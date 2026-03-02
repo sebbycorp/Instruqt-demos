@@ -1,8 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-
-# Ensure previous resources exist
-kubectl wait --for=condition=Ready pod -l app=mcp-github --timeout=60s
-kubectl wait --for=condition=Ready pod -l app=mcp-slack --timeout=60s
-
-echo "Challenge 4 setup complete"

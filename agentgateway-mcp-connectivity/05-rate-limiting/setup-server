@@ -1,7 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-
-# Ensure previous resources exist
-kubectl -n agentgateway-system get httproute mcp-route
-
-echo "Challenge 5 setup complete"

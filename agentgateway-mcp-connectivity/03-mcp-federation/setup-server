@@ -1,8 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-
-# Ensure previous challenge resources exist
-kubectl wait --for=condition=Ready pod -l app=mcp-website-fetcher --timeout=60s
-kubectl -n agentgateway-system get gateway agentgateway-proxy
-
-echo "Challenge 3 setup complete"

@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-
-kubectl get pods -n agentgateway-system
-kubectl -n agentgateway-system get gateway agentgateway-proxy
