@@ -1,0 +1,19 @@
+#!/bin/bash
+set -euxo pipefail
+
+if ! kubectl get httproute openai -n agentgateway-system &>/dev/null; then
+  fail-message "HTTPRoute 'openai' not found in namespace agentgateway-system. Create the OpenAI HTTPRoute first."
+  exit 1
+fi
+
+if ! kubectl get agentgatewaybackend openai-all-models -n agentgateway-system &>/dev/null; then
+  fail-message "AgentgatewayBackend 'openai-all-models' not found in namespace agentgateway-system. Create the OpenAI backend first."
+  exit 1
+fi
+
+if ! kubectl get enterpriseagentgatewaypolicy comprehensive-prompt-guard -n agentgateway-system &>/dev/null; then
+  fail-message "EnterpriseAgentgatewayPolicy 'comprehensive-prompt-guard' not found in namespace agentgateway-system. Apply the comprehensive built-in guardrails policy."
+  exit 1
+fi
+
+echo "Challenge 9 complete!"

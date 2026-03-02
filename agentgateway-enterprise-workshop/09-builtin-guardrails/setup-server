@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Clean up failover resources from challenge 08
+kubectl delete httproute -n agentgateway-system failover-route 2>/dev/null || true
+kubectl delete agentgatewaybackend -n agentgateway-system failover-backend 2>/dev/null || true
+kubectl delete deployment -n agentgateway-system mock-gpt-4o 2>/dev/null || true
+kubectl delete service -n agentgateway-system mock-gpt-4o-svc 2>/dev/null || true
+
+# Clean up any prompt guard/enrichment policies that could conflict with this lab
+kubectl delete enterpriseagentgatewaypolicy -n agentgateway-system openai-prompt-enrichment 2>/dev/null || true
+kubectl delete enterpriseagentgatewaypolicy -n agentgateway-system openai-prompt-guard 2>/dev/null || true
+kubectl delete enterpriseagentgatewaypolicy -n agentgateway-system comprehensive-prompt-guard 2>/dev/null || true
+
+echo "Challenge 9 setup complete"
