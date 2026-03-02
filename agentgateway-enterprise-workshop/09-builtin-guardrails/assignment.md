@@ -1,28 +1,32 @@
 ---
 slug: builtin-guardrails
-id: l3f8c2n0wxqa
+id: 3elzvhixpso7
 type: challenge
 title: Built-in Guardrails
-teaser: Configure comprehensive prompt guardrails (injection/jailbreak/PII/secrets) at the gateway.
+teaser: Configure comprehensive prompt guardrails (injection/jailbreak/PII/secrets)
+  at the gateway.
 notes:
 - type: text
-  contents: "# \U0001F6E1\uFE0F Built-in Guardrails\n\nEnterprise AgentGateway can enforce *prompt security* at the gateway layer: block prompt injection and jailbreaks, reject PII/secrets, and redact sensitive data from LLM responses — without changing app code.\n"
+  contents: "# \U0001F6E1️ Built-in Guardrails\n\nEnterprise AgentGateway can enforce
+    *prompt security* at the gateway layer: block prompt injection and jailbreaks,
+    reject PII/secrets, and redact sensitive data from LLM responses — without changing
+    app code.\n"
 tabs:
-- id: 5hlr8t0d2vkw
+- id: aeqvbp2amfw7
   title: Terminal
   type: terminal
   hostname: server
-- id: 0lq9s7k1p3fa
+- id: uzii398atrjm
   title: Code Editor
   type: code
   hostname: server
   path: /root
-- id: a3z1m8x0v2qt
+- id: bouticuuud0n
   title: Grafana
   type: service
   hostname: server
   port: 3000
-- id: d7p4n1c9k2uj
+- id: ueycjfyprpas
   title: Solo UI
   type: service
   hostname: server

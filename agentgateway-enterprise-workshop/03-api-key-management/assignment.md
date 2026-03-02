@@ -83,8 +83,7 @@ metadata:
 spec:
   ai:
     provider:
-      openai:
-        model: gpt-4o
+      openai: {}
   policies:
     auth:
       secretRef:

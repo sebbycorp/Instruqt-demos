@@ -11,11 +11,12 @@ description: "AI agents are calling LLMs and MCP tools with no visibility, no se
   to OpenAI with metrics and distributed tracing\n- \U0001F511 Manage API keys with
   vanity key masking\n- \U0001F6E1️ Enforce JWT authentication with CEL-based RBAC\n-
   \U0001F4DD Enrich prompts and guard against PII leakage and prompt injection\n-
-  \U0001F6E1\uFE0F Configure comprehensive built-in guardrails (jailbreaks, secrets, PII) at the gateway\n-
-  \U0001F4B0 Rate limit requests to control AI spend\n- \U0001F527 Route to MCP servers
-  with JWT security and tool-level access control\n- \U0001F504 Configure LLM failover
-  with priority groups\n\n**Prerequisites:** Familiarity with Kubernetes basics (kubectl,
-  Helm, pods, services). No prior AgentGateway experience required."
+  \U0001F6E1️ Configure comprehensive built-in guardrails (jailbreaks, secrets, PII)
+  at the gateway\n- \U0001F4B0 Rate limit requests to control AI spend\n- \U0001F527
+  Route to MCP servers with JWT security and tool-level access control\n- \U0001F504
+  Configure LLM failover with priority groups\n\n**Prerequisites:** Familiarity with
+  Kubernetes basics (kubectl, Helm, pods, services). No prior AgentGateway experience
+  required."
 icon: ""
 tags:
 - ai
@@ -37,6 +38,7 @@ lab_config:
   feedback_recap_enabled: true
   feedback_tab_enabled: false
   loadingMessages: true
+  override_challenge_layout: false
   hideStopButton: false
-checksum: "6890332064705973565"
+checksum: "8446845030109384341"
 enhanced_loading: false
