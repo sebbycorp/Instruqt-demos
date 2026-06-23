@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Wait for instruqt bootstrap
+until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
+  sleep 1
+done
+
+set -euxo pipefail
+
+set-workdir /root
+
+# Pinned versions (kept in one place; also exported into the shell for the learner)
+KIND_VERSION=v0.24.0
+KIND_CLUSTER=kagent-substrate
+SUBSTRATE_VERSION=0.0.6
+KAGENT_VERSION=0.9.7
+
+# Shell conveniences + version env for the learner's terminal
+cat >> ~/.bashrc << EOF
+alias k=kubectl
+complete -F __start_kubectl k 2>/dev/null || true
+source /etc/bash_completion 2>/dev/null || true
+export KIND_CLUSTER=${KIND_CLUSTER}
+export SUBSTRATE_VERSION=${SUBSTRATE_VERSION}
+export KAGENT_VERSION=${KAGENT_VERSION}
+EOF
+
+# --- Install tooling if missing ---------------------------------------------
+if ! command -v kubectl >/dev/null 2>&1; then
+  curl -fsSLo /usr/local/bin/kubectl \
+    "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  chmod +x /usr/local/bin/kubectl
+fi
+
+if ! command -v helm >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+fi
+
+if ! command -v kind >/dev/null 2>&1; then
+  curl -fsSLo /usr/local/bin/kind \
+    "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
+  chmod +x /usr/local/bin/kind
+fi
+
+if ! command -v grpcurl >/dev/null 2>&1; then
+  curl -fsSL "https://github.com/fullstorydev/grpcurl/releases/download/v1.9.1/grpcurl_1.9.1_linux_x86_64.tar.gz" \
+    | tar -xz -C /usr/local/bin grpcurl
+  chmod +x /usr/local/bin/grpcurl
+fi
+
+# --- Ensure Docker is running (kind requires it) ----------------------------
+systemctl start docker 2>/dev/null || true
+timeout 60 bash -c 'until docker info >/dev/null 2>&1; do sleep 2; done'
+
+# --- Create the kind cluster ------------------------------------------------
+if ! kind get clusters 2>/dev/null | grep -q "^${KIND_CLUSTER}$"; then
+  kind create cluster --name "${KIND_CLUSTER}" --wait 120s
+fi
+
+kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+# --- Validate the OpenAI key (footgun: empty key installs silently) ---------
+if [ -n "${OPENAI_API_KEY:-}" ]; then
+  echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
+  echo "=== OPENAI_API_KEY present (len=${#OPENAI_API_KEY}) ==="
+else
+  echo "=== WARNING: OPENAI_API_KEY is empty — kagent install in challenge 3 will fail ==="
+fi
+
+echo "=== Track setup complete: kind cluster '${KIND_CLUSTER}' ready ==="
