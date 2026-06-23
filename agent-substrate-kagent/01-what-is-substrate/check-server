@@ -1,0 +1,21 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get nodes >/dev/null 2>&1; then
+  fail-message "kind cluster not reachable. The track setup may still be running — wait a moment and re-check."
+  exit 1
+fi
+
+if ! kubectl wait --for=condition=Ready nodes --all --timeout=10s >/dev/null 2>&1; then
+  fail-message "Cluster node is not Ready yet. Wait a few seconds and check again."
+  exit 1
+fi
+
+for tool in kind helm grpcurl; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    fail-message "Required tool '$tool' is not installed. The track setup may still be running."
+    exit 1
+  fi
+done
+
+echo "Challenge 1 complete!"

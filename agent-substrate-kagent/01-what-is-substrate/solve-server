@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euxo pipefail
+
+kubectl get nodes
+kubectl cluster-info
+
+echo "Challenge 1 solved"
