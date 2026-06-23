@@ -217,12 +217,15 @@ fi
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
 # --- Validate the OpenAI key (footgun: empty key installs silently) ---------
+# Disable xtrace around the secret so the key value is never echoed into logs.
+set +x
 if [ -n "${OPENAI_API_KEY:-}" ]; then
   echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
   echo "=== OPENAI_API_KEY present (len=${#OPENAI_API_KEY}) ==="
 else
   echo "=== WARNING: OPENAI_API_KEY is empty — kagent install in challenge 3 will fail ==="
 fi
+set -x
 
 echo "=== Track setup complete: kind cluster '${KIND_CLUSTER}' ready ==="
 ```
@@ -767,6 +770,8 @@ helm upgrade --install kagent-crds \
   --version 0.9.7 \
   --namespace kagent --create-namespace --wait
 
+# Disable xtrace for the kagent install so the OpenAI key isn't echoed into logs.
+set +x
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --version 0.9.7 --namespace kagent --timeout 10m --wait \
@@ -784,6 +789,7 @@ helm upgrade --install kagent \
   --set substrateWorkerPool.replicas=1 \
   --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6 \
   || true
+set -x
 
 kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=600s
 

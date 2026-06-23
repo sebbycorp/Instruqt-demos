@@ -6,6 +6,8 @@ helm upgrade --install kagent-crds \
   --version 0.9.7 \
   --namespace kagent --create-namespace --wait
 
+# Disable xtrace for the kagent install so the OpenAI key isn't echoed into logs.
+set +x
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --version 0.9.7 --namespace kagent --timeout 10m --wait \
@@ -23,6 +25,7 @@ helm upgrade --install kagent \
   --set substrateWorkerPool.replicas=1 \
   --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6 \
   || true
+set -x
 
 kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=600s
 

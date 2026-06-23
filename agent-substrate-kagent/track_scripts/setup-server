@@ -60,11 +60,14 @@ fi
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
 # --- Validate the OpenAI key (footgun: empty key installs silently) ---------
+# Disable xtrace around the secret so the key value is never echoed into logs.
+set +x
 if [ -n "${OPENAI_API_KEY:-}" ]; then
   echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
   echo "=== OPENAI_API_KEY present (len=${#OPENAI_API_KEY}) ==="
 else
   echo "=== WARNING: OPENAI_API_KEY is empty — kagent install in challenge 3 will fail ==="
 fi
+set -x
 
 echo "=== Track setup complete: kind cluster '${KIND_CLUSTER}' ready ==="
