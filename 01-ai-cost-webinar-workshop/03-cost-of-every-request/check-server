@@ -1,0 +1,11 @@
+#!/bin/bash
+set -uo pipefail
+if ! grep -q 'modelCatalog' /root/config.yaml 2>/dev/null; then
+  fail-message "No modelCatalog in /root/config.yaml yet. Add a top-level config.modelCatalog pointing at /root/costs/catalog.json so the gateway can attach USD cost, then restart (agw-restart)."
+  exit 1
+fi
+if ! curl -s http://localhost:15020/metrics | grep -q 'agentgateway_cost_catalog_lookups_total{status="Exact"'; then
+  fail-message "No priced requests recorded yet. Send a request through the gateway (curl :4000 or the openai CLI), then check :15020/metrics for agentgateway_cost_catalog_lookups_total{status=\"Exact\"}."
+  exit 1
+fi
+echo "Cost tracking is live — every request now carries token usage and USD cost."

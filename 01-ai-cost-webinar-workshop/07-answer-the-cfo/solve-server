@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+cd /root
+uv run gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db
+echo "=== Spend by team (chargeback) ==="
+sqlite3 -box /root/gw-logs.db "SELECT agentgateway_group AS team, ROUND(SUM(cost),2) AS usd, COUNT(*) AS reqs FROM request_logs GROUP BY team ORDER BY usd DESC;"
+echo "=== Top 5 spenders ==="
+sqlite3 -box /root/gw-logs.db "SELECT agentgateway_user AS user, ROUND(SUM(cost),2) AS usd FROM request_logs GROUP BY user ORDER BY usd DESC LIMIT 5;"
+echo "=== Batch vs interactive (the mystery) ==="
+sqlite3 -box /root/gw-logs.db "SELECT json_extract(attributes_json,'\$.workload') AS workload, COUNT(*) AS n, ROUND(SUM(cost),2) AS usd FROM request_logs GROUP BY workload ORDER BY usd DESC;"

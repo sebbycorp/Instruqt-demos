@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euo pipefail
+mkdir -p /root/costs
+[ -f /root/costs/catalog.json ] || cp /opt/instruqt/track/assets/costs/catalog.json /root/costs/catalog.json 2>/dev/null || true
+echo "challenge 3 setup complete"

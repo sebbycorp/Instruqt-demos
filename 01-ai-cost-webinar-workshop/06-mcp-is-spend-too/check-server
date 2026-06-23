@@ -1,0 +1,15 @@
+#!/bin/bash
+set -uo pipefail
+if ! grep -q 'mcp-route' /root/config.yaml 2>/dev/null; then
+  fail-message "No mcp-route in /root/config.yaml. Add a second route matching /mcp with an mcp backend (targets -> stdio -> npx @modelcontextprotocol/server-everything)."
+  exit 1
+fi
+if ! agentgateway -f /root/config.yaml --validate-only >/dev/null 2>&1; then
+  fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only"
+  exit 1
+fi
+if ! curl -s http://localhost:15000/config_dump | grep -q 'mcp-route'; then
+  fail-message "The live config doesn't show the MCP route yet. Restart the gateway: agw-restart"
+  exit 1
+fi
+echo "MCP traffic now flows through the same gateway as your LLM traffic."

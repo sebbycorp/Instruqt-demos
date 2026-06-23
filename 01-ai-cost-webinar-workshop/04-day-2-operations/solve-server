@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+# Ensure the good config is the one running.
+pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
+nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
+sleep 3
+echo "=== live binds/listeners from config_dump ==="
+curl -s http://localhost:15000/config_dump | jq '.binds[0].listeners | keys'
+echo "=== metrics sample ==="
+curl -s http://localhost:15020/metrics | grep -E 'cost_catalog' | head -2

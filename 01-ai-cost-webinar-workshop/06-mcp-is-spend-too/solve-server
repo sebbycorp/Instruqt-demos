@@ -1,0 +1,50 @@
+#!/bin/bash
+set -euo pipefail
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+cat > /root/config.yaml <<'YAML'
+config:
+  modelCatalog:
+  - file: /root/costs/catalog.json
+binds:
+- port: 4000
+  listeners:
+  - protocol: HTTP
+    routes:
+    - name: openai-route
+      matches:
+      - path:
+          pathPrefix: /v1
+      policies:
+        backendAuth:
+          key: "$OPENAI_API_KEY"
+        ai:
+          overrides:
+            model: gpt-4o-mini
+        localRateLimit:
+        - maxTokens: 20000
+          tokensPerFill: 20000
+          fillInterval: "1h"
+          type: tokens
+      backends:
+      - ai:
+          name: openai
+          provider:
+            openAI: {}
+    - name: mcp-route
+      matches:
+      - path:
+          pathPrefix: /mcp
+      backends:
+      - mcp:
+          targets:
+          - name: everything
+            stdio:
+              cmd: npx
+              args: ["-y","@modelcontextprotocol/server-everything"]
+YAML
+agentgateway -f /root/config.yaml --validate-only
+pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
+nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
+sleep 5
+echo "=== routes now loaded ==="
+curl -s http://localhost:15000/config_dump | jq '.binds[].listeners[].routes[]?.name? // empty' 2>/dev/null || true

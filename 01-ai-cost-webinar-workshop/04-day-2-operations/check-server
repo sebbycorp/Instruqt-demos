@@ -1,0 +1,11 @@
+#!/bin/bash
+set -uo pipefail
+if ! curl -s http://localhost:15000/config_dump | grep -q '"openai-route"'; then
+  fail-message "Couldn't read the live route from :15000/config_dump. Make sure the gateway is running with /root/config.yaml: curl http://localhost:15000/config_dump | jq ."
+  exit 1
+fi
+if ! curl -s http://localhost:15020/metrics | grep -qi 'agentgateway'; then
+  fail-message "Metrics endpoint on :15020 isn't responding. Try: curl -s http://localhost:15020/metrics | head."
+  exit 1
+fi
+echo "You can inspect live config and metrics — you can operate this gateway."

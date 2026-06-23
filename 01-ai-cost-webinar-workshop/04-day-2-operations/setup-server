@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+# Leave a "broken" alternate config on disk for the learner to diagnose.
+# It is valid YAML but omits the backendAuth policy, so upstream calls 401.
+cat > /root/config.broken.yaml <<'YAML'
+config:
+  modelCatalog:
+  - file: /root/costs/catalog.json
+binds:
+- port: 4000
+  listeners:
+  - protocol: HTTP
+    routes:
+    - name: openai-route
+      matches:
+      - path:
+          pathPrefix: /v1
+      backends:
+      - ai:
+          name: openai
+          provider:
+            openAI: {}
+YAML
+echo "challenge 4 setup complete"

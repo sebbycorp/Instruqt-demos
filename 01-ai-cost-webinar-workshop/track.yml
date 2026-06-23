@@ -1,0 +1,41 @@
+slug: ai-cost-token-spend-agentgateway
+id: ""
+title: 'AI Cost & Token Spend: Govern LLM and MCP Traffic with Agentgateway'
+teaser: Track, troubleshoot, and control AI token spend across your org using standalone
+  Agentgateway OSS.
+description: |
+  Finance just forwarded a five-figure OpenAI bill and asked "who spent this?" — and nobody on the platform team can answer. Agents, copilots, and scripts are calling LLMs and MCP tools directly, with no shared control point. That's shadow AI, and it's the same loss of control enterprises hit with microservices before API gateways.
+
+  In this ~15-minute hands-on lab you'll put **standalone Agentgateway OSS v1.3.1** in front of all AI traffic and get control back:
+
+  - 🧮 Understand how tokens are calculated and what LLM features actually cost
+  - 🚦 Route OpenAI traffic through a single gateway you operate
+  - 💵 See realized USD cost and token usage on every request
+  - 🔧 Troubleshoot the gateway with the admin API on :15000
+  - 🛡️ Enforce per-team token budgets and an approved-model policy
+  - 🔌 Bring MCP tool traffic under the same control point
+  - 📊 Answer "who spent the money?" with fleet-scale cost analysis
+
+  Built for platform, FinOps, and SecOps teams evaluating Agentgateway. Familiarity with the terminal and JSON is helpful; no Kubernetes required.
+icon: ""
+tags:
+- ai
+- llm
+- mcp
+- finops
+- cost
+- agentgateway
+- solo-io
+owner: soloio
+developers:
+- sebastian.maniak@solo.io
+idle_timeout: 1800
+timelimit: 2400
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  hideStopButton: false
+checksum: ""
+enhanced_loading: false

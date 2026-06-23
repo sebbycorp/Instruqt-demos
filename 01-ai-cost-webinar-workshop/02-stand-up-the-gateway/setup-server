@@ -1,0 +1,4 @@
+#!/bin/bash
+set -euo pipefail
+command -v agentgateway >/dev/null 2>&1 || { curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1; }
+echo "challenge 2 setup complete"

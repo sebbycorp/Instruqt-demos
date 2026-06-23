@@ -1,0 +1,108 @@
+---
+slug: governance-budgets-models
+id: ""
+type: challenge
+title: Governance — Budgets & Approved Models
+teaser: Enforce a token budget and pin traffic to an approved model. Stop the runaway spender.
+notes:
+- type: text
+  contents: |
+    # 🛡️ Governance
+
+    Visibility tells you what happened. **Policy** stops it from happening. Two
+    route policies — a token budget and an approved-model pin — and the surprise
+    bill can't repeat the same way.
+tabs:
+- id: ""
+  title: Terminal
+  type: terminal
+  hostname: server
+- id: ""
+  title: Editor
+  type: code
+  hostname: server
+  path: /root
+difficulty: ""
+enhanced_loading: null
+---
+
+# Governance — Budgets & Approved Models
+
+Now that every call is metered, attach guardrails right on the route.
+
+## Part A — A token budget (the spend cap)
+
+In the **Editor**, add a `localRateLimit` policy and an `ai: {}` marker to the
+route's `policies` block in `/root/config.yaml`:
+
+```yaml
+      policies:
+        backendAuth:
+          key: "$OPENAI_API_KEY"
+        ai: {}
+        localRateLimit:
+        - maxTokens: 50
+          tokensPerFill: 50
+          fillInterval: "1h"
+          type: tokens
+```
+
+`type: tokens` counts **LLM tokens**, not requests. We use a tiny 50-token
+bucket so you can trip it in one call (in production this would be, say, 2M
+tokens/hour per team). The `ai: {}` marker tells the gateway this route is LLM
+traffic so it knows how to count tokens.
+
+```bash
+agentgateway -f /root/config.yaml --validate-only
+agw-restart
+```
+
+Now spend the budget:
+
+```bash
+for i in 1 2 3 4; do
+  echo "req $i -> $(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Write a paragraph about budgets."}],"max_tokens":80}')"
+done
+```
+
+The first call returns **200**; the rest return **429 Too Many Requests**. The
+runaway agent is throttled — *before* it runs up the bill.
+
+## Part B — Pin to an approved model (the model lever)
+
+A frontier model costs ~17× more. Force everything to the approved cheap model,
+no matter what the client asks for. Add an `overrides` block under the `ai`
+policy:
+
+```yaml
+        ai:
+          overrides:
+            model: gpt-4o-mini
+```
+
+```bash
+agw-restart
+```
+
+Now ask for the **expensive** model and watch what actually runs:
+
+```bash
+curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+```
+
+The response model comes back **`gpt-4o-mini`** — the expensive model is simply
+unreachable through this route. (The full `solve` config combines both policies;
+your edits above match it.)
+
+## Part C — How this scales
+
+A 50-token bucket is a demo. In production you enforce budgets **per API key or
+per team** with `remoteRateLimit` descriptors backed by a shared rate-limit
+service — so `sales` and `eng` each get their own cap across every gateway
+replica. Same idea, distributed.
+
+> Two policies, and the runaway bill is structurally prevented. Next: agents
+> don't only call models — they call **tools**. ➡️

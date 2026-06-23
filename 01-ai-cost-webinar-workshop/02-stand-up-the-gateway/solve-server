@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+cat > /root/config.yaml <<'YAML'
+binds:
+- port: 4000
+  listeners:
+  - protocol: HTTP
+    routes:
+    - name: openai-route
+      matches:
+      - path:
+          pathPrefix: /v1
+      policies:
+        backendAuth:
+          key: "$OPENAI_API_KEY"
+      backends:
+      - ai:
+          name: openai
+          provider:
+            openAI: {}
+YAML
+agentgateway -f /root/config.yaml --validate-only
+pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
+nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
+sleep 4
+curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq .

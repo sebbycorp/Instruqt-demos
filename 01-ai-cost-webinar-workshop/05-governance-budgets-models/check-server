@@ -1,0 +1,12 @@
+#!/bin/bash
+set -uo pipefail
+dump=$(curl -s http://localhost:15000/config_dump)
+if ! echo "$dump" | grep -q 'maxTokens'; then
+  fail-message "No token budget found in the live config. Add a localRateLimit policy (type: tokens) to openai-route and restart with agw-restart."
+  exit 1
+fi
+if ! echo "$dump" | grep -q '"overrides"'; then
+  fail-message "No model-pin override found. Add ai.overrides.model: gpt-4o-mini to the route so expensive models can't be used, then agw-restart."
+  exit 1
+fi
+echo "Governance in place: per-route token budget + approved-model pin."

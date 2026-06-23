@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Wait for instruqt bootstrap
+until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
+  sleep 1
+done
+
+set -euo pipefail
+set-workdir /root
+
+# Store OpenAI key for use across challenges
+if [ -n "${OPENAI_API_KEY:-}" ]; then
+  echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
+  echo "${OPENAI_API_KEY}" > /root/.openai-api-key
+  echo "=== OpenAI API key stored ==="
+else
+  echo "=== WARNING: OPENAI_API_KEY not set ==="
+fi
+
+# Install agentgateway standalone binary (pinned)
+echo "=== Installing agentgateway v1.3.1 ==="
+curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1
+# Ensure on PATH for non-login shells
+ln -sf "$(command -v agentgateway || echo /usr/local/bin/agentgateway)" /usr/local/bin/agentgateway 2>/dev/null || true
+
+# Install the official OpenAI CLI (used to drive traffic through the gateway)
+pip3 install --quiet --upgrade openai || pip install --quiet --upgrade openai || true
+
+# Ensure uv exists for the mock-data generator (needs Python >=3.11)
+command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Stage workshop assets onto the VM
+mkdir -p /root/costs
+cp /opt/instruqt/track/assets/gen-mock-logs.py /root/gen-mock-logs.py 2>/dev/null || true
+cp /opt/instruqt/track/assets/costs/catalog.json /root/costs/catalog.json 2>/dev/null || true
+
+# Convenience: point the OpenAI CLI/SDK at the gateway, and add a restart helper
+cat >> ~/.bashrc <<'RC'
+export OPENAI_BASE_URL=http://localhost:4000/v1
+agw-restart() { pkill -f "agentgateway -f" 2>/dev/null; sleep 1; nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 & sleep 3; }
+RC
+
+echo "=== Track setup complete ==="
