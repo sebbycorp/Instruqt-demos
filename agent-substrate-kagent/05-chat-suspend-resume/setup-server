@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Make sure the agent is ready to chat with.
+kubectl wait sandboxagent/hello-substrate -n kagent --for=condition=Ready --timeout=300s || true
+
+# Ensure the UI port-forward service is running (created in challenge 4).
+systemctl restart kagent-ui 2>/dev/null || true
+
+echo "Challenge 5 setup complete"
