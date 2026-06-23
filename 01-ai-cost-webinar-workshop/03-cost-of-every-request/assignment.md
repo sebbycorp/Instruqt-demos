@@ -109,5 +109,5 @@ a chat request, then look at the request view — you'll see the model, token
 counts, and cost for each call without touching the logs. This is the same data,
 visualized.
 
-> Now you can answer *"how much did that call cost?"* Next: how to **operate and
-> troubleshoot** this gateway. ➡️
+> Now you can answer *"how much did that call cost?"* Next: explore the whole
+> gateway in its **web UI**. ➡️

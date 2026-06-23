@@ -1,22 +1,13 @@
 #!/bin/bash
 set -euo pipefail
-# Leave a "broken" alternate config for the learner to diagnose. It is valid YAML
-# but the model has NO apiKey, so upstream calls 401 — a realistic misconfig to
-# find via the logs and config_dump.
-cat > /root/config.broken.yaml <<'YAML'
-config:
-  adminAddr: "0.0.0.0:15000"
-  database:
-    url: "sqlite:///root/data/data.db"
-  modelCatalog:
-    - file: /root/costs/base-costs.json
-llm:
-  port: 4000
-  models:
-  - name: "*"
-    provider: openAI
-frontendPolicies:
-  http:
-    maxBufferSize: 33554432
-YAML
+mkdir -p /root/data /root/costs
+if [ ! -s /root/costs/base-costs.json ]; then
+cat > /root/costs/base-costs.json <<'JSON'
+{ "providers": { "openai": { "models": {
+  "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
+  "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
+  "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
+  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } } } } } }
+JSON
+fi
 echo "challenge 4 setup complete"

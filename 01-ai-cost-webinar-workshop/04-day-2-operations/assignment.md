@@ -2,13 +2,17 @@
 slug: day-2-operations
 id: a3xmnpwlqjxt
 type: challenge
-title: Day-2 Operations
-teaser: Inspect and troubleshoot the gateway with the admin API on :15000.
+title: Explore the Gateway UI
+teaser: Take the Agentgateway web UI for a spin — chat playground, live config, and client setup.
 notes:
 - type: text
-  contents: "# \U0001F527 Day-2 Operations\n\nYou own this gateway now. When spend
-    spikes or calls start failing, you need\nto see **what's actually loaded and running**
-    — not what you think you\nwrote. That's the admin API on **:15000**.\n"
+  contents: |
+    # 🧭 Explore the Gateway UI
+
+    Everything you've done in YAML, Agentgateway also gives you in a **web UI** —
+    your mission control for AI traffic. Let's click around: chat with your models,
+    see the live config, and grab a ready-made snippet to point any app at the
+    gateway.
 tabs:
 - id: fg2dsy86jle2
   title: Terminal
@@ -24,62 +28,48 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-# Day-2 Operations
+# Explore the Gateway UI
 
-Agentgateway exposes a local admin interface on **:15000** (and Prometheus
-metrics on **:15020**). This is your first stop for any incident.
+Open the **Agentgateway UI** tab (served on `:15000/ui`). The left nav groups
+everything: **LLM** (Models, Providers, Policies, Costs…), **MCP**, **Traffic**,
+and **Tools**. No commands this time — just explore.
 
-## Step 1 — Dump the live config (ground truth)
+## 1. Chat Playground — talk to your gateway
 
-```bash
-curl -s http://localhost:15000/config_dump | jq '.binds[0].listeners | keys'
-curl -s http://localhost:15000/config_dump | jq '.binds[].listeners[].routes[]?.name? // empty'
-```
+Left nav → **Chat Playground**. This sends a **real** chat completion *through the
+gateway* (great for setup debugging).
 
-`config_dump` shows the **running** version, build, binds, listeners, routes,
-backends, and policies — exactly what the proxy loaded. If reality and your
-intent disagree, this is where you find out.
+- **Model:** pick `*` (your catch-all model)
+- **Specific model:** type `gpt-4o-mini`
+- Type a question in **User message** and hit **Send**
 
-## Step 2 — Use the visual UI
+You'll get a live reply — and because it went through the gateway, it was just
+priced and logged (you'll see it on the Costs/Logs pages). Notice the **Include
+MCP tools** toggle too — that lets the model call MCP tools you expose later.
 
-Open the **Agentgateway UI** tab (served at `:15000/ui`). Same information,
-visual — routes, backends, and live state.
+## 2. Raw Configuration — the whole gateway, in one place
 
-## Step 3 — Check metrics
+Left nav → **Tools → Raw Configuration**. This is the **full gateway YAML**, live
+and editable — your `config.database`, `modelCatalog`, `llm.models`, everything.
+You can **Copy**, **Download**, or edit and **Save** (it hot-reloads). This is the
+same config you'd otherwise hand-edit in `/root/config.yaml`.
 
-```bash
-curl -s http://localhost:15020/metrics | grep -E 'cost_catalog|requests' | head
-```
+## 3. Client Setup — point any app at the gateway
 
-Cost-catalog lookups, request counts, latencies — all Prometheus-ready on
-`:15020`.
+Left nav → **Client Setup**. This **generates connection snippets** for any
+OpenAI-compatible client:
 
-## Step 4 — Troubleshooting drill
+- It shows your **Gateway Base URL** (`…:4000/v1`), the **model**, and the **auth** header
+- Switch the **Integration** dropdown between **curl**, the **OpenAI Python/Node SDKs**, and more
+- Hit **Copy** — that's literally all a developer needs to route their app through your gateway
 
-A teammate swears their config "looks fine" but every call returns **401**.
-Their file is at `/root/config.broken.yaml`. First, does it even validate?
+This is the "make it yours" button: any team drops in that base URL and their
+traffic is instantly metered, priced, and governed.
 
-```bash
-agentgateway -f /root/config.broken.yaml --validate-only
-```
+## 4. Look around: Costs, Logs, Analytics
 
-It says **`Configuration is valid!`** — valid YAML, *wrong behavior*. Now diff it
-against the working config:
+Click **Costs**, **Logs**, and **Analytics** in the LLM section to see the spend
+and requests you've already generated — the same data, visualized.
 
-```bash
-diff <(grep -v '^\s*#' /root/config.yaml) /root/config.broken.yaml
-```
-
-The broken one's model is **missing `params.apiKey`** — so the gateway forwards to
-OpenAI with no key and gets 401s. The fix is obvious once you can see the live vs.
-intended config side by side.
-
-## Step 5 — Make sure the good config is running
-
-```bash
-agw-restart
-curl -s http://localhost:15000/config_dump | grep -q '4000' && echo "gateway loaded ✅"
-```
-
-> Inspecting config and metrics is how you operate this in production. Next:
-> stop the spend problem from happening at all — **governance**. ➡️
+> You've seen the gateway from every angle. Next: put **guardrails on the spend**
+> so it can't run away. ➡️
