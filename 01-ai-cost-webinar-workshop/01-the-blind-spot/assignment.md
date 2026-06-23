@@ -1,21 +1,17 @@
 ---
 slug: the-blind-spot
-id: ""
+id: w9urzfxttwa5
 type: challenge
 title: The Blind Spot
 teaser: Why your AI bill is a mystery — and how tokens actually get spent.
 notes:
 - type: text
-  contents: |
-    # 🧾 The Blind Spot
-
-    Finance just forwarded a five-figure OpenAI bill and asked one question:
-    **"Who spent this?"**
-
-    You're on the platform team. You can't answer. Let's understand why — and
-    what we're going to do about it.
+  contents: "# \U0001F9FE The Blind Spot\n\nFinance just forwarded a five-figure OpenAI
+    bill and asked one question:\n**\"Who spent this?\"**\n\nYou're on the platform
+    team. You can't answer. Let's understand why — and\nwhat we're going to do about
+    it.\n"
 tabs:
-- id: ""
+- id: 1h8a6j1zgsv8
   title: Terminal
   type: terminal
   hostname: server

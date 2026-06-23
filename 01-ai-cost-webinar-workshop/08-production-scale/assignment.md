@@ -1,18 +1,17 @@
 ---
 slug: production-scale
-id: ""
+id: yffmloq3omyy
 type: challenge
 title: Production Scale
-teaser: Where enterprise adoption goes next — guardrails, per-team keys, tracing, Enterprise.
+teaser: Where enterprise adoption goes next — guardrails, per-team keys, tracing,
+  Enterprise.
 notes:
 - type: text
-  contents: |
-    # 🏁 Production Scale
-
-    You took a blind, ungoverned AI bill and brought it under one control point.
-    Here's what the production-grade version of this looks like.
+  contents: "# \U0001F3C1 Production Scale\n\nYou took a blind, ungoverned AI bill
+    and brought it under one control point.\nHere's what the production-grade version
+    of this looks like.\n"
 tabs:
-- id: ""
+- id: kxkztxzcyhtq
   title: Terminal
   type: terminal
   hostname: server

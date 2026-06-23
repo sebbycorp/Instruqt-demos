@@ -1,23 +1,21 @@
 ---
 slug: answer-the-cfo
-id: ""
+id: xnjzpvrc6jc7
 type: challenge
 title: Answer the CFO
 teaser: Use fleet-scale gateway logs to finally answer "who spent the money?"
 notes:
 - type: text
-  contents: |
-    # 📊 Answer the CFO
-
-    Back to the original question. A week of gateway request logs across 12
-    users and 4 providers is waiting in SQLite — the same fields Agentgateway
-    records in production. Time to find out where the money went.
+  contents: "# \U0001F4CA Answer the CFO\n\nBack to the original question. A week
+    of gateway request logs across 12\nusers and 4 providers is waiting in SQLite
+    — the same fields Agentgateway\nrecords in production. Time to find out where
+    the money went.\n"
 tabs:
-- id: ""
+- id: upptowlm0w23
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: vdysbceelims
   title: Editor
   type: code
   hostname: server

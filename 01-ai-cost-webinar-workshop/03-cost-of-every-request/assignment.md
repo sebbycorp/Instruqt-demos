@@ -1,23 +1,22 @@
 ---
 slug: cost-of-every-request
-id: ""
+id: zzrir3nvtmi0
 type: challenge
 title: The Cost of Every Request
-teaser: Attach real USD cost and token counts to every call — and watch models differ by 17×.
+teaser: Attach real USD cost and token counts to every call — and watch models differ
+  by 17×.
 notes:
 - type: text
-  contents: |
-    # 💵 The Cost of Every Request
-
-    Routing isn't the point — **attribution** is. Give the gateway a price list
-    and it stamps every request with token usage and **realized USD cost**, in
-    real time. Then you'll see why model choice is a budget decision.
+  contents: "# \U0001F4B5 The Cost of Every Request\n\nRouting isn't the point — **attribution**
+    is. Give the gateway a price list\nand it stamps every request with token usage
+    and **realized USD cost**, in\nreal time. Then you'll see why model choice is
+    a budget decision.\n"
 tabs:
-- id: ""
+- id: ujaxcjanrprx
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: mtwzbgcxq93i
   title: Editor
   type: code
   hostname: server

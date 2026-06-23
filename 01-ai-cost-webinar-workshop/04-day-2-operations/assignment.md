@@ -1,28 +1,25 @@
 ---
 slug: day-2-operations
-id: ""
+id: a3xmnpwlqjxt
 type: challenge
 title: Day-2 Operations
 teaser: Inspect and troubleshoot the gateway with the admin API on :15000.
 notes:
 - type: text
-  contents: |
-    # 🔧 Day-2 Operations
-
-    You own this gateway now. When spend spikes or calls start failing, you need
-    to see **what's actually loaded and running** — not what you think you
-    wrote. That's the admin API on **:15000**.
+  contents: "# \U0001F527 Day-2 Operations\n\nYou own this gateway now. When spend
+    spikes or calls start failing, you need\nto see **what's actually loaded and running**
+    — not what you think you\nwrote. That's the admin API on **:15000**.\n"
 tabs:
-- id: ""
+- id: fg2dsy86jle2
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: 09qu2qpqmkri
   title: Agentgateway UI
   type: service
   hostname: server
-  port: 15000
   path: /ui
+  port: 15000
 difficulty: ""
 enhanced_loading: null
 ---

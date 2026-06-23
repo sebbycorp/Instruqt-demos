@@ -1,23 +1,20 @@
 ---
 slug: stand-up-the-gateway
-id: ""
+id: 9nswgbezzcg0
 type: challenge
 title: Stand Up the Gateway
 teaser: Put a single chokepoint in front of all your OpenAI traffic.
 notes:
 - type: text
-  contents: |
-    # 🚦 Stand Up the Gateway
-
-    Step one to regaining control: route every LLM call through **one place you
-    operate**. You'll install standalone Agentgateway, point it at OpenAI, and
-    send your first call through it.
+  contents: "# \U0001F6A6 Stand Up the Gateway\n\nStep one to regaining control: route
+    every LLM call through **one place you\noperate**. You'll install standalone Agentgateway,
+    point it at OpenAI, and\nsend your first call through it.\n"
 tabs:
-- id: ""
+- id: lpcnur5ga7bv
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: nlc8xtx0f7ar
   title: Editor
   type: code
   hostname: server

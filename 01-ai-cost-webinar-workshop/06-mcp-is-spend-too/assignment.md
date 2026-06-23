@@ -1,23 +1,21 @@
 ---
 slug: mcp-is-spend-too
-id: ""
+id: esebezs0fzq6
 type: challenge
 title: MCP Is Spend Too
 teaser: Bring agent tool traffic under the same gateway — and see why tools cost tokens.
 notes:
 - type: text
-  contents: |
-    # 🔌 MCP Is Spend Too
-
-    Agents don't just call models — they call **tools** over MCP. Every tool
-    schema and every tool result becomes tokens in the model's context. Put MCP
-    behind the same gateway so it shares the same logs, budgets, and control.
+  contents: "# \U0001F50C MCP Is Spend Too\n\nAgents don't just call models — they
+    call **tools** over MCP. Every tool\nschema and every tool result becomes tokens
+    in the model's context. Put MCP\nbehind the same gateway so it shares the same
+    logs, budgets, and control.\n"
 tabs:
-- id: ""
+- id: watyjcfkrh05
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: tydwe9v82pmm
   title: Editor
   type: code
   hostname: server
