@@ -97,4 +97,16 @@ The `429`s are where budgets kicked in. **The token budget from Challenge 5 is
 exactly what would have caught alice's batch job before it ran up $229.**
 
 > You went from a blind five-figure bill to per-team, per-user, per-workload
-> attribution — and the policies to prevent the next one. ➡️
+> attribution — and the policies to prevent the next one.
+
+## You did it 🎉
+
+In ~15 minutes you put Agentgateway in front of all AI traffic and turned an
+unanswerable bill into a governed, fully-attributed system: live token + USD
+cost, admin-API troubleshooting, per-team token budgets, an approved-model pin,
+MCP under the same control point, and fleet-scale spend analysis.
+
+**Try it on your own traffic:** point any OpenAI client at
+`http://localhost:4000/v1` and it flows through the gateway — instantly metered
+and governed.
+
