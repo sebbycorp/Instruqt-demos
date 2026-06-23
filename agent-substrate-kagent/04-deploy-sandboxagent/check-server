@@ -1,0 +1,14 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get sandboxagent hello-substrate -n kagent >/dev/null 2>&1; then
+  fail-message "SandboxAgent 'hello-substrate' not found. Run: kubectl apply -f /root/hello-substrate.yaml"
+  exit 1
+fi
+
+if ! kubectl wait sandboxagent/hello-substrate -n kagent --for=condition=Ready --timeout=300s >/dev/null 2>&1; then
+  fail-message "SandboxAgent is not Ready yet. The first golden snapshot takes ~60-90s — wait and re-check. Inspect with: kubectl describe sandboxagent hello-substrate -n kagent"
+  exit 1
+fi
+
+echo "Challenge 4 complete!"

@@ -1,0 +1,48 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Ensure kagent is up before the learner deploys an agent onto it.
+kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=300s || true
+
+# Pre-write the manifest so it shows in the Code Editor tab.
+cat > /root/hello-substrate.yaml <<'YAML'
+apiVersion: kagent.dev/v1alpha2
+kind: SandboxAgent
+metadata:
+  name: hello-substrate
+  namespace: kagent
+spec:
+  type: Declarative
+  description: Tiny declarative agent running inside a substrate actor
+  declarative:
+    runtime: go
+    modelConfig: default-model-config
+    systemMessage: |
+      You are a friendly assistant living inside an Agent Substrate sandbox.
+      When asked who you are, say "I am hello-substrate, a Go ADK declarative
+      agent running inside a gVisor actor."
+  platform: substrate
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+YAML
+
+# Expose the kagent UI on host port 8080 for the service tab.
+cat > /etc/systemd/system/kagent-ui.service <<'SVCEOF'
+[Unit]
+Description=kagent UI Port Forward
+After=cloud-final.service multi-user.target
+[Service]
+Restart=always
+RestartSec=5s
+Environment="KUBECONFIG=/root/.kube/config"
+ExecStart=/usr/local/bin/kubectl -n kagent port-forward svc/kagent-ui 8080:8080 --address 0.0.0.0
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable kagent-ui
+systemctl restart kagent-ui
+
+echo "Challenge 4 setup complete"
