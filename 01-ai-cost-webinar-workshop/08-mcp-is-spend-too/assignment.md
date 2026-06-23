@@ -43,8 +43,8 @@ control point.
 
 ## Step 1 — Add an MCP route
 
-In the **Editor**, add a second route to `/root/config.yaml` (a sibling of
-`openai-route`, under the same listener's `routes:`):
+In the **Editor**, add another route to `/root/config.yaml` — a sibling of your
+`premium-route` and `default-route`, under the same listener's `routes:`:
 
 ```yaml
     - name: mcp-route
@@ -74,8 +74,8 @@ agw-restart
 curl -s http://localhost:15000/config_dump | jq '.binds[].listeners[].routes[]?.name? // empty'
 ```
 
-You should see **both** `openai-route` and `mcp-route`. One gateway, both traffic
-types.
+You should see `premium-route`, `default-route`, **and** `mcp-route`. One gateway,
+both LLM and tool traffic.
 
 ## Step 3 — Explore MCP in the UI
 
@@ -95,5 +95,5 @@ Without this, MCP tool traffic is yet another blind spot inflating your token
 bill. With it, the tools your agents use are as visible and governable as the
 models they call.
 
-> You now control LLM and MCP traffic from one gateway. Last stop: **answer the
-> CFO** with real numbers. ➡️
+> You now control LLM and MCP traffic from one gateway. Next: issue **per-team
+> virtual keys** so every call is authenticated and attributable. ➡️

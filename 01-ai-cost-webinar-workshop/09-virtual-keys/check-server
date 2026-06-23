@@ -1,0 +1,17 @@
+#!/bin/bash
+set -uo pipefail
+if ! curl -s http://localhost:15000/config_dump | grep -qi 'apiKey'; then
+  fail-message "No apiKey policy in the live config. Add a listener-level apiKey policy (mode: strict) with per-team keys, then agw-restart."
+  exit 1
+fi
+noauth=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":5}')
+if [ "$noauth" != "401" ] && [ "$noauth" != "403" ]; then
+  fail-message "A request with no virtual key returned HTTP $noauth (expected 401/403). Set mode: strict so unkeyed requests are rejected."
+  exit 1
+fi
+ok=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions -H 'Authorization: Bearer sk-team-sales-DEMO' -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":5}')
+if [ "$ok" != "200" ]; then
+  fail-message "The sales virtual key (sk-team-sales-DEMO) returned HTTP $ok (expected 200). Check the keys list in your apiKey policy."
+  exit 1
+fi
+echo "Virtual keys enforced: no key = 401, team key = 200, real OpenAI key never exposed."

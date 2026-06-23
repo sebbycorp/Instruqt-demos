@@ -6,31 +6,32 @@ config:
   adminAddr: "0.0.0.0:15000"
   modelCatalog:
   - file: /root/costs/catalog.json
+  logging:
+    fields:
+      add:
+        cost_usd: "llm.cost.total"
 binds:
 - port: 4000
   listeners:
   - protocol: HTTP
     routes:
-    - name: openai-route
+    - name: premium-route
       matches:
-      - path:
-          pathPrefix: /v1
+      - path: { pathPrefix: /v1 }
+        headers:
+        - name: x-priority
+          value: { exact: high }
       policies:
-        backendAuth:
-          key: "$OPENAI_API_KEY"
-        ai:
-          overrides:
-            model: gpt-4o-mini
-        localRateLimit:
-        - maxTokens: 20000
-          tokensPerFill: 20000
-          fillInterval: "1h"
-          type: tokens
-      backends:
-      - ai:
-          name: openai
-          provider:
-            openAI: {}
+        backendAuth: { key: "$OPENAI_API_KEY" }
+        ai: { overrides: { model: gpt-4o } }
+      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
+    - name: default-route
+      matches:
+      - path: { pathPrefix: /v1 }
+      policies:
+        backendAuth: { key: "$OPENAI_API_KEY" }
+        ai: { overrides: { model: gpt-4o-mini } }
+      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
     - name: mcp-route
       matches:
       - path:

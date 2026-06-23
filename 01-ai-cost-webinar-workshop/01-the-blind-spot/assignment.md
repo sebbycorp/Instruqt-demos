@@ -6,40 +6,26 @@ title: The Blind Spot
 teaser: Why your AI bill is a mystery — and how tokens actually get spent.
 notes:
 - type: text
-  contents: |
-    # 🧾 The Blind Spot
-
-    It's Monday. Finance forwards a **$40,000 OpenAI invoice** and asks the one
-    question that matters: **"Who spent this?"**
-
-    Across the company, agents, copilots (Cursor, Claude Code), SDKs, and one-off
-    scripts all call the models **directly**. No shared control point. That's
-    **shadow AI** — the same chaos we hit with microservices before API gateways.
-
-    ![Shadow AI: no control point](../assets/blind-spot-before.png)
+  contents: "# \U0001F9FE The Blind Spot\n\nIt's Monday. Finance forwards a **$40,000
+    OpenAI invoice** and asks the one\nquestion that matters: **\"Who spent this?\"**\n\nAcross
+    the company, agents, copilots (Cursor, Claude Code), SDKs, and one-off\nscripts
+    all call the models **directly**. No shared control point. That's\n**shadow AI**
+    — the same chaos we hit with microservices before API gateways.\n\n![Shadow AI:
+    no control point](../assets/blind-spot-before.png)\n"
 - type: text
-  contents: |
-    # 🧮 What you're actually paying for
-
-    LLMs bill per **token**, not per request — **input** (your prompt, history,
-    documents, tool schemas) + **output** (what the model generates). Price is
-    per **1M tokens** and varies **~17×** between models.
-
-    What quietly inflates the bill: long context, reasoning tokens, streaming,
-    embeddings in bulk, and **tool / MCP calls** (every tool schema and result
-    rides along as tokens). The provider dashboard is per-account, delayed, and
-    can't tell you which **team, agent, or human** made the call.
+  contents: "# \U0001F9EE What you're actually paying for\n\nLLMs bill per **token**,
+    not per request — **input** (your prompt, history,\ndocuments, tool schemas) +
+    **output** (what the model generates). Price is\nper **1M tokens** and varies
+    **~17×** between models.\n\nWhat quietly inflates the bill: long context, reasoning
+    tokens, streaming,\nembeddings in bulk, and **tool / MCP calls** (every tool schema
+    and result\nrides along as tokens). The provider dashboard is per-account, delayed,
+    and\ncan't tell you which **team, agent, or human** made the call.\n"
 - type: text
-  contents: |
-    # 🚦 The fix
-
-    Put **one gateway** in front of all AI traffic. Every call flows through a
-    single place you operate — so you get token usage, **real USD cost**,
-    attribution, and governance, across every model and provider, in real time.
-
-    That gateway is **Agentgateway**. Let's stand it up. ➡️
-
-    ![One gateway in front of all AI traffic](../assets/blind-spot-after.png)
+  contents: "# \U0001F6A6 The fix\n\nPut **one gateway** in front of all AI traffic.
+    Every call flows through a\nsingle place you operate — so you get token usage,
+    **real USD cost**,\nattribution, and governance, across every model and provider,
+    in real time.\n\nThat gateway is **Agentgateway**. Let's stand it up. ➡️\n\n![One
+    gateway in front of all AI traffic](../assets/blind-spot-after.png)\n"
 tabs:
 - id: 1h8a6j1zgsv8
   title: Terminal

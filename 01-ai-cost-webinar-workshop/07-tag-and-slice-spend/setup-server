@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+mkdir -p /root/costs
+[ -f /root/costs/catalog.json ] || cat > /root/costs/catalog.json <<'JSON'
+{ "providers": { "openai": { "models": {
+  "gpt-4o-mini": { "rates": { "input": "0.15", "output": "0.60" } },
+  "gpt-4o":      { "rates": { "input": "2.50", "output": "10.00" } } } } } }
+JSON
+echo "challenge 7 setup complete"

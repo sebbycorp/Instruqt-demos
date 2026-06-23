@@ -108,5 +108,5 @@ per team** with `remoteRateLimit` descriptors backed by a shared rate-limit
 service — so `sales` and `eng` each get their own cap across every gateway
 replica. Same idea, distributed.
 
-> Two policies, and the runaway bill is structurally prevented. Next: agents
-> don't only call models — they call **tools**. ➡️
+> Two policies, and the runaway bill is structurally prevented. Next: stop
+> over-paying by **routing cheap by default**. ➡️

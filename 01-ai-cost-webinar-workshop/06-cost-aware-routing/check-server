@@ -1,0 +1,16 @@
+#!/bin/bash
+set -uo pipefail
+dump=$(curl -s http://localhost:15000/config_dump)
+if ! echo "$dump" | grep -q 'premium-route'; then
+  fail-message "No premium-route in the live config. Add a route that matches header x-priority: high and pins model gpt-4o, then agw-restart."
+  exit 1
+fi
+if ! echo "$dump" | grep -q 'default-route'; then
+  fail-message "No default-route found. Keep a catch-all /v1 route that pins gpt-4o-mini for everyday traffic."
+  exit 1
+fi
+if ! echo "$dump" | grep -qi 'x-priority'; then
+  fail-message "The premium route isn't matching on the x-priority header. Add matches[].headers with name x-priority, value.exact: high."
+  exit 1
+fi
+echo "Cost-aware routing live: cheap model by default, premium only on escalation."
