@@ -15,6 +15,40 @@ The workshop targets a **~15 minute** self-paced run (8 challenges, two of which
 are read-only). It uses **real OpenAI calls** through the gateway for live token
 + cost visibility, and a **mock SQLite dataset** for fleet-scale cost analysis.
 
+## Narrative — The Enterprise Story
+
+The whole track is told from the seat of a **platform / FinOps team at an
+enterprise that is adopting AI fast and unevenly**. Dozens of dev teams
+(eng, sales, support, security, product, marketing) are calling OpenAI and other
+providers directly — through Cursor, Claude Code, SDKs, scripts — with no shared
+control point. This is the audience: **enterprise practitioners evaluating
+agentgateway** as the answer.
+
+The inciting incident: **Finance forwards a surprise five-figure AI bill and
+asks "who spent this?"** — and the platform team can't answer. Provider
+dashboards are per-account, delayed, and don't map to teams, agents, or humans.
+That's *shadow AI*, and it's the same loss-of-control enterprises hit with
+microservices before API gateways and service meshes.
+
+Each challenge is a beat in getting that control back:
+
+1. **The blind spot** — why the bill is a mystery and dashboards don't cut it.
+2. **Stand up the chokepoint** — put agentgateway in front of all AI traffic.
+3. **Attribution** — every call now carries tokens + realized USD cost.
+4. **Day-2 ops** — operate and troubleshoot the gateway via the admin API.
+5. **Governance** — enforce per-team token budgets and an approved-model policy
+   to stop the runaway spender (FinOps guardrails).
+6. **MCP is spend too** — bring agent tool traffic under the same control point.
+7. **Answer the CFO** — "show me spend by team/model/user" from the fleet data.
+8. **Production scale** — what enterprise adoption looks like next (Langfuse,
+   per-team virtual keys, guardrails, SSO, Enterprise).
+
+**Tone:** speak to platform/FinOps/SecOps leads evaluating a purchase, not to a
+hobbyist. Each `assignment.md` opens with the business stake ("why this matters
+to the org") before the commands, and closes by tying the result back to the
+surprise-bill problem. The mock dataset's users/groups/spend-tiers are the cast
+of this story (e.g. the `enterprise-batch` top spender, per-`group` chargeback).
+
 ## Goals
 
 - Explain how tokens are calculated and what LLM features cost (streaming,
