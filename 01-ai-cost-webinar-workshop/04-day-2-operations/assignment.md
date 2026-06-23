@@ -3,16 +3,14 @@ slug: day-2-operations
 id: a3xmnpwlqjxt
 type: challenge
 title: Explore the Gateway UI
-teaser: Take the Agentgateway web UI for a spin — chat playground, live config, and client setup.
+teaser: Take the Agentgateway web UI for a spin — chat playground, live config, and
+  client setup.
 notes:
 - type: text
-  contents: |
-    # 🧭 Explore the Gateway UI
-
-    Everything you've done in YAML, Agentgateway also gives you in a **web UI** —
-    your mission control for AI traffic. Let's click around: chat with your models,
-    see the live config, and grab a ready-made snippet to point any app at the
-    gateway.
+  contents: "# \U0001F9ED Explore the Gateway UI\n\nEverything you've done in YAML,
+    Agentgateway also gives you in a **web UI** —\nyour mission control for AI traffic.
+    Let's click around: chat with your models,\nsee the live config, and grab a ready-made
+    snippet to point any app at the\ngateway.\n"
 tabs:
 - id: fg2dsy86jle2
   title: Terminal
