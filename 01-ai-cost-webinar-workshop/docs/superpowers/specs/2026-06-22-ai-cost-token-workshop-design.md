@@ -229,13 +229,31 @@ Pushing to Instruqt is a separate, explicitly-authorized step (requires the
 - All config writes happen in `solve-server` from a canonical heredoc so the
   track is reproducible and skip-safe.
 
-## Open Items to Resolve During Implementation
+## Open Items — RESOLVED during research (tested against the real binary + schema)
 
-1. Exact AI-backend YAML keys and the token-budget + model-restriction policy
-   block (verify against `backends.md`, `rate-limits.md`,
-   `policies/attachment.md`).
-2. Exact MCP backend YAML for a Streamable-HTTP target.
-3. Confirm the VM image ships `python3`, `jq`, `sqlite3`, `pip`; otherwise add
-   installs to `track_scripts/setup-server`.
-4. Confirm `agentgateway` install script honors `--version 1.3.1`.
+1. **AI-backend / policy YAML — RESOLVED & verified.** Exact, validated keypaths
+   are captured in the implementation plan:
+   - AI backend: `backends[].ai.{name, provider.openAI.{model?}}`; key via route
+     policy `backendAuth.key: "$OPENAI_API_KEY"`.
+   - Cost: `config.modelCatalog: [{file}]`, catalog rates are strings (USD/1M).
+     Verified cost in logs (`agw.ai.usage.cost.total`) and metrics on `:15020`.
+   - Token budget: route policy `localRateLimit[{maxTokens,tokensPerFill,
+     fillInterval,type:tokens}]` + `ai: {}` → verified HTTP 429 on overflow.
+   - Model restriction: `ai.overrides.model` → verified it pins gpt-4o→gpt-4o-mini.
+2. **MCP backend — RESOLVED.** `backends[].mcp.targets[].{name, stdio:{cmd,args}}`
+   on a `/mcp`-prefixed route; combined LLM+MCP config validates. (stdio target;
+   Streamable-HTTP target also available via `mcp:` target form if needed.)
+3. **Tooling — RESOLVED.** Plan installs the binary + `openai` CLI + `uv`; the
+   generator needs Python ≥3.11 so it runs via `uv run` (not bare `python3`).
+4. **Install version — RESOLVED.** `--version` flag confirmed; plan pins `1.3.1`.
+
+> Correction vs. earlier draft: metrics/Prometheus is on **`:15020/metrics`**, not
+> `:15000`. `:15000` serves `/config_dump` and `/ui` only.
+
+## Status
+
+Implementation plan written and verified:
+`docs/superpowers/plans/2026-06-22-ai-cost-token-workshop.md`. Every config, the
+mock-data generator, and all analysis queries were executed locally against the
+real agentgateway binary and a generated dataset before the plan was finalized.
 ```
