@@ -37,11 +37,10 @@ genuinely need a frontier model. Instead of trusting clients to choose (and pay)
 responsibly, make the **gateway** decide: cheap by default, premium only when a
 request carries an explicit `x-priority: high` header.
 
-## Step 1 — Two routes, two price points
+## Step 1 — Two models, two price points
 
-Replace the single route in `/root/config.yaml` with two — a header-matched
-**premium** route and a catch-all **default** route. Paste this into the
-**Terminal**:
+Give the `llm` block **two models**: a premium one that only matches when the
+request carries `x-priority: high`, and a catch-all default. Paste this:
 
 ```bash
 cat > /root/config.yaml <<'EOF'
@@ -50,36 +49,33 @@ config:
   database:
     url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    localRateLimit:
+    - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
+  models:
+  - name: "*"
+    matches:
+    - headers:
+      - name: x-priority
+        value: { exact: high }
+    provider: openAI
+    params: { model: gpt-4o, apiKey: "$OPENAI_API_KEY" }
+  - name: "*"
+    provider: openAI
+    params: { model: gpt-4o-mini, apiKey: "$OPENAI_API_KEY" }
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 EOF
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
 
-Route order matters: the **premium** route (more specific — it requires the
-header) is listed first, so it's matched before the catch-all default.
+Order matters: the **premium** model (more specific — it requires the header) is
+listed first, so it's matched before the catch-all default.
 
 ## Step 2 — Prove it
 

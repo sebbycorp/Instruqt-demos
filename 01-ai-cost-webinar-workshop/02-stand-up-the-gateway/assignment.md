@@ -31,93 +31,74 @@ enhanced_loading: null
 
 # Stand Up the Gateway
 
-Agentgateway OSS is a single Rust binary — no Kubernetes, no sidecars. You give
-it a config file and it becomes an **OpenAI-compatible proxy** your apps point at
-instead of `api.openai.com`. That one redirect is how you get visibility and
-control over everything.
+Agentgateway OSS is a single Rust binary — no Kubernetes, no sidecars. It comes
+with a **web UI** for setup. You'll start it with a minimal config, then add your
+OpenAI model in the UI — and it becomes an **OpenAI-compatible proxy** your apps
+point at instead of `api.openai.com`.
 
-## Step 1 — Confirm the binary
+A minimal **`/root/config.yaml`** is already staged (admin UI + a default cost
+catalog + request database, no models yet). Two ports matter: **:4000** (the LLM
+API) and **:15000** (admin + UI).
 
-```bash
-agentgateway --version
-```
-
-You should see version `1.3.x`.
-
-## Step 2 — Create the config
-
-A starter **`/root/config.yaml`** is already waiting in the **Editor** tab —
-open it from the file tree on the left to read along. The simplest way to write
-it is to **paste this into the Terminal** (it creates or overwrites the file):
+## Step 1 — Start the gateway
 
 ```bash
-cat > /root/config.yaml <<'EOF'
-config:
-  # expose the admin UI (:15000/ui) so the "Agentgateway UI" tab can reach it
-  adminAddr: "0.0.0.0:15000"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: openai-route
-      matches:
-      - path:
-          pathPrefix: /v1
-      policies:
-        backendAuth:
-          key: "$OPENAI_API_KEY"
-      backends:
-      - ai:
-          name: openai
-          provider:
-            openAI: {}
-EOF
-```
-
-What this says: listen on **:4000**, accept OpenAI-style `/v1/...` calls, attach
-your OpenAI key with the `backendAuth` policy, and forward to OpenAI. The
-`$OPENAI_API_KEY` is read from the environment — clients never see the real key.
-
-> 💡 Prefer the Editor? Just edit the pre-loaded `/root/config.yaml` and save
-> (`Ctrl/Cmd-S`) — no need to create a new file.
-
-## Step 3 — Validate before you run
-
-```bash
-agentgateway -f /root/config.yaml --validate-only
-```
-
-Expected: `Configuration is valid!` (Get used to this — it's your fastest
-feedback loop.)
-
-## Step 4 — Start the gateway
-
-```bash
+agentgateway -f /root/config.yaml --validate-only      # Configuration is valid!
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 3
 ```
 
-It's now listening on **:4000** (API) and **:15000** (admin/UI). More on
-:15000 soon.
+## Step 2 — Open the UI and add a model
 
-## Step 5 — Send your first call *through the gateway*
+Open the **Agentgateway UI** tab (`:15000/ui`). You'll see **Welcome to
+Agentgateway** → you can **Enable LLM** (or **Skip setup**). Then:
+
+1. Left nav → **Models** → **Add model**
+2. **Incoming model match:** `*`  (match any model the client asks for)
+3. **Provider:** OpenAI
+4. **Provider API Key:** choose **Env var**, value `OPENAI_API_KEY`
+5. **Save model**
+
+That's it — the UI writes the model into your config. (Prefer YAML? The same
+thing is just an `llm.models` entry — paste this into the Terminal instead:)
+
+```bash
+cat > /root/config.yaml <<'EOF'
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
+  modelCatalog:
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  models:
+  - name: "*"
+    provider: openAI
+    params:
+      apiKey: "$OPENAI_API_KEY"
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+EOF
+agw-restart
+```
+
+The `$OPENAI_API_KEY` is read from the environment — clients never see the real
+key. Note the gateway also loaded a default **cost catalog** (`base-costs.json`,
+~846 models) and a **request database** — so cost tracking + logging are already
+on, with zero extra setup.
+
+## Step 3 — Send your first call *through the gateway*
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq .
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
-You'll get a normal OpenAI response — but it went through **your** gateway. Every
-client that points at `:4000` instead of OpenAI directly is now under your
-control point.
+A normal OpenAI response — but it went through **your** gateway. You can also try
+the UI's **Chat Playground** tab. Every client that points at `:4000` instead of
+OpenAI directly is now under your control point.
 
-## Step 6 — Explore the Agentgateway UI
-
-Open the **Agentgateway UI** tab (served at `:15000/ui`). This standalone UI is
-your window into the gateway — listeners, routes, backends, a request **Playground**,
-and live traffic. You'll come back to it in later challenges to watch token
-usage and cost in real time. Click around and get oriented.
-
-> Next: make that control point put a **dollar figure on every call**. ➡️
+> Next: see the **dollar figure** the gateway already put on that call. ➡️

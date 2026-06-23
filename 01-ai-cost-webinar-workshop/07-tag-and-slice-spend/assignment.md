@@ -39,48 +39,29 @@ compute new log fields and metric labels from it — no external pipeline needed
 ## Step 1 — Add cost-based fields
 
 Add `logging` and `metrics` blocks under the existing `config:` in
-`/root/config.yaml` (paste the whole file to be safe):
+`/root/config.yaml` (your `llm:` models from the last challenge stay as-is):
 
-```bash
-cat > /root/config.yaml <<'EOF'
+```yaml
 config:
   adminAddr: "0.0.0.0:15000"
   database:
     url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
-  logging:
+    - file: /root/costs/base-costs.json
+  logging:                                       # <-- add
     fields:
       add:
         cost_usd: "llm.cost.total"
         expensive: "llm.cost.total > 0.0001"
-  metrics:
+  metrics:                                        # <-- add
     fields:
       add:
         cost_tier: "llm.cost.total > 0.0001 ? 'high' : 'low'"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-EOF
+```
+
+Then validate and restart:
+
+```bash
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```

@@ -33,44 +33,21 @@ enhanced_loading: null
 
 # The Cost of Every Request
 
-The gateway already sees every token (OpenAI returns usage on each response).
-Give it a **model cost catalog** and it converts tokens → dollars automatically.
+Good news: you don't have to *configure* cost tracking — it's already on. Your
+config loaded the default **`base-costs.json`** catalog (~846 models, USD per 1M
+tokens) and a **request database**, so the gateway is already pricing and
+recording every call. This challenge is about *seeing* it.
 
 ## Step 1 — Look at the price list
 
 ```bash
-cat /root/costs/catalog.json
+grep -A4 '"gpt-4o-mini"\|"gpt-4o"' /root/costs/base-costs.json | head
 ```
 
 Rates are **USD per 1 million tokens**, split into input and output — exactly how
 providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
 
-## Step 2 — Wire cost tracking into the gateway
-
-In the **Editor**, add a `database` and a `modelCatalog` under the existing
-`config:` block at the top of `/root/config.yaml`, so it reads:
-
-```yaml
-config:
-  adminAddr: "0.0.0.0:15000"             # already there from the last challenge
-  database:
-    url: "sqlite:///root/data/data.db"   # persist every request to SQLite
-  modelCatalog:
-  - file: /root/costs/catalog.json       # price tokens in USD
-```
-
-The **catalog** turns tokens into dollars; the **database** records every
-request (model, tokens, cost, user) to a SQLite table — the gateway's own log of
-spend that you'll query in the final challenge.
-
-Validate and restart (the `agw-restart` helper does both):
-
-```bash
-agentgateway -f /root/config.yaml --validate-only
-agw-restart
-```
-
-## Step 3 — Drive a call through the OpenAI CLI
+## Step 2 — Drive a call through the OpenAI CLI
 
 The official `openai` CLI is already pointed at the gateway
 (`OPENAI_BASE_URL=http://localhost:4000/v1`):

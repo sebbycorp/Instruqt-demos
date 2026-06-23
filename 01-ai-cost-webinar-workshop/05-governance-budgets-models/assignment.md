@@ -32,29 +32,32 @@ enhanced_loading: null
 
 # Governance — Budgets & Approved Models
 
-Now that every call is metered, attach guardrails right on the route.
+Now that every call is metered, attach guardrails to the `llm` block.
 
 ## Part A — A token budget (the spend cap)
 
-In the **Editor**, add a `localRateLimit` policy and an `ai: {}` marker to the
-route's `policies` block in `/root/config.yaml`:
+In the **Editor**, add a `policies` block with `localRateLimit` under `llm:` in
+`/root/config.yaml`:
 
 ```yaml
-      policies:
-        backendAuth:
-          key: "$OPENAI_API_KEY"
-        ai: {}
-        localRateLimit:
-        - maxTokens: 50
-          tokensPerFill: 50
-          fillInterval: "1h"
-          type: tokens
+llm:
+  port: 4000
+  policies:                 # <-- add this block
+    localRateLimit:
+    - maxTokens: 50
+      tokensPerFill: 50
+      fillInterval: "1h"
+      type: tokens
+  models:
+  - name: "*"
+    provider: openAI
+    params:
+      apiKey: "$OPENAI_API_KEY"
 ```
 
 `type: tokens` counts **LLM tokens**, not requests. We use a tiny 50-token
 bucket so you can trip it in one call (in production this would be, say, 2M
-tokens/hour per team). The `ai: {}` marker tells the gateway this route is LLM
-traffic so it knows how to count tokens.
+tokens/hour per team).
 
 ```bash
 agentgateway -f /root/config.yaml --validate-only
@@ -77,13 +80,15 @@ runaway agent is throttled — *before* it runs up the bill.
 ## Part B — Pin to an approved model (the model lever)
 
 A frontier model costs ~17× more. Force everything to the approved cheap model,
-no matter what the client asks for. Add an `overrides` block under the `ai`
-policy:
+no matter what the client asks for. Add `params.model` to your model:
 
 ```yaml
-        ai:
-          overrides:
-            model: gpt-4o-mini
+  models:
+  - name: "*"
+    provider: openAI
+    params:
+      model: gpt-4o-mini      # <-- pin the OUTGOING model, ignore what's requested
+      apiKey: "$OPENAI_API_KEY"
 ```
 
 ```bash
@@ -98,8 +103,7 @@ curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/
 ```
 
 The response model comes back **`gpt-4o-mini`** — the expensive model is simply
-unreachable through this route. (The full `solve` config combines both policies;
-your edits above match it.)
+unreachable. (The full `solve` config combines both policies; your edits match it.)
 
 ## Part C — How this scales
 

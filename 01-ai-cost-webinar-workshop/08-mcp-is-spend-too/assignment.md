@@ -41,46 +41,31 @@ spend that's completely invisible if MCP traffic doesn't go through your gateway
 Agentgateway proxies MCP servers too, so LLM **and** tool traffic share one
 control point.
 
-## Step 1 — Add an MCP bind on its own port
+## Step 1 — Add an MCP server on its own port
 
-LLM lives on `:4000`. Give MCP its **own port, `:3000`** — `binds`, `llm`, and
-`mcp` must each use a unique port. In the **Editor**, add a second entry to the
-`binds:` list in `/root/config.yaml` (a sibling of the `- port: 4000` block):
+LLM lives on `:4000`. Give MCP its **own port, `:3000`** — `llm` and `mcp` must
+use unique ports. In the **Editor**, add a top-level `mcp:` block to
+`/root/config.yaml` (a sibling of `llm:`):
 
 ```yaml
-- port: 3000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: mcp-route
-      backends:
-      - mcp:
-          targets:
-          - name: everything
-            stdio:
-              cmd: npx
-              args: ["-y","@modelcontextprotocol/server-everything"]
+mcp:
+  port: 3000
+  targets:
+  - name: everything
+    stdio:
+      cmd: npx
+      args: ["-y","@modelcontextprotocol/server-everything"]
 ```
 
 This proxies the reference `server-everything` MCP server (started on demand via
 `npx`) and exposes it at **`:3000`** — alongside your LLM gateway on `:4000`.
-
-> ⚠️ Don't add a top-level `llm:` or `mcp:` block while you also have `binds:` —
-> that's the `port ... configured by both binds and llm` error. Use `binds` only.
 
 ```bash
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
 
-## Step 2 — Confirm both binds are live
-
-```bash
-curl -s http://localhost:15000/config_dump | jq -r '.binds | to_entries[] | "\(.value.address): " + ([.value.listeners[].routes[]?.name] | join(", "))'
-```
-
-You should see `:4000` carrying `premium-route, default-route` and `:3000`
-carrying `mcp-route`. Quick MCP liveness check:
+## Step 2 — Confirm MCP is live on :3000
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000 \

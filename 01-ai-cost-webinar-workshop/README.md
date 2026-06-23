@@ -37,28 +37,33 @@ calls, then scales up with the generated fleet dataset.
 - `config.yml` — single VM, `OPENAI_API_KEY` secret.
 - `track.yml` — track metadata (`id`/`checksum` assigned on push).
 - `track_scripts/setup-server` — installs the agentgateway binary + the `openai`
-  CLI + `uv` + `sqlite3`, and **embeds** the cost catalog and request-log
-  generator onto the VM (Instruqt assets are markdown URLs, not VM files).
+  CLI + `uv` + `sqlite3`; **provisions the default `base-costs.json` catalog** (by
+  briefly bootstrapping the binary) and embeds the request-log generator onto the
+  VM (Instruqt assets are markdown URLs, not VM files).
 - `assets/gen-mock-logs.py` — request-log generator (run via `uv run`; needs Python ≥3.11).
-- `assets/costs/catalog.json` — model cost catalog (USD per 1M tokens).
+- `/root/costs/base-costs.json` — default model cost catalog (~846 models), provisioned at setup.
 - `assets/blind-spot-{before,after}.{svg,png}` — Challenge 1 intro diagrams.
 - `NN-*/` — per-challenge `assignment.md`, `setup-server`, `check-server`, `solve-server`.
 
+> **Config style:** the track uses the **UI-native `llm:`** form (the model
+> Agentgateway's web UI manages) — `llm.models`, `llm.policies`, top-level `mcp:`,
+> and `config.*` — not the lower-level `binds:`/routes form.
+
 ## Ports
 
-- `4000` — OpenAI-compatible LLM API (clients point here).
-- `3000` — MCP endpoint (separate bind; `binds`, `llm`, and `mcp` must use unique ports).
-- `15000` — admin API + UI (`/config_dump`, `/ui`). Bound to `0.0.0.0` via
-  `config.adminAddr` so the lab's **Agentgateway UI** tab can reach it.
+- `4000` — OpenAI-compatible LLM API (`llm.port`; clients point here).
+- `3000` — MCP endpoint (top-level `mcp.port`; `llm` and `mcp` must use unique ports).
+- `15000` — admin API + UI (`/config_dump`, `/ui`, `/api/config`). Bound to `0.0.0.0`
+  via `config.adminAddr` so the lab's **Agentgateway UI** tab can reach it.
 - `15020` — Prometheus metrics (`/metrics`).
 
 ## Cost controls demonstrated (vs. Mike's k8s cost-optimization demos)
 
-| Demo | k8s (AdminTurnedDevOps) | This track (standalone) |
+| Demo | k8s (AdminTurnedDevOps) | This track (standalone, `llm:` style) |
 |------|--------------------------|--------------------------|
-| **C-8** Cost-aware routing | HTTPRoute header match → premium backend | Route `matches.headers` `x-priority: high` → `ai.overrides.model: gpt-4o` |
+| **C-8** Cost-aware routing | HTTPRoute header match → premium backend | `llm.models[].matches.headers` `x-priority: high` → `params.model: gpt-4o` |
 | **C-9** CEL cost policy | `rawConfig` logging/metrics fields | `config.logging.fields.add` / `config.metrics.fields.add` on `llm.cost.total` |
-| **C-10** Budget enforcement | `traffic.rateLimit.local.tokens` | `policies.localRateLimit` `type: tokens` |
+| **C-10** Budget enforcement | `traffic.rateLimit.local.tokens` | `llm.policies.localRateLimit` `type: tokens` |
 
 ## Verification
 

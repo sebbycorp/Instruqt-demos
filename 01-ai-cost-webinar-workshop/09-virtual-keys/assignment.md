@@ -35,73 +35,38 @@ enhanced_loading: null
 # Per-Team Virtual Keys
 
 A **virtual key** is a credential *you* mint and hand to a team. Clients send the
-virtual key; the gateway checks it, then uses its own `backendAuth` key to call
+virtual key; the gateway checks it, then uses its own provider key to call
 OpenAI. Teams never see the real key, you can revoke a team's access by deleting
 one line, and the key's `metadata` (team, owner) rides along for attribution.
 
 ## Step 1 — Add a virtual-key gate
 
-Add a listener-level `apiKey` policy with one key per team. Paste the full config:
+Add an `apiKey` policy under `llm.policies` (alongside your rate limit), with one
+key per team:
+
+```yaml
+llm:
+  port: 4000
+  policies:
+    apiKey:                    # <-- add this
+      mode: strict             # reject any request without a valid virtual key
+      keys:
+      - key: "sk-team-sales-DEMO"
+        metadata: { team: sales, owner: "alice@example.com" }
+      - key: "sk-team-eng-DEMO"
+        metadata: { team: eng, owner: "bob@example.com" }
+    localRateLimit:
+    - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
+  models:
+    # ... your two models from the routing challenge stay unchanged ...
+```
 
 ```bash
-cat > /root/config.yaml <<'EOF'
-config:
-  adminAddr: "0.0.0.0:15000"
-  database:
-    url: "sqlite:///root/data/data.db"
-  modelCatalog:
-  - file: /root/costs/catalog.json
-  logging:
-    fields:
-      add:
-        cost_usd: "llm.cost.total"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    policies:
-      apiKey:
-        mode: strict          # reject any request without a valid virtual key
-        keys:
-        - key: "sk-team-sales-DEMO"
-          metadata: { team: sales, owner: "alice@example.com" }
-        - key: "sk-team-eng-DEMO"
-          metadata: { team: eng, owner: "bob@example.com" }
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-- port: 3000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: mcp-route
-      backends:
-      - mcp:
-          targets:
-          - name: everything
-            stdio: { cmd: npx, args: ["-y","@modelcontextprotocol/server-everything"] }
-EOF
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
 
-The virtual-key gate is on the **`:4000` (LLM)** listener; MCP keeps its own
-`:3000` bind from the previous challenge.
+The gate is on the **`llm`** frontend (`:4000`); MCP keeps its own `:3000` port.
 
 ## Step 2 — No key, no service
 

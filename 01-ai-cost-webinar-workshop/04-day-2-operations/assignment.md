@@ -70,15 +70,15 @@ against the working config:
 diff <(grep -v '^\s*#' /root/config.yaml) /root/config.broken.yaml
 ```
 
-The broken one is **missing the `backendAuth` policy** — so the gateway forwards
-to OpenAI with no key and gets 401s. The fix is obvious once you can see the live
-vs. intended config side by side.
+The broken one's model is **missing `params.apiKey`** — so the gateway forwards to
+OpenAI with no key and gets 401s. The fix is obvious once you can see the live vs.
+intended config side by side.
 
 ## Step 5 — Make sure the good config is running
 
 ```bash
 agw-restart
-curl -s http://localhost:15000/config_dump | grep -q backendAuth && echo "auth policy loaded ✅"
+curl -s http://localhost:15000/config_dump | grep -q '4000' && echo "gateway loaded ✅"
 ```
 
 > Inspecting config and metrics is how you operate this in production. Next:
