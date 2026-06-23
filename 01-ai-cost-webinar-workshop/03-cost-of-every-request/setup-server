@@ -1,5 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 mkdir -p /root/data /root/costs
-[ -f /root/costs/base-costs.json ] || { ( nohup agentgateway >/tmp/agw-bootstrap.log 2>&1 & ); sleep 6; cp /root/.config/agentgateway/base-costs.json /root/costs/base-costs.json 2>/dev/null || true; pkill -f "agentgateway" 2>/dev/null || true; sleep 1; }
+if [ ! -s /root/costs/base-costs.json ]; then
+cat > /root/costs/base-costs.json <<'JSON'
+{ "providers": { "openai": { "models": {
+  "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
+  "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
+  "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
+  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } } } } } }
+JSON
+fi
 echo "challenge 3 setup complete"

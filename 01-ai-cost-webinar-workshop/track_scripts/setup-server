@@ -42,12 +42,25 @@ command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt
 # files), so the cost catalog and the request-log generator are provisioned here.
 mkdir -p /root/costs /root/data
 
-# Provision the DEFAULT model cost catalog (base-costs.json — ~846 models, shipped
-# with the binary). Briefly bootstrap agentgateway with no config so it writes the
-# catalog, then copy it to where our config references it.
-( nohup agentgateway >/tmp/agw-bootstrap.log 2>&1 & ) ; sleep 6
-cp /root/.config/agentgateway/base-costs.json /root/costs/base-costs.json 2>/dev/null || true
+# Provision the model cost catalog at /root/costs/base-costs.json. Best effort:
+# briefly bootstrap agentgateway (no config) which writes the full ~846-model
+# catalog, polling for it. Guaranteed fallback: a small deterministic catalog
+# covering the models this track uses. Either way the file exists and prices calls.
+( nohup agentgateway >/tmp/agw-bootstrap.log 2>&1 & )
+for i in $(seq 1 30); do
+  [ -s /root/.config/agentgateway/base-costs.json ] && { cp /root/.config/agentgateway/base-costs.json /root/costs/base-costs.json; break; }
+  sleep 1
+done
 pkill -f "agentgateway" 2>/dev/null || true; sleep 1
+if [ ! -s /root/costs/base-costs.json ]; then
+cat > /root/costs/base-costs.json <<'JSON'
+{ "providers": { "openai": { "models": {
+  "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
+  "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
+  "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
+  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } } } } } }
+JSON
+fi
 echo "base-costs.json provisioned: $(wc -c < /root/costs/base-costs.json 2>/dev/null || echo MISSING) bytes"
 
 cat > /root/gen-mock-logs.py <<'PYEOF'
