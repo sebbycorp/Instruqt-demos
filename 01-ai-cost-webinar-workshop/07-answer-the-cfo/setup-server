@@ -1,7 +1,10 @@
 #!/bin/bash
 set -euo pipefail
-[ -f /root/gen-mock-logs.py ] || cp /opt/instruqt/track/assets/gen-mock-logs.py /root/gen-mock-logs.py 2>/dev/null || true
-command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
-# Pre-generate so the dataset exists even before the learner runs it
-[ -f /root/gw-logs.db ] || (cd /root && uv run gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db) || true
+# The generator is embedded into /root/gen-mock-logs.py by the track setup script.
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+command -v uv >/dev/null 2>&1 || { curl -LsSf https://astral.sh/uv/install.sh | sh; ln -sf "$HOME/.local/bin/uv" /usr/local/bin/uv 2>/dev/null || true; }
+# Pre-generate so the dataset exists even before the learner runs it.
+if [ -f /root/gen-mock-logs.py ] && [ ! -f /root/gw-logs.db ]; then
+  (cd /root && uv run /root/gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db) || true
+fi
 echo "challenge 7 setup complete"

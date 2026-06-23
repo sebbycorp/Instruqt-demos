@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 cd /root
-uv run gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db
+uv run /root/gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db
 echo "=== Spend by team (chargeback) ==="
 sqlite3 -box /root/gw-logs.db "SELECT agentgateway_group AS team, ROUND(SUM(cost),2) AS usd, COUNT(*) AS reqs FROM request_logs GROUP BY team ORDER BY usd DESC;"
 echo "=== Top 5 spenders ==="

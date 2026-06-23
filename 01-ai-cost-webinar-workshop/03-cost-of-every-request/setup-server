@@ -1,5 +1,19 @@
 #!/bin/bash
 set -euo pipefail
+# Ensure the cost catalog exists (track setup writes it too; keep this self-contained).
 mkdir -p /root/costs
-[ -f /root/costs/catalog.json ] || cp /opt/instruqt/track/assets/costs/catalog.json /root/costs/catalog.json 2>/dev/null || true
+cat > /root/costs/catalog.json <<'JSON'
+{
+  "providers": {
+    "openai": {
+      "models": {
+        "gpt-4o-mini": { "rates": { "input": "0.15", "output": "0.60" } },
+        "gpt-4o":      { "rates": { "input": "2.50", "output": "10.00" } },
+        "gpt-4.1":     { "rates": { "input": "2.00", "output": "8.00" } },
+        "gpt-4.1-mini":{ "rates": { "input": "0.40", "output": "1.60" } }
+      }
+    }
+  }
+}
+JSON
 echo "challenge 3 setup complete"

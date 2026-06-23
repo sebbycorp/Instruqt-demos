@@ -20,7 +20,6 @@ fi
 # Install agentgateway standalone binary (pinned)
 echo "=== Installing agentgateway v1.3.1 ==="
 curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1
-# Ensure on PATH for non-login shells
 ln -sf "$(command -v agentgateway || echo /usr/local/bin/agentgateway)" /usr/local/bin/agentgateway 2>/dev/null || true
 
 # Install uv (drives the OpenAI CLI and the mock-data generator) and expose it on
@@ -39,13 +38,727 @@ ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true
 # sqlite3 for the fleet-analysis challenge (defensive; jq is already on the image).
 command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt-get install -y sqlite3 >/dev/null 2>&1; } || true
 
-# Stage workshop assets onto the VM
+# Stage workshop files onto the VM. Instruqt assets become markdown URLs (not VM
+# files), so the cost catalog and the request-log generator are embedded here.
 mkdir -p /root/costs
-cp /opt/instruqt/track/assets/gen-mock-logs.py /root/gen-mock-logs.py 2>/dev/null || true
-cp /opt/instruqt/track/assets/costs/catalog.json /root/costs/catalog.json 2>/dev/null || true
+cat > /root/costs/catalog.json <<'CATEOF'
+{
+  "providers": {
+    "openai": {
+      "models": {
+        "gpt-4o-mini": { "rates": { "input": "0.15", "output": "0.60" } },
+        "gpt-4o":      { "rates": { "input": "2.50", "output": "10.00" } },
+        "gpt-4.1":     { "rates": { "input": "2.00", "output": "8.00" } },
+        "gpt-4.1-mini":{ "rates": { "input": "0.40", "output": "1.60" } }
+      }
+    }
+  }
+}
+CATEOF
+
+cat > /root/gen-mock-logs.py <<'PYEOF'
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.11"
+# ///
+
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+import math
+import random
+import sqlite3
+import sys
+import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import TypeVar
+
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS request_logs (
+	id TEXT PRIMARY KEY,
+	started_at TEXT NOT NULL,
+	completed_at TEXT NOT NULL,
+	duration_ms INTEGER NOT NULL,
+	trace_id TEXT,
+	span_id TEXT,
+	http_status INTEGER,
+	error TEXT,
+	gen_ai_operation_name TEXT,
+	gen_ai_provider_name TEXT,
+	gen_ai_request_model TEXT,
+	gen_ai_response_model TEXT,
+	input_tokens INTEGER,
+	output_tokens INTEGER,
+	total_tokens INTEGER,
+	cost REAL,
+	agentgateway_user TEXT,
+	agentgateway_group TEXT,
+	has_payload INTEGER NOT NULL,
+	attributes_json TEXT NOT NULL CHECK (json_valid(attributes_json))
+);
+
+CREATE TABLE IF NOT EXISTS request_log_payloads (
+	log_id TEXT PRIMARY KEY REFERENCES request_logs(id) ON DELETE CASCADE,
+	request_prompt_json TEXT CHECK (request_prompt_json IS NULL OR json_valid(request_prompt_json)),
+	response_completion_json TEXT CHECK (response_completion_json IS NULL OR json_valid(response_completion_json))
+);
+
+CREATE INDEX IF NOT EXISTS idx_request_logs_completed_at ON request_logs(completed_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_http_status_completed_at ON request_logs(http_status, completed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_gen_ai_completed_at ON request_logs(gen_ai_provider_name, gen_ai_request_model, completed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_user_completed_at ON request_logs(agentgateway_user, completed_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_request_logs_group_completed_at ON request_logs(agentgateway_group, completed_at DESC, id DESC);
+"""
+
+
+DEFAULT_MODELS = [
+	("openai", "gpt-4.1-mini"),
+	("openai", "gpt-4.1"),
+	("openai", "gpt-5-nano"),
+	("anthropic", "claude-haiku-4-5"),
+	("anthropic", "claude-sonnet-4-5"),
+	("google", "gemini-2.5-flash"),
+	("google", "gemini-2.5-pro"),
+	("bedrock", "amazon.nova-lite-v1:0"),
+	("bedrock", "anthropic.claude-3-5-haiku-20241022-v1:0"),
+	("ollama", "llama3.2:3b"),
+	("ollama", "gemma3:270m"),
+	("mistral", "mistral-small-latest"),
+]
+
+T = TypeVar("T")
+
+PROMPTS = [
+	"Summarize the latest incident report for the support queue.",
+	"Draft a concise response for this customer escalation.",
+	"Extract action items from these meeting notes.",
+	"Write a SQL query for weekly active accounts.",
+	"Classify this ticket by urgency and product area.",
+	"Generate test cases for the billing workflow.",
+	"Rewrite this release note for a technical audience.",
+	"Explain this authentication error in plain English.",
+	"Create a rollout checklist for the new gateway policy.",
+	"Find likely causes for elevated latency in this trace.",
+]
+
+COMPLETIONS = [
+	"Here is a concise summary with the key risks and next steps.",
+	"The likely issue is a configuration mismatch; verify the route and provider settings.",
+	"I grouped the action items by owner and included expected deadlines.",
+	"The query should aggregate by account_id and filter on the requested window.",
+	"This looks like a medium-priority support case with billing impact.",
+]
+
+GATEWAYS = ["default/default", "prod/edge", "staging/edge"]
+LISTENERS = ["llm", "public-api", "internal-api"]
+ROUTES = [
+	"internal/model:primary/*",
+	"internal/model:fallback/*",
+	"prod/chat/completions",
+	"prod/responses",
+	"staging/model:test/*",
+]
+STATUS_WEIGHTS = [(200, 0.925), (400, 0.02), (401, 0.01), (403, 0.008), (429, 0.022), (500, 0.015)]
+ERRORS = {
+	400: "bad request: invalid model parameter",
+	401: "unauthorized: missing or invalid credentials",
+	403: "forbidden: policy denied request",
+	429: "rate limited: token budget exceeded",
+	500: "upstream provider error",
+}
+
+PROVIDER_USER_AGENTS = {
+	"anthropic": [
+		("claude-code", "claude-code/1.0.64"),
+		("claude-desktop", "claude-desktop/0.11.2"),
+		("anthropic-sdk-python", "anthropic-sdk-python/0.71.0"),
+		("anthropic-sdk-typescript", "anthropic-sdk-typescript/0.40.1"),
+	],
+	"openai": [
+		("codex", "codex/0.42.0"),
+		("openai-python", "openai-python/1.109.1"),
+		("openai-node", "openai-node/5.21.0"),
+		("cursor", "cursor/1.5.9"),
+	],
+	"google": [
+		("gemini-cli", "gemini-cli/0.7.3"),
+		("google-genai-python", "google-genai-python/1.37.0"),
+		("firebase-ai", "firebase-ai/2.3.1"),
+	],
+	"bedrock": [
+		("boto3", "Boto3/1.35.18 Python/3.12.4 Linux/6.8"),
+		("aws-sdk-js", "aws-sdk-js/3.637.0"),
+		("bedrock-agent", "bedrock-agent/0.9.4"),
+	],
+	"ollama": [
+		("ollama-python", "ollama-python/0.5.3"),
+		("ollama-js", "ollama-js/0.5.0"),
+		("open-webui", "open-webui/0.6.18"),
+	],
+	"mistral": [
+		("mistral-client-python", "mistral-client-python/1.9.11"),
+		("continue", "continue/1.1.5"),
+	],
+}
+
+GENERIC_USER_AGENTS = [
+	("litellm", "litellm/1.75.8"),
+	("bifrost", "bifrost/0.4.2"),
+	("grpc-java-okhttp", "grpc-java-okhttp/1.27.2"),
+	("curl", "curl/8.7.1"),
+]
+
+
+@dataclass(frozen=True)
+class Model:
+	provider: str
+	name: str
+	weight: float
+	input_mean: int
+	output_mean: int
+	latency_ms: int
+	input_cost_per_m: float
+	output_cost_per_m: float
+
+
+@dataclass(frozen=True)
+class UserProfile:
+	email: str
+	activity_weight: float
+	preferred_provider: str
+	secondary_provider: str
+	preferred_model: str
+	spender_tier: str
+	token_scale: float
+	latency_scale: float
+	error_scale: float
+	payload_scale: float
+	burst_rate: float
+
+
+def parse_args() -> argparse.Namespace:
+	parser = argparse.ArgumentParser(
+		description="Generate a SQLite request log database with fake agentgateway LLM traffic.",
+	)
+	parser.add_argument("--output", "-o", default="/tmp/gw-mock-logs.db", help="SQLite DB path to create.")
+	parser.add_argument("--days", type=int, default=7, help="Number of days to backfill.")
+	parser.add_argument("--requests", type=int, default=5000, help="Total request log rows to generate.")
+	parser.add_argument("--models", type=int, default=8, help="Number of fake models to include.")
+	parser.add_argument("--providers", type=int, default=4, help="Number of providers to include.")
+	parser.add_argument("--users", type=int, default=12, help="Number of fake users to include.")
+	parser.add_argument("--payload-rate", type=float, default=0.15, help="Fraction of rows with payload table entries.")
+	parser.add_argument("--seed", type=int, default=7, help="Random seed for repeatable data.")
+	parser.add_argument("--append", action="store_true", help="Append rows to an existing database.")
+	parser.add_argument("--replace", action="store_true", help="Replace an existing output database.")
+	return parser.parse_args()
+
+
+def main() -> int:
+	args = parse_args()
+	if args.days < 1:
+		raise SystemExit("--days must be at least 1")
+	if args.requests < 1:
+		raise SystemExit("--requests must be at least 1")
+	if args.models < 1:
+		raise SystemExit("--models must be at least 1")
+	if args.providers < 1:
+		raise SystemExit("--providers must be at least 1")
+	if args.providers > args.models:
+		raise SystemExit("--providers cannot exceed --models")
+	if args.users < 1:
+		raise SystemExit("--users must be at least 1")
+	if not 0 <= args.payload_rate <= 1:
+		raise SystemExit("--payload-rate must be between 0 and 1")
+	if args.append and args.replace:
+		raise SystemExit("--append and --replace are mutually exclusive")
+
+	output = Path(args.output)
+	if output.exists() and args.replace:
+		output.unlink()
+	elif output.exists() and not args.append:
+		raise SystemExit(f"{output} already exists; pass --replace or --append")
+	output.parent.mkdir(parents=True, exist_ok=True)
+
+	rng = random.Random(args.seed)
+	providers = pick_providers(args.providers)
+	models = make_models(providers, args.models, rng)
+	users = make_user_profiles(args.users, providers, models, rng)
+	now = datetime.now(UTC)
+
+	conn = sqlite3.connect(output)
+	try:
+		conn.execute("PRAGMA foreign_keys = ON")
+		conn.execute("PRAGMA journal_mode = WAL")
+		conn.executescript(SCHEMA)
+		insert_logs(conn, rng, now, args.days, args.requests, models, users, args.payload_rate)
+		conn.commit()
+	finally:
+		conn.close()
+
+	print(f"wrote {args.requests} request logs to {output}")
+	print(f"providers={len(providers)} models={len(models)} users={len(users)} days={args.days}")
+	return 0
+
+
+def pick_providers(count: int) -> list[str]:
+	seen: list[str] = []
+	for provider, _ in DEFAULT_MODELS:
+		if provider not in seen:
+			seen.append(provider)
+	return cycle_to_count(seen, count, "provider")
+
+
+def make_models(providers: list[str], count: int, rng: random.Random) -> list[Model]:
+	by_provider = {
+		provider: [name for candidate_provider, name in DEFAULT_MODELS if candidate_provider == provider]
+		for provider in providers
+	}
+	candidates = []
+	for provider in providers[:count]:
+		names = by_provider.get(provider) or [f"{provider}-mock-1"]
+		candidates.append((provider, names[0]))
+	for provider, name in DEFAULT_MODELS:
+		if provider in providers and (provider, name) not in candidates:
+			candidates.append((provider, name))
+	if not candidates:
+		candidates = [(providers[0], "mock-model-1")]
+	while len(candidates) < count:
+		provider = providers[len(candidates) % len(providers)]
+		candidates.append((provider, f"{provider}-mock-{len(candidates) + 1}"))
+
+	models: list[Model] = []
+	for idx, (provider, name) in enumerate(candidates[:count]):
+		size = 1 + (idx % 4)
+		models.append(
+			Model(
+				provider=provider,
+				name=name,
+				weight=max(0.25, rng.lognormvariate(0.0, 0.55)),
+				input_mean=180 * size + rng.randint(20, 220),
+				output_mean=90 * size + rng.randint(10, 180),
+				latency_ms=120 + 90 * size + rng.randint(0, 240),
+				input_cost_per_m=cost_rates_for(provider, name, size)[0],
+				output_cost_per_m=cost_rates_for(provider, name, size)[1],
+			)
+		)
+	return models
+
+
+def make_user_profiles(count: int, providers: list[str], models: list[Model], rng: random.Random) -> list[UserProfile]:
+	names = [
+		"alice",
+		"bob",
+		"carol",
+		"dave",
+		"erin",
+		"frank",
+		"grace",
+		"heidi",
+		"ivan",
+		"judy",
+		"mallory",
+		"oscar",
+		"peggy",
+		"trent",
+		"victor",
+		"wendy",
+	]
+	emails = [f"{name}@example.com" for name in cycle_to_count(names, count, "user")]
+	profiles = []
+	for idx, email in enumerate(emails):
+		preferred_provider = providers[idx % len(providers)]
+		other_providers = [provider for provider in providers if provider != preferred_provider]
+		secondary_provider = rng.choice(other_providers) if other_providers else preferred_provider
+		provider_models = [model for model in models if model.provider == preferred_provider] or models
+		preferred_model = rng.choice(provider_models).name
+		spender_tier, token_scale, activity_multiplier, burst_rate = user_spend_profile(idx, rng)
+		profiles.append(
+			UserProfile(
+				email=email,
+				activity_weight=(1 / math.sqrt(idx + 1)) * rng.uniform(0.7, 1.4) * activity_multiplier,
+				preferred_provider=preferred_provider,
+				secondary_provider=secondary_provider,
+				preferred_model=preferred_model,
+				spender_tier=spender_tier,
+				token_scale=token_scale,
+				latency_scale=rng.uniform(0.85, 1.25),
+				error_scale=rng.uniform(0.65, 1.55),
+				payload_scale=rng.uniform(0.55, 1.8),
+				burst_rate=burst_rate,
+			)
+		)
+	return profiles
+
+
+def user_spend_profile(idx: int, rng: random.Random) -> tuple[str, float, float, float]:
+	if idx == 0:
+		return ("enterprise-batch", rng.uniform(9.0, 14.0), rng.uniform(1.7, 2.4), rng.uniform(0.18, 0.28))
+	if idx in (1, 2):
+		return ("power", rng.uniform(3.0, 5.5), rng.uniform(1.15, 1.65), rng.uniform(0.08, 0.16))
+	if idx % 7 == 0:
+		return ("bursty", rng.uniform(1.6, 2.8), rng.uniform(0.9, 1.25), rng.uniform(0.05, 0.10))
+	return ("standard", rng.lognormvariate(0.0, 0.28), rng.uniform(0.75, 1.15), rng.uniform(0.005, 0.025))
+
+
+def cycle_to_count(values: list[str], count: int, prefix: str) -> list[str]:
+	result = values[:count]
+	idx = 1
+	while len(result) < count:
+		result.append(f"{prefix}-{idx}")
+		idx += 1
+	return result
+
+
+def insert_logs(
+	conn: sqlite3.Connection,
+	rng: random.Random,
+	now: datetime,
+	days: int,
+	requests: int,
+	models: list[Model],
+	users: list[UserProfile],
+	payload_rate: float,
+) -> None:
+	log_rows = []
+	payload_rows = []
+	model_weights = [model.weight for model in models]
+	user_weights = [user.activity_weight for user in users]
+
+	for _ in range(requests):
+		user_profile = weighted_choice(rng, users, user_weights)
+		user = user_profile.email
+		model = choose_model_for_user(rng, models, model_weights, user_profile)
+		completed_at = random_completed_at(rng, now, days)
+		status = choose_status(rng, user_profile)
+		error = ERRORS.get(status)
+		input_tokens, output_tokens, workload = token_counts(rng, model, status, user_profile)
+		total_tokens = input_tokens + output_tokens
+		cost = request_cost(model, input_tokens, output_tokens)
+		duration_ms = duration(rng, model, total_tokens, status, user_profile)
+		started_at = completed_at - timedelta(milliseconds=duration_ms)
+		log_id = str(uuid.UUID(int=rng.getrandbits(128)))
+		trace_id = f"{rng.getrandbits(128):032x}"
+		span_id = f"{rng.getrandbits(64):016x}"
+		prompt = [{"role": "user", "content": rng.choice(PROMPTS)}]
+		completion = [rng.choice(COMPLETIONS)] if status < 400 else []
+		max_tokens = max(64, round(output_tokens * rng.uniform(1.2, 2.8)))
+		operation = "embeddings" if rng.random() < 0.035 else "chat"
+		http_path = "/v1/embeddings" if operation == "embeddings" else "/v1/chat/completions"
+		original_model = original_model_name(rng, model.name)
+		endpoint = endpoint_for(model.provider)
+		group = group_for(user)
+		user_agent_name, user_agent = user_agent_for_provider(rng, model.provider)
+		api_key_name = api_key_name_for(user_profile, user_agent_name)
+		cost_input = round(input_tokens * model.input_cost_per_m / 1_000_000, 8)
+		cost_output = round(output_tokens * model.output_cost_per_m / 1_000_000, 8)
+
+		attributes = {
+			"gateway": rng.choice(GATEWAYS),
+			"listener": rng.choice(LISTENERS),
+			"route": rng.choice(ROUTES),
+			"endpoint": endpoint,
+			"src.addr": f"10.{rng.randrange(0, 16)}.{rng.randrange(0, 255)}.{rng.randrange(1, 255)}:{rng.randrange(1024, 65535)}",
+			"http.method": "POST",
+			"http.host": "gateway.local",
+			"http.path": http_path,
+			"http.user_agent": user_agent,
+			"http.version": "HTTP/1.1",
+			"http.status": status,
+			"protocol": "llm",
+			"user_agent.name": user_agent_name,
+			"user_agent.original": user_agent,
+			"user": user,
+			"group": group,
+			"agentgateway.user": user,
+			"agentgateway.group": group,
+			"agentgateway.preferred_provider": user_profile.preferred_provider,
+			"agentgateway.preferred_model": user_profile.preferred_model,
+			"agentgateway.spend_tier": user_profile.spender_tier,
+			"agentgateway.workload": workload,
+			"preferredProvider": user_profile.preferred_provider,
+			"preferredModel": user_profile.preferred_model,
+			"spendTier": user_profile.spender_tier,
+			"workload": workload,
+			"metadata": {
+				"user": user,
+				"group": group,
+				"preferredProvider": user_profile.preferred_provider,
+				"spendTier": user_profile.spender_tier,
+				"environment": "prod" if "prod" in endpoint else "dev",
+			},
+			"apiKey": {
+				"name": api_key_name,
+				"user": user,
+				"group": group,
+				"client": user_agent_name,
+			},
+			"gen_ai.provider.name": model.provider,
+			"gen_ai.usage.input_tokens": input_tokens,
+			"gen_ai.usage.output_tokens": output_tokens,
+			"agw.ai.usage.cost.total": cost,
+			"agw.ai.usage.cost.input": cost_input,
+			"agw.ai.usage.cost.output": cost_output,
+			"agw.ai.usage.cost.cacheRead": 0.0,
+			"agw.ai.usage.cost.cacheWrite": 0.0,
+			"agw.ai.usage.cost.reasoning": 0.0,
+			"agw.ai.usage.cost.inputAudio": 0.0,
+			"agw.ai.usage.cost.outputAudio": 0.0,
+			"agw.api_key.name": api_key_name,
+			"gen_ai.request.max_tokens": max_tokens,
+			"duration": f"{duration_ms}ms",
+			"llm": {
+				"streaming": rng.random() < 0.18,
+				"requestModel": model.name,
+				"responseModel": model.name,
+				"provider": model.provider,
+				"inputTokens": input_tokens,
+				"outputTokens": output_tokens,
+				"totalTokens": total_tokens,
+				"cost": cost,
+				"prompt": prompt,
+				"completion": completion,
+				"params": {"max_tokens": max_tokens},
+			},
+			"gen_ai.operation.name": operation,
+			"gen_ai.system": model.provider,
+			"gen_ai.request.model": model.name,
+			"gen_ai.response.model": model.name,
+			"agw.ai.original_model": original_model,
+			"gen_ai.usage.prompt_tokens": input_tokens,
+			"gen_ai.usage.completion_tokens": output_tokens,
+			"gen_ai.usage.total_tokens": total_tokens,
+			"gen_ai.prompt": prompt,
+			"gen_ai.completion": completion,
+			"b": encoded_response(log_id, model.name, input_tokens, output_tokens, completion),
+		}
+		has_payload = rng.random() < min(1.0, payload_rate * user_profile.payload_scale)
+
+		log_rows.append(
+			(
+				log_id,
+				started_at.isoformat(),
+				completed_at.isoformat(),
+				duration_ms,
+				trace_id,
+				span_id,
+				status,
+				error,
+				operation,
+				model.provider,
+				model.name,
+				model.name,
+				input_tokens,
+				output_tokens,
+				total_tokens,
+				cost,
+				user,
+				group,
+				1 if has_payload else 0,
+				json.dumps(attributes, separators=(",", ":")),
+			)
+		)
+		if has_payload:
+			payload_rows.append(
+				(
+					log_id,
+					json.dumps(prompt, separators=(",", ":")),
+					json.dumps(completion, separators=(",", ":")),
+				)
+			)
+
+	conn.executemany(
+		"""
+		INSERT INTO request_logs (
+			id, started_at, completed_at, duration_ms, trace_id, span_id, http_status, error,
+			gen_ai_operation_name, gen_ai_provider_name, gen_ai_request_model, gen_ai_response_model,
+			input_tokens, output_tokens, total_tokens, cost, agentgateway_user, agentgateway_group,
+			has_payload, attributes_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		""",
+		log_rows,
+	)
+	conn.executemany(
+		"""
+		INSERT INTO request_log_payloads (log_id, request_prompt_json, response_completion_json)
+		VALUES (?, ?, ?)
+		""",
+		payload_rows,
+	)
+
+
+def random_completed_at(rng: random.Random, now: datetime, days: int) -> datetime:
+	age_seconds = rng.random() * days * 24 * 60 * 60
+	return now - timedelta(seconds=age_seconds)
+
+
+def choose_model_for_user(
+	rng: random.Random,
+	models: list[Model],
+	base_weights: list[float],
+	user: UserProfile,
+) -> Model:
+	weights = []
+	for model, base_weight in zip(models, base_weights, strict=True):
+		weight = base_weight
+		if model.provider == user.preferred_provider:
+			weight *= 6.0
+		elif model.provider == user.secondary_provider:
+			weight *= 1.8
+		else:
+			weight *= 0.55
+		if model.name == user.preferred_model:
+			weight *= 2.4
+		weights.append(weight)
+	return weighted_choice(rng, models, weights)
+
+
+def choose_status(rng: random.Random, user: UserProfile) -> int:
+	weights = []
+	for status, weight in STATUS_WEIGHTS:
+		if status >= 400:
+			weight *= user.error_scale
+		weights.append(weight)
+	return weighted_choice(rng, [status for status, _ in STATUS_WEIGHTS], weights)
+
+
+def weighted_choice(rng: random.Random, values: list[T], weights: list[float]) -> T:
+	total = sum(weights)
+	pick = rng.random() * total
+	current = 0.0
+	for value, weight in zip(values, weights, strict=True):
+		current += weight
+		if current >= pick:
+			return value
+	return values[-1]
+
+
+def token_counts(rng: random.Random, model: Model, status: int, user: UserProfile) -> tuple[int, int, str]:
+	input_tokens = max(1, round(rng.lognormvariate(math.log(model.input_mean * user.token_scale), 0.55)))
+	if status >= 400:
+		return input_tokens, 0, "failed"
+	output_tokens = max(1, round(rng.lognormvariate(math.log(model.output_mean * user.token_scale), 0.65)))
+	if rng.random() < 0.04:
+		output_tokens *= rng.randint(3, 8)
+	if rng.random() < user.burst_rate:
+		input_tokens *= rng.randint(10, 45)
+		output_tokens *= rng.randint(8, 35)
+		return input_tokens, output_tokens, "batch"
+	return input_tokens, output_tokens, "interactive"
+
+
+def cost_rates_for(provider: str, model: str, size: int) -> tuple[float, float]:
+	if "sonnet" in model:
+		return (3.0, 15.0)
+	if "gpt-4.1" == model:
+		return (2.0, 8.0)
+	if "gemini-2.5-pro" in model:
+		return (1.25, 10.0)
+	if "claude" in model:
+		return (3.0, 15.0)
+	if provider == "openai":
+		return (0.40 * size, 1.60 * size)
+	if provider == "anthropic":
+		return (0.80 * size, 4.00 * size)
+	if provider == "google":
+		return (0.35 * size, 1.40 * size)
+	if provider == "bedrock":
+		return (0.70 * size, 3.20 * size)
+	if provider == "ollama":
+		return (0.0, 0.0)
+	return (0.40 * size, 1.80 * size)
+
+
+def request_cost(model: Model, input_tokens: int, output_tokens: int) -> float:
+	return round(
+		(input_tokens * model.input_cost_per_m + output_tokens * model.output_cost_per_m) / 1_000_000,
+		8,
+	)
+
+
+def duration(rng: random.Random, model: Model, total_tokens: int, status: int, user: UserProfile) -> int:
+	base = (model.latency_ms + total_tokens * rng.uniform(0.8, 3.2)) * user.latency_scale
+	if status == 429:
+		base *= rng.uniform(0.15, 0.45)
+	elif status >= 500:
+		base *= rng.uniform(1.8, 4.5)
+	return max(20, round(rng.lognormvariate(math.log(base), 0.3)))
+
+
+def endpoint_for(provider: str) -> str:
+	if provider == "openai":
+		return "api.openai.com:443"
+	if provider == "anthropic":
+		return "api.anthropic.com:443"
+	if provider == "google":
+		return "generativelanguage.googleapis.com:443"
+	if provider == "bedrock":
+		return "bedrock-runtime.us-east-1.amazonaws.com:443"
+	if provider == "ollama":
+		return "localhost:11434"
+	return f"api.{provider}.example.com:443"
+
+
+def user_agent_for_provider(rng: random.Random, provider: str) -> tuple[str, str]:
+	provider_agents = PROVIDER_USER_AGENTS.get(provider, [])
+	if provider_agents and rng.random() < 0.88:
+		_, raw = rng.choice(provider_agents)
+	else:
+		_, raw = rng.choice(GENERIC_USER_AGENTS)
+	return processed_user_agent_name(raw), raw
+
+
+def processed_user_agent_name(raw: str) -> str:
+	raw = raw.strip()
+	for idx, char in enumerate(raw):
+		if char == "/" or char.isspace() or char in ";(":
+			return raw[:idx].strip()
+	return raw
+
+
+def api_key_name_for(user: UserProfile, user_agent_name: str) -> str:
+	name = user.email.split("@", 1)[0]
+	return f"{name}-{user_agent_name}"
+
+
+def original_model_name(rng: random.Random, model: str) -> str:
+	if rng.random() > 0.16:
+		return model
+	return rng.choice(["primary-chat", "fast-chat", "coding-assistant", "summarizer"])
+
+
+def group_for(user: str) -> str:
+	groups = ["eng", "sales", "support", "security", "product", "marketing"]
+	return groups[sum(user.encode("utf-8")) % len(groups)]
+
+
+def encoded_response(log_id: str, model: str, input_tokens: int, output_tokens: int, completion: list[str]) -> str:
+	body = {
+		"id": f"chatcmpl-{log_id[:8]}",
+		"object": "chat.completion",
+		"model": model,
+		"usage": {
+			"prompt_tokens": input_tokens,
+			"completion_tokens": output_tokens,
+			"total_tokens": input_tokens + output_tokens,
+		},
+		"choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": completion[0] if completion else ""}}],
+	}
+	return base64.b64encode(json.dumps(body, separators=(",", ":")).encode("utf-8")).decode("ascii")
+
+
+if __name__ == "__main__":
+	sys.exit(main())
+PYEOF
+chmod +x /root/gen-mock-logs.py
 
 # Convenience: point the OpenAI CLI/SDK at the gateway, and add a restart helper
 cat >> ~/.bashrc <<'RC'
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 export OPENAI_BASE_URL=http://localhost:4000/v1
 agw-restart() { pkill -f "agentgateway -f" 2>/dev/null; sleep 1; nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 & sleep 3; }
 RC
