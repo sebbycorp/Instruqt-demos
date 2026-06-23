@@ -1,0 +1,24 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get deploy -n kagent kagent-controller >/dev/null 2>&1; then
+  fail-message "kagent-controller not found. Run the kagent helm install from the assignment."
+  exit 1
+fi
+
+if ! kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=300s >/dev/null 2>&1; then
+  fail-message "kagent-controller is not Available yet (it can restart a couple of times during cold start). Wait and re-check."
+  exit 1
+fi
+
+if ! kubectl get workerpool kagent-default -n kagent >/dev/null 2>&1; then
+  fail-message "WorkerPool 'kagent/kagent-default' not found. Ensure substrateWorkerPool.create=true was set on the helm install."
+  exit 1
+fi
+
+if ! kubectl get secret kagent-openai -n kagent >/dev/null 2>&1; then
+  fail-message "Secret 'kagent-openai' missing — the OpenAI key was empty at install time. Re-run the kagent helm install with the key set."
+  exit 1
+fi
+
+echo "Challenge 3 complete!"

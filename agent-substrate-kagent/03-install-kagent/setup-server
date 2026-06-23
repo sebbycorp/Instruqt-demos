@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euxo pipefail
+
+# The learner installs kagent here; ensure substrate is healthy first so the
+# controller doesn't crash-loop on a missing ate-api.
+kubectl wait --for=condition=Available deployment --all -n ate-system --timeout=300s || true
+
+echo "Challenge 3 setup complete"
