@@ -76,13 +76,38 @@ Built for the [Instruqt](https://instruqt.com/) platform by the Solo.io GTM team
 
 ---
 
+### Track 5: [AI Cost & Token Spend — Govern LLM and MCP Traffic](https://play.instruqt.com/soloio/tracks/ai-cost-token-spend-agentgateway)
+
+> Track, troubleshoot, and control AI token spend with **standalone Agentgateway OSS** (no Kubernetes). Framed as a platform/FinOps team chasing a surprise AI bill.
+
+| # | Challenge | What You'll Learn |
+|---|-----------|-------------------|
+| 1 | The Blind Spot | How tokens are spent, what inflates the bill, why dashboards fail |
+| 2 | Stand Up the Gateway | Install the standalone binary, route OpenAI through `:4000` |
+| 3 | The Cost of Every Request | Model cost catalog → live token + USD cost (gpt-4o vs mini ~17×) |
+| 4 | Day-2 Operations | Troubleshoot via the admin API on `:15000` + metrics on `:15020` |
+| 5 | Governance: Budgets & Model Pin | Token-budget rate limit (→429) + approved-model override |
+| 6 | Cost-Aware Routing | Header routing: `x-priority: high` → gpt-4o, default → gpt-4o-mini |
+| 7 | Tag & Slice Spend | CEL on `llm.cost.total` → custom log fields + `cost_tier` metric |
+| 8 | MCP Is Spend Too | Proxy an MCP server; why tool calls cost tokens |
+| 9 | Per-Team Virtual Keys | Issue `apiKey` virtual keys; real provider key stays hidden |
+| 10 | Answer the CFO | Fleet-scale cost analysis (by team/user/model/workload) over SQLite |
+
+**Time:** ~25-30 min · **Level:** Intermediate · **Prerequisites:** Familiarity with the terminal and JSON; no Kubernetes required
+
+---
+
 ## 🏗️ Architecture
 
-All tracks run on Instruqt with:
+Tracks 1–4 run on Instruqt with:
 - **VM:** Solo.io pre-baked GCP image with k3d, kubectl, helm pre-installed
 - **Cluster:** k3d single-node Kubernetes cluster
 - **Helm Charts:** OCI-based from `ghcr.io/kgateway-dev/charts/`
 - **No API keys required** — all demos use mock LLM servers and MCP servers
+
+**Track 5 differs:** it runs **standalone Agentgateway OSS** (the single binary,
+no Kubernetes) and uses a **real `OPENAI_API_KEY`** secret to make live, priced
+LLM calls — the point of the workshop is real token/cost data.
 
 ## 🔗 Resources
 

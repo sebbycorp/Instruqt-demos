@@ -252,6 +252,16 @@ Pushing to Instruqt is a separate, explicitly-authorized step (requires the
 
 ## Status
 
+> **This is the original design doc (point-in-time).** The shipped track has
+> since evolved — see the track `README.md` for the current, authoritative
+> state. Notable changes since this design: the "Production Scale" challenge was
+> removed; a visual intro was added to "The Blind Spot"; the admin UI is exposed
+> via `config.adminAddr: 0.0.0.0:15000` and surfaced as a lab tab; and three
+> cost-optimization challenges were added — **Cost-Aware Routing** (header-based,
+> C-8), **Tag & Slice Spend** (CEL on `llm.cost.total`, C-9), and **Per-Team
+> Virtual Keys**. The track is now **10 challenges** and passes `instruqt track
+> test` 10/10 on a real VM.
+
 Implementation plan written and verified:
 `docs/superpowers/plans/2026-06-22-ai-cost-token-workshop.md`. Every config, the
 mock-data generator, and all analysis queries were executed locally against the

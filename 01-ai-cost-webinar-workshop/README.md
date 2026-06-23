@@ -1,50 +1,77 @@
 # AI Cost & Token Spend — Agentgateway OSS (Instruqt track)
 
-A ~15-minute hands-on workshop for platform / FinOps / SecOps teams. It frames an
-enterprise story — *Finance forwarded a surprise AI bill; who spent it?* — and
-walks through tracking, troubleshooting, and governing LLM + MCP token spend with
-**standalone Agentgateway OSS v1.3.1**.
+A hands-on cost-optimization workshop for platform / FinOps / SecOps teams. It
+frames an enterprise story — *Finance forwarded a surprise AI bill; who spent
+it?* — and walks through tracking, troubleshooting, and **governing** LLM + MCP
+token spend with **standalone Agentgateway OSS v1.3.1** (the single binary, no
+Kubernetes).
+
+**~25–30 min · 10 challenges · real OpenAI traffic + a generated fleet dataset.**
 
 ## Challenges
 
-1. **The Blind Spot** — how tokens are calculated and what LLM features cost (read-only).
-2. **Stand Up the Gateway** — install the binary, route OpenAI through `:4000`.
-3. **The Cost of Every Request** — model cost catalog → live token + USD cost in logs.
-4. **Day-2 Operations** — troubleshoot via the admin API on `:15000` (+ metrics on `:15020`).
-5. **Governance** — token-budget rate limit (→429) and approved-model pin.
-6. **MCP Is Spend Too** — proxy an MCP server on the same gateway.
-7. **Answer the CFO** — fleet-scale cost analysis over a generated SQLite dataset.
-8. **Production Scale** — guardrails, virtual keys, tracing, Enterprise (read-only).
+| # | Challenge | What you do |
+|---|-----------|-------------|
+| 1 | **The Blind Spot** | Visual intro: how tokens are spent, what inflates the bill, why dashboards fail (read-only). |
+| 2 | **Stand Up the Gateway** | Install the binary, route OpenAI through `:4000`. |
+| 3 | **The Cost of Every Request** | Model cost catalog → live token + USD cost in logs; gpt-4o vs gpt-4o-mini (~17×). |
+| 4 | **Day-2 Operations** | Troubleshoot via the admin API on `:15000` (`config_dump`, UI) + metrics on `:15020`. |
+| 5 | **Governance: Budgets & Model Pin** | `localRateLimit` token budget (→429) + approved-model `overrides`. *(Mike's C-10)* |
+| 6 | **Cost-Aware Routing** | Header-based routing: `x-priority: high` → gpt-4o, default → gpt-4o-mini. *(C-8)* |
+| 7 | **Tag & Slice Spend** | CEL on `llm.cost.total` → custom log fields + `cost_tier` metric label. *(C-9)* |
+| 8 | **MCP Is Spend Too** | Proxy an MCP server on the same gateway; why tool calls cost tokens. |
+| 9 | **Per-Team Virtual Keys** | Listener `apiKey` gate (strict) + per-key metadata; real provider key stays hidden. |
+| 10 | **Answer the CFO** | Fleet-scale cost analysis (spend by team/user/model/workload) over a generated SQLite dataset. |
+
+The config in `/root/config.yaml` **evolves across challenges** — each `solve`
+writes a complete, validated config and restarts the gateway, so a learner can
+skip ahead from any point.
 
 ## Layout
 
 - `config.yml` — single VM, `OPENAI_API_KEY` secret.
-- `track.yml` — track metadata (`id`/`checksum` assigned on first push).
-- `track_scripts/setup-server` — installs the binary + `openai` CLI + `uv`, stages assets.
+- `track.yml` — track metadata (`id`/`checksum` assigned on push).
+- `track_scripts/setup-server` — installs the agentgateway binary + the `openai`
+  CLI + `uv` + `sqlite3`, and **embeds** the cost catalog and request-log
+  generator onto the VM (Instruqt assets are markdown URLs, not VM files).
 - `assets/gen-mock-logs.py` — request-log generator (run via `uv run`; needs Python ≥3.11).
 - `assets/costs/catalog.json` — model cost catalog (USD per 1M tokens).
+- `assets/blind-spot-{before,after}.{svg,png}` — Challenge 1 intro diagrams.
 - `NN-*/` — per-challenge `assignment.md`, `setup-server`, `check-server`, `solve-server`.
 
 ## Ports
 
-- `4000` — OpenAI-compatible API (clients point here).
-- `15000` — admin API + UI (`/config_dump`, `/ui`), localhost-only.
+- `4000` — OpenAI-compatible API (clients point here; also `/mcp` for MCP).
+- `15000` — admin API + UI (`/config_dump`, `/ui`). Bound to `0.0.0.0` via
+  `config.adminAddr` so the lab's **Agentgateway UI** tab can reach it.
 - `15020` — Prometheus metrics (`/metrics`).
 
-## Verification done locally
+## Cost controls demonstrated (vs. Mike's k8s cost-optimization demos)
 
-All configs were validated with `agentgateway --validate-only`, and the cost
-tracking, token-budget 429, model-pin override, dual LLM+MCP routing, and the
-mock-data SQL analysis were all run end-to-end against the real binary + live
-OpenAI calls before commit.
+| Demo | k8s (AdminTurnedDevOps) | This track (standalone) |
+|------|--------------------------|--------------------------|
+| **C-8** Cost-aware routing | HTTPRoute header match → premium backend | Route `matches.headers` `x-priority: high` → `ai.overrides.model: gpt-4o` |
+| **C-9** CEL cost policy | `rawConfig` logging/metrics fields | `config.logging.fields.add` / `config.metrics.fields.add` on `llm.cost.total` |
+| **C-10** Budget enforcement | `traffic.rateLimit.local.tokens` | `policies.localRateLimit` `type: tokens` |
 
-## Push to Instruqt
+## Verification
 
-This authors the files only. To publish (assigns `id`/`checksum`):
+All configs are validated with `agentgateway --validate-only`, and the full
+track passes `instruqt track test` (setup → solve → check) **10/10 on a real
+VM**, including live OpenAI calls (cost tracking, model-pin, 429 budgets,
+header routing, CEL cost tags, virtual-key 401/200, and the SQL analysis).
+
+## Publish
 
 ```bash
 cd 01-ai-cost-webinar-workshop
-instruqt track push        # requires the instruqt CLI + auth
+instruqt track push                        # publish (assigns id/checksum)
+instruqt track test ai-cost-token-spend-agentgateway --skip-fail-check
 ```
 
-Design + plan: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
+> `--skip-fail-check` is needed because Challenge 1 is read-only (its check
+> always passes, so the "check should fail before solve" assertion is skipped).
+
+**Live track:** https://play.instruqt.com/manage/soloio/tracks/ai-cost-token-spend-agentgateway
+
+Design + plan history: `docs/superpowers/specs/` and `docs/superpowers/plans/`.
