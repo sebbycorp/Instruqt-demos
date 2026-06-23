@@ -20,6 +20,12 @@ tabs:
   type: code
   hostname: server
   path: /root
+- id: ""
+  title: Agentgateway UI
+  type: service
+  hostname: server
+  port: 15000
+  path: /ui
 difficulty: ""
 enhanced_loading: null
 ---

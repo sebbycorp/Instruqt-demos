@@ -21,6 +21,12 @@ tabs:
   type: code
   hostname: server
   path: /root
+- id: ""
+  title: Agentgateway UI
+  type: service
+  hostname: server
+  port: 15000
+  path: /ui
 difficulty: ""
 enhanced_loading: null
 ---
@@ -98,6 +104,13 @@ curl -s http://localhost:15020/metrics | grep cost_catalog
 `agentgateway_cost_catalog_lookups_total{status="Exact",...}` confirms the gateway
 priced the request. Point Prometheus/Grafana at `:15020` and cost becomes a
 dashboard.
+
+## Step 7 — Watch it in the UI
+
+Open the **Agentgateway UI** tab (`:15000/ui`) and use the **Playground** to send
+a chat request, then look at the request view — you'll see the model, token
+counts, and cost for each call without touching the logs. This is the same data,
+visualized.
 
 > Now you can answer *"how much did that call cost?"* Next: how to **operate and
 > troubleshoot** this gateway. ➡️

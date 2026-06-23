@@ -19,6 +19,12 @@ tabs:
   type: code
   hostname: server
   path: /root
+- id: ""
+  title: Agentgateway UI
+  type: service
+  hostname: server
+  port: 15000
+  path: /ui
 difficulty: ""
 enhanced_loading: null
 ---
@@ -38,11 +44,14 @@ agentgateway --version
 
 You should see version `1.3.x`.
 
-## Step 2 — Write the config
+## Step 2 — Create the config
 
-Open the **Editor** tab and create `/root/config.yaml`:
+A starter **`/root/config.yaml`** is already waiting in the **Editor** tab —
+open it from the file tree on the left to read along. The simplest way to write
+it is to **paste this into the Terminal** (it creates or overwrites the file):
 
-```yaml
+```bash
+cat > /root/config.yaml <<'EOF'
 binds:
 - port: 4000
   listeners:
@@ -60,11 +69,15 @@ binds:
           name: openai
           provider:
             openAI: {}
+EOF
 ```
 
 What this says: listen on **:4000**, accept OpenAI-style `/v1/...` calls, attach
 your OpenAI key with the `backendAuth` policy, and forward to OpenAI. The
 `$OPENAI_API_KEY` is read from the environment — clients never see the real key.
+
+> 💡 Prefer the Editor? Just edit the pre-loaded `/root/config.yaml` and save
+> (`Ctrl/Cmd-S`) — no need to create a new file.
 
 ## Step 3 — Validate before you run
 
@@ -96,5 +109,12 @@ curl -s http://localhost:4000/v1/chat/completions \
 You'll get a normal OpenAI response — but it went through **your** gateway. Every
 client that points at `:4000` instead of OpenAI directly is now under your
 control point.
+
+## Step 6 — Explore the Agentgateway UI
+
+Open the **Agentgateway UI** tab (served at `:15000/ui`). This standalone UI is
+your window into the gateway — listeners, routes, backends, a request **Playground**,
+and live traffic. You'll come back to it in later challenges to watch token
+usage and cost in real time. Click around and get oriented.
 
 > Next: make that control point put a **dollar figure on every call**. ➡️

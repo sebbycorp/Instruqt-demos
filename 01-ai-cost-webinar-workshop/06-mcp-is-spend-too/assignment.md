@@ -20,6 +20,12 @@ tabs:
   type: code
   hostname: server
   path: /root
+- id: ""
+  title: Agentgateway UI
+  type: service
+  hostname: server
+  port: 15000
+  path: /ui
 difficulty: ""
 enhanced_loading: null
 ---
@@ -71,7 +77,15 @@ curl -s http://localhost:15000/config_dump | jq '.binds[].listeners[].routes[]?.
 You should see **both** `openai-route` and `mcp-route`. One gateway, both traffic
 types.
 
-## Step 3 — Why this matters for cost
+## Step 3 — Explore MCP in the UI
+
+Open the **Agentgateway UI** tab (`:15000/ui`) and find the **MCP / Tools
+Playground**. List the tools exposed by `server-everything` and invoke one. Notice
+how much tool metadata (names, descriptions, JSON schemas) the model would have to
+carry as input tokens — that's the hidden cost of tool-heavy agents, now visible
+and governable at the gateway.
+
+## Step 4 — Why this matters for cost
 
 - **Same logs** — MCP calls land in the same access log as LLM calls.
 - **Same governance** — the same budget/policy machinery applies.
