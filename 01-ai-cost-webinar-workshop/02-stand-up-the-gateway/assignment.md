@@ -54,10 +54,12 @@ Open the **Agentgateway UI** tab (`:15000/ui`). You'll see **Welcome to
 Agentgateway** → you can **Enable LLM** (or **Skip setup**). Then:
 
 1. Left nav → **Models** → **Add model**
-2. **Incoming model match:** `*`  (match any model the client asks for)
+2. **Incoming model match:** `openai/*`  (the default — matches any `openai/`-prefixed model)
 3. **Provider:** OpenAI
 4. **Provider API Key:** choose **Env var**, value `OPENAI_API_KEY`
 5. **Save model**
+
+Clients then call models as `openai/gpt-4o-mini`, `openai/gpt-4o`, etc.
 
 That's it — the UI writes the model into your config. (Prefer YAML? The same
 thing is just an `llm.models` entry — paste this into the Terminal instead:)
@@ -73,9 +75,10 @@ config:
 llm:
   port: 4000
   models:
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params:
+      model: gpt-4o-mini
       apiKey: "$OPENAI_API_KEY"
 frontendPolicies:
   http:
@@ -94,7 +97,7 @@ on, with zero extra setup.
 ```bash
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
 A normal OpenAI response — but it went through **your** gateway. You can also try

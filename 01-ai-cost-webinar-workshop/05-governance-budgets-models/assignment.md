@@ -49,7 +49,7 @@ llm:
       fillInterval: "1h"
       type: tokens
   models:
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params:
       apiKey: "$OPENAI_API_KEY"
@@ -70,7 +70,7 @@ Now spend the budget:
 for i in 1 2 3 4; do
   echo "req $i -> $(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions \
     -H 'Content-Type: application/json' \
-    -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Write a paragraph about budgets."}],"max_tokens":80}')"
+    -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Write a paragraph about budgets."}],"max_tokens":80}')"
 done
 ```
 
@@ -84,7 +84,7 @@ no matter what the client asks for. Add `params.model` to your model:
 
 ```yaml
   models:
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params:
       model: gpt-4o-mini      # <-- pin the OUTGOING model, ignore what's requested
@@ -99,7 +99,7 @@ Now ask for the **expensive** model and watch what actually runs:
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
 ```
 
 The response model comes back **`gpt-4o-mini`** — the expensive model is simply

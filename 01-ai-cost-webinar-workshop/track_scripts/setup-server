@@ -31,11 +31,6 @@ ln -sf "$HOME/.local/bin/uv" /usr/local/bin/uv 2>/dev/null || true
 ln -sf "$HOME/.local/bin/uvx" /usr/local/bin/uvx 2>/dev/null || true
 export PATH="$HOME/.local/bin:$PATH"
 
-# Official OpenAI CLI via uv (this image has no pip). Pin to 1.x — the 2.x package
-# dropped the `openai` CLI entrypoint, so `openai<2` is required to get the binary.
-uv tool install 'openai<2' >/dev/null 2>&1 || true
-ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true
-
 # sqlite3 for the fleet-analysis challenge (defensive; jq is already on the image).
 command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt-get install -y sqlite3 >/dev/null 2>&1; } || true
 
@@ -764,10 +759,9 @@ if __name__ == "__main__":
 PYEOF
 chmod +x /root/gen-mock-logs.py
 
-# Convenience: point the OpenAI CLI/SDK at the gateway, and add a restart helper
+# Convenience: PATH for uv + a gateway restart helper.
 cat >> ~/.bashrc <<'RC'
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-export OPENAI_BASE_URL=http://localhost:4000/v1
 agw-restart() { pkill -f "agentgateway -f" 2>/dev/null; sleep 1; nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 & sleep 3; }
 RC
 

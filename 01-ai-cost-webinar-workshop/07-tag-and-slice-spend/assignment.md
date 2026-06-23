@@ -70,9 +70,9 @@ agw-restart
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' \
-  -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 ```
 
 ## Step 3 — See the tags in the log

@@ -37,7 +37,7 @@ and **Tools**. No commands this time — just explore.
 Left nav → **Chat Playground**. This sends a **real** chat completion *through the
 gateway* (great for setup debugging).
 
-- **Model:** pick `*` (your catch-all model)
+- **Model:** pick `openai/*` (your catch-all model)
 - **Specific model:** type `gpt-4o-mini`
 - Type a question in **User message** and hit **Send**
 

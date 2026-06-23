@@ -14,7 +14,7 @@ llm:
     localRateLimit:
     - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
   models:
-  - name: "*"
+  - name: "openai/*"
     matches:
     - headers:
       - name: x-priority
@@ -23,7 +23,7 @@ llm:
     params:
       model: gpt-4o
       apiKey: "$OPENAI_API_KEY"
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params:
       model: gpt-4o-mini
@@ -36,5 +36,5 @@ agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 4
-echo "default request  -> $(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model)"
-echo "x-priority: high -> $(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model)"
+echo "default request  -> $(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model)"
+echo "x-priority: high -> $(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model)"

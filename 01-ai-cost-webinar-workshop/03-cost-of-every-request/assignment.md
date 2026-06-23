@@ -47,18 +47,23 @@ grep -A4 '"gpt-4o-mini"\|"gpt-4o"' /root/costs/base-costs.json | head
 Rates are **USD per 1 million tokens**, split into input and output — exactly how
 providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
 
-## Step 2 — Drive a call through the OpenAI CLI
+## Step 2 — Drive a couple of calls
 
-Point the official `openai` CLI at the gateway and send a chat request:
+Send a cheap and a premium request through the gateway. Note the **`openai/`**
+prefix on the model — that's how the gateway's `openai/*` model matches:
 
 ```bash
-export OPENAI_BASE_URL=http://localhost:4000/v1
-openai api chat.completions.create -m gpt-4o-mini -g user "Say hi in 3 words."
+# cheap model
+curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
+
+# premium model
+curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
-You'll see the model's short reply printed (e.g. `Hello there, friend!`) — that's
-the call going through **your** gateway to OpenAI and back. (New terminals get
-`OPENAI_BASE_URL` automatically; we export it here so the current shell uses it.)
+Each prints the model's short reply — the calls went through **your** gateway to
+OpenAI and back, and were just priced and logged.
 
 ## Step 3 — See the cost, cleanly
 
@@ -88,7 +93,7 @@ never gives you. (It's in the access log too if you ever need it:
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
+  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
 
 sqlite3 -box /root/data/data.db \
   "SELECT gen_ai_request_model AS model, printf('\$%.6f', cost) AS per_call,

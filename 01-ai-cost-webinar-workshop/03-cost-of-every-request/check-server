@@ -6,7 +6,7 @@ if [ ! -f /root/data/data.db ]; then
 fi
 # Drive a priced request, then poll the DB for a row with cost (avoids write races).
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
 n=0
 for i in $(seq 1 12); do
   n=$(sqlite3 /root/data/data.db "SELECT COUNT(*) FROM request_logs WHERE cost > 0;" 2>/dev/null || echo 0)

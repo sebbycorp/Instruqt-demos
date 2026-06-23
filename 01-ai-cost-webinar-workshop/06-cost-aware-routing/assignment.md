@@ -56,14 +56,14 @@ llm:
     localRateLimit:
     - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
   models:
-  - name: "*"
+  - name: "openai/*"
     matches:
     - headers:
       - name: x-priority
         value: { exact: high }
     provider: openAI
     params: { model: gpt-4o, apiKey: "$OPENAI_API_KEY" }
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params: { model: gpt-4o-mini, apiKey: "$OPENAI_API_KEY" }
 frontendPolicies:

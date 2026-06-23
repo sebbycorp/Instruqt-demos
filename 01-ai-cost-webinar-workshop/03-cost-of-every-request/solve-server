@@ -12,9 +12,15 @@ config:
 llm:
   port: 4000
   models:
-  - name: "*"
+  - name: "openai/gpt-4o"
     provider: openAI
     params:
+      model: gpt-4o
+      apiKey: "$OPENAI_API_KEY"
+  - name: "openai/*"
+    provider: openAI
+    params:
+      model: gpt-4o-mini
       apiKey: "$OPENAI_API_KEY"
 frontendPolicies:
   http:
@@ -24,20 +30,10 @@ agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 4
-for m in gpt-4o-mini gpt-4o; do
+for m in openai/gpt-4o-mini openai/gpt-4o; do
   curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
     -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in 3 words.\"}],\"max_tokens\":20}" >/dev/null
 done
-# Also drive a call via the official OpenAI CLI (best effort; curl above already
-# drove the cost lesson). Ensure it's installed — the 2.x package has no CLI, so
-# pin <2. Non-fatal: a CLI hiccup must not fail the solve.
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-command -v openai >/dev/null 2>&1 || { uv tool install 'openai<2' >/dev/null 2>&1 || true; ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true; }
-if command -v openai >/dev/null 2>&1; then
-  OPENAI_BASE_URL=http://localhost:4000/v1 openai api chat.completions.create -m gpt-4o-mini -g user "Say hi in 3 words." 2>&1 | head -2 || true
-else
-  echo "note: openai CLI not available; the curl calls above already drove traffic"
-fi
 sleep 1
 echo "=== token + USD cost per request (priced by default base-costs.json) ==="
 sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok, printf('\$%.7f', cost) AS cost_usd, printf('\$%.2f', cost*1000000) AS per_1M_calls FROM request_logs ORDER BY completed_at DESC LIMIT 4;" 2>/dev/null || true

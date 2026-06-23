@@ -10,8 +10,4 @@ cat > /root/costs/base-costs.json <<'JSON'
   "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } } } } } }
 JSON
 fi
-# Ensure the OpenAI CLI is installed for this challenge's terminal (the openai 2.x
-# package ships no CLI, so pin <2). Idempotent; no-op if already present.
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-command -v openai >/dev/null 2>&1 || { uv tool install 'openai<2' >/dev/null 2>&1 || true; ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true; }
 echo "challenge 3 setup complete"

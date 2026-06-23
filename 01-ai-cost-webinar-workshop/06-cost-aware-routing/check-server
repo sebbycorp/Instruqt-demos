@@ -8,8 +8,8 @@ if ! agentgateway -f /root/config.yaml --validate-only >/dev/null 2>&1; then
   fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only"
   exit 1
 fi
-hi=$(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
-lo=$(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
+hi=$(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
+lo=$(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
 case "$hi" in gpt-4o*) : ;; *) fail-message "x-priority: high routed to '$hi' (expected gpt-4o). Check the premium model's matches/params.model."; exit 1;; esac
 case "$lo" in gpt-4o-mini*) : ;; *) fail-message "Default traffic routed to '$lo' (expected gpt-4o-mini). Check the default model is listed after the premium one."; exit 1;; esac
 echo "Cost-aware routing live: default -> gpt-4o-mini, x-priority: high -> gpt-4o."

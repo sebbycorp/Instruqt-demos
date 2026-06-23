@@ -6,7 +6,7 @@ if ! grep -q 'llm.cost.total' /root/config.yaml 2>/dev/null; then
 fi
 # Send a request, then poll the log for the custom cost field (avoids log-flush races).
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"x","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
+  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
 for i in $(seq 1 12); do
   grep -q 'cost_usd=' /root/agentgateway.log 2>/dev/null && break
   sleep 1

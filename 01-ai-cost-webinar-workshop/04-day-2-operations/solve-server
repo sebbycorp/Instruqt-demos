@@ -13,9 +13,10 @@ config:
 llm:
   port: 4000
   models:
-  - name: "*"
+  - name: "openai/*"
     provider: openAI
     params:
+      model: gpt-4o-mini
       apiKey: "$OPENAI_API_KEY"
 frontendPolicies:
   http:
