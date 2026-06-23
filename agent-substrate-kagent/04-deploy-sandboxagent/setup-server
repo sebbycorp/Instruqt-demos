@@ -27,22 +27,8 @@ spec:
       name: kagent-default
 YAML
 
-# Expose the kagent UI on host port 8080 for the service tab.
-cat > /etc/systemd/system/kagent-ui.service <<'SVCEOF'
-[Unit]
-Description=kagent UI Port Forward
-After=cloud-final.service multi-user.target
-[Service]
-Restart=always
-RestartSec=5s
-Environment="KUBECONFIG=/root/.kube/config"
-ExecStart=/usr/local/bin/kubectl -n kagent port-forward svc/kagent-ui 8080:8080 --address 0.0.0.0
-[Install]
-WantedBy=multi-user.target
-SVCEOF
-
-systemctl daemon-reload
-systemctl enable kagent-ui
-systemctl restart kagent-ui
+# The kagent UI port-forward service is defined in the track setup-server.
+# Refresh it here so the service tab is connected once kagent-ui is running.
+systemctl restart kagent-ui 2>/dev/null || true
 
 echo "Challenge 4 setup complete"

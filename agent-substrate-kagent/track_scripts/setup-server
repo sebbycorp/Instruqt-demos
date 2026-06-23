@@ -76,4 +76,24 @@ else
 fi
 set -x
 
+# --- kagent UI port-forward (service tab on host port 8080) -----------------
+# Defined here with Restart=always so it connects the moment kagent-ui is
+# deployed (challenge 3) and survives pod restarts. It harmlessly retries every
+# few seconds until kagent exists, so the "kagent UI" tab works from challenge 3 on.
+cat > /etc/systemd/system/kagent-ui.service <<'SVCEOF'
+[Unit]
+Description=kagent UI Port Forward
+After=cloud-final.service multi-user.target
+[Service]
+Restart=always
+RestartSec=5s
+Environment="KUBECONFIG=/root/.kube/config"
+ExecStart=/usr/local/bin/kubectl -n kagent port-forward svc/kagent-ui 8080:8080 --address 0.0.0.0
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+systemctl daemon-reload
+systemctl enable kagent-ui
+systemctl restart kagent-ui
+
 echo "=== Track setup complete: kind cluster '${KIND_CLUSTER}' ready ==="
