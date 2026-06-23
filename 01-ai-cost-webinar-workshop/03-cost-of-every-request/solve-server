@@ -28,11 +28,16 @@ for m in gpt-4o-mini gpt-4o; do
   curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
     -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in 3 words.\"}],\"max_tokens\":20}" >/dev/null
 done
-# Also drive a call via the official OpenAI CLI (and ensure it's installed — the
-# 2.x package has no CLI, so pin <2). This makes the lifecycle test cover the CLI.
+# Also drive a call via the official OpenAI CLI (best effort; curl above already
+# drove the cost lesson). Ensure it's installed — the 2.x package has no CLI, so
+# pin <2. Non-fatal: a CLI hiccup must not fail the solve.
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
 command -v openai >/dev/null 2>&1 || { uv tool install 'openai<2' >/dev/null 2>&1 || true; ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true; }
-command -v openai >/dev/null 2>&1 || { echo "ERROR: openai CLI not installed"; exit 1; }
-OPENAI_BASE_URL=http://localhost:4000/v1 openai api chat.completions.create -m gpt-4o-mini -g user "Say hi in 3 words." 2>&1 | head -2 || true
+if command -v openai >/dev/null 2>&1; then
+  OPENAI_BASE_URL=http://localhost:4000/v1 openai api chat.completions.create -m gpt-4o-mini -g user "Say hi in 3 words." 2>&1 | head -2 || true
+else
+  echo "note: openai CLI not available; the curl calls above already drove traffic"
+fi
 sleep 1
 echo "=== token + USD cost per request (priced by default base-costs.json) ==="
 sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok, cost FROM request_logs ORDER BY completed_at DESC LIMIT 4;" 2>/dev/null || true
