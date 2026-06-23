@@ -7,7 +7,7 @@ config:
   database:
     url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
+    - file: /root/costs/base-costs.json
   logging:
     fields:
       add:
@@ -17,28 +17,29 @@ config:
     fields:
       add:
         cost_tier: "llm.cost.total > 0.0001 ? 'high' : 'low'"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
+llm:
+  port: 4000
+  policies:
+    localRateLimit:
+    - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
+  models:
+  - name: "*"
+    matches:
+    - headers:
+      - name: x-priority
+        value: { exact: high }
+    provider: openAI
+    params:
+      model: gpt-4o
+      apiKey: "$OPENAI_API_KEY"
+  - name: "*"
+    provider: openAI
+    params:
+      model: gpt-4o-mini
+      apiKey: "$OPENAI_API_KEY"
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
@@ -47,7 +48,7 @@ sleep 4
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 sleep 1
-echo "=== custom CEL fields in the access log ==="
+echo "=== cost_usd / expensive in the access log ==="
 grep -oE 'cost_usd=[^ ]+|expensive=[^ ]+' /root/agentgateway.log | tail -6 || true
 echo "=== cost_tier split in metrics ==="
 curl -s http://localhost:15020/metrics | grep -oE 'cost_tier="[a-z]+"' | sort | uniq -c || true

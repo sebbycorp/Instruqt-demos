@@ -1,37 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 command -v agentgateway >/dev/null 2>&1 || { curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1; }
+mkdir -p /root/data /root/costs
+# Ensure the default cost catalog exists (track setup provisions it; re-bootstrap if missing).
+[ -f /root/costs/base-costs.json ] || { ( nohup agentgateway >/tmp/agw-bootstrap.log 2>&1 & ); sleep 6; cp /root/.config/agentgateway/base-costs.json /root/costs/base-costs.json 2>/dev/null || true; pkill -f "agentgateway" 2>/dev/null || true; sleep 1; }
 
-# Pre-create /root/config.yaml so it appears in the Editor tab (no "new file"
-# step needed). The learner reviews/edits it, then validates and starts the
-# gateway. We intentionally do NOT start the gateway here — that's the learner's
-# (or the solve script's) job, so the challenge check is meaningful.
+# Pre-seed a MINIMAL config so it opens in the Editor (no models yet). The gateway
+# is NOT started here — the learner starts it and adds a model (UI or YAML).
 if [ ! -f /root/config.yaml ]; then
 cat > /root/config.yaml <<'YAML'
-# Agentgateway — your first AI gateway.
-# Listens on :4000, authenticates to OpenAI, and forwards /v1/* requests.
-# Review this, then: agentgateway -f /root/config.yaml --validate-only
+# Minimal Agentgateway config — boots the gateway + UI with no models yet.
+# Add your OpenAI model in the UI (Models -> Add model), or paste the block from the assignment.
 config:
-  # Expose the admin UI (:15000/ui) on all interfaces so the lab's UI tab can reach it.
   adminAddr: "0.0.0.0:15000"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: openai-route
-      matches:
-      - path:
-          pathPrefix: /v1
-      policies:
-        backendAuth:
-          key: "$OPENAI_API_KEY"
-      backends:
-      - ai:
-          name: openai
-          provider:
-            openAI: {}
+  database:
+    url: "sqlite:///root/data/data.db"
+  modelCatalog:
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  models: []
+  providers: []
+  virtualModels: []
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 fi
-
 echo "challenge 2 setup complete"

@@ -7,51 +7,48 @@ config:
   database:
     url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
+    - file: /root/costs/base-costs.json
   logging:
     fields:
       add:
         cost_usd: "llm.cost.total"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    policies:
-      apiKey:
-        mode: strict
-        keys:
-        - key: "sk-team-sales-DEMO"
-          metadata: { team: sales, owner: "alice@example.com" }
-        - key: "sk-team-eng-DEMO"
-          metadata: { team: eng, owner: "bob@example.com" }
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-- port: 3000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: mcp-route
-      backends:
-      - mcp:
-          targets:
-          - name: everything
-            stdio: { cmd: npx, args: ["-y","@modelcontextprotocol/server-everything"] }
+llm:
+  port: 4000
+  policies:
+    apiKey:
+      mode: strict
+      keys:
+      - key: "sk-team-sales-DEMO"
+        metadata: { team: sales, owner: "alice@example.com" }
+      - key: "sk-team-eng-DEMO"
+        metadata: { team: eng, owner: "bob@example.com" }
+    localRateLimit:
+    - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
+  models:
+  - name: "*"
+    matches:
+    - headers:
+      - name: x-priority
+        value: { exact: high }
+    provider: openAI
+    params:
+      model: gpt-4o
+      apiKey: "$OPENAI_API_KEY"
+  - name: "*"
+    provider: openAI
+    params:
+      model: gpt-4o-mini
+      apiKey: "$OPENAI_API_KEY"
+mcp:
+  port: 3000
+  targets:
+  - name: everything
+    stdio:
+      cmd: npx
+      args: ["-y","@modelcontextprotocol/server-everything"]
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1

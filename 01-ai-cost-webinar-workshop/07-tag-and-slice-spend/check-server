@@ -4,12 +4,11 @@ if ! grep -q 'llm.cost.total' /root/config.yaml 2>/dev/null; then
   fail-message "No CEL cost expression in /root/config.yaml. Add config.logging.fields.add (and metrics.fields.add) using llm.cost.total, then agw-restart."
   exit 1
 fi
-# Send one priced request, then confirm the custom field is emitted.
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
   -d '{"model":"x","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
 sleep 1
 if ! grep -q 'cost_usd=' /root/agentgateway.log 2>/dev/null; then
-  fail-message "The custom cost field isn't appearing in the log yet. Make sure the gateway restarted with the new logging fields and send a request."
+  fail-message "The custom cost field isn't appearing in the log yet. Ensure the gateway restarted with the new logging fields and send a request."
   exit 1
 fi
-echo "Spend is now tagged and sliced by cost — logs and metrics carry your CEL fields."
+echo "Spend is tagged and sliced by cost — CEL fields are in your logs and metrics."

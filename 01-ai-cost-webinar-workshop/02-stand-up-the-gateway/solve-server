@@ -1,30 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+mkdir -p /root/data /root/costs
+# Ensure the default cost catalog exists (track setup provisions it).
+[ -f /root/costs/base-costs.json ] || { ( nohup agentgateway >/tmp/agw-bootstrap.log 2>&1 & ); sleep 6; cp /root/.config/agentgateway/base-costs.json /root/costs/base-costs.json 2>/dev/null || true; pkill -f "agentgateway" 2>/dev/null || true; sleep 1; }
 cat > /root/config.yaml <<'YAML'
 config:
   adminAddr: "0.0.0.0:15000"
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: openai-route
-      matches:
-      - path:
-          pathPrefix: /v1
-      policies:
-        backendAuth:
-          key: "$OPENAI_API_KEY"
-      backends:
-      - ai:
-          name: openai
-          provider:
-            openAI: {}
+  database:
+    url: "sqlite:///root/data/data.db"
+  modelCatalog:
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  models:
+  - name: "*"
+    provider: openAI
+    params:
+      apiKey: "$OPENAI_API_KEY"
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 4
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq . || true
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content' || true

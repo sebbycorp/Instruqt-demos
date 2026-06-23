@@ -1,24 +1,22 @@
 #!/bin/bash
 set -euo pipefail
-# Leave a "broken" alternate config on disk for the learner to diagnose.
-# It is valid YAML but omits the backendAuth policy, so upstream calls 401.
+# Leave a "broken" alternate config for the learner to diagnose. It is valid YAML
+# but the model has NO apiKey, so upstream calls 401 — a realistic misconfig to
+# find via the logs and config_dump.
 cat > /root/config.broken.yaml <<'YAML'
 config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: openai-route
-      matches:
-      - path:
-          pathPrefix: /v1
-      backends:
-      - ai:
-          name: openai
-          provider:
-            openAI: {}
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  models:
+  - name: "*"
+    provider: openAI
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 echo "challenge 4 setup complete"

@@ -1,22 +1,18 @@
 #!/bin/bash
 set -uo pipefail
-if ! grep -q 'mcp-route' /root/config.yaml 2>/dev/null; then
-  fail-message "No mcp-route in /root/config.yaml. Add a second bind on port 3000 with an mcp backend (targets -> stdio -> npx @modelcontextprotocol/server-everything)."
+if ! grep -q 'server-everything' /root/config.yaml 2>/dev/null; then
+  fail-message "No MCP target in /root/config.yaml. Add a top-level mcp: block (port 3000, targets -> stdio -> npx @modelcontextprotocol/server-everything), then agw-restart."
   exit 1
 fi
 if ! agentgateway -f /root/config.yaml --validate-only >/dev/null 2>&1; then
-  fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only (remember: binds, llm, and mcp must use unique ports)."
-  exit 1
-fi
-if ! curl -s http://localhost:15000/config_dump | grep -q 'mcp-route'; then
-  fail-message "The live config doesn't show the MCP route yet. Restart the gateway: agw-restart"
+  fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only (binds, llm, and mcp must use unique ports)."
   exit 1
 fi
 code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000 \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}')
 if [ "$code" != "200" ]; then
-  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Make sure the MCP bind is on port 3000 and the gateway restarted (agw-restart)."
+  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Ensure the mcp: block uses port 3000 and the gateway restarted (agw-restart)."
   exit 1
 fi
-echo "MCP is live on :3000, LLM on :4000 — both under one gateway, on separate ports."
+echo "MCP is live on :3000, LLM on :4000 — both under one gateway."

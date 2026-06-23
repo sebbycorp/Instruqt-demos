@@ -1,16 +1,15 @@
 #!/bin/bash
 set -uo pipefail
-dump=$(curl -s http://localhost:15000/config_dump)
-if ! echo "$dump" | grep -q 'premium-route'; then
-  fail-message "No premium-route in the live config. Add a route that matches header x-priority: high and pins model gpt-4o, then agw-restart."
+if ! grep -qi 'x-priority' /root/config.yaml 2>/dev/null; then
+  fail-message "No x-priority match found. Add a model with matches[].headers (name x-priority, value.exact high) that pins gpt-4o, then agw-restart."
   exit 1
 fi
-if ! echo "$dump" | grep -q 'default-route'; then
-  fail-message "No default-route found. Keep a catch-all /v1 route that pins gpt-4o-mini for everyday traffic."
+if ! agentgateway -f /root/config.yaml --validate-only >/dev/null 2>&1; then
+  fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only"
   exit 1
 fi
-if ! echo "$dump" | grep -qi 'x-priority'; then
-  fail-message "The premium route isn't matching on the x-priority header. Add matches[].headers with name x-priority, value.exact: high."
-  exit 1
-fi
-echo "Cost-aware routing live: cheap model by default, premium only on escalation."
+hi=$(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
+lo=$(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"x","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
+case "$hi" in gpt-4o*) : ;; *) fail-message "x-priority: high routed to '$hi' (expected gpt-4o). Check the premium model's matches/params.model."; exit 1;; esac
+case "$lo" in gpt-4o-mini*) : ;; *) fail-message "Default traffic routed to '$lo' (expected gpt-4o-mini). Check the default model is listed after the premium one."; exit 1;; esac
+echo "Cost-aware routing live: default -> gpt-4o-mini, x-priority: high -> gpt-4o."

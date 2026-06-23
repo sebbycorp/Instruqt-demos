@@ -1,12 +1,15 @@
 #!/bin/bash
 set -uo pipefail
-dump=$(curl -s http://localhost:15000/config_dump)
-if ! echo "$dump" | grep -q 'maxTokens'; then
-  fail-message "No token budget found in the live config. Add a localRateLimit policy (type: tokens) to openai-route and restart with agw-restart."
+if ! grep -q 'localRateLimit' /root/config.yaml 2>/dev/null; then
+  fail-message "No token budget found. Add llm.policies.localRateLimit (type: tokens) to /root/config.yaml, then agw-restart."
   exit 1
 fi
-if ! echo "$dump" | grep -q '"overrides"'; then
-  fail-message "No model-pin override found. Add ai.overrides.model: gpt-4o-mini to the route so expensive models can't be used, then agw-restart."
+if ! grep -q 'model: gpt-4o-mini' /root/config.yaml 2>/dev/null; then
+  fail-message "No approved-model pin found. Set params.model: gpt-4o-mini on your model so expensive models can't be used, then agw-restart."
   exit 1
 fi
-echo "Governance in place: per-route token budget + approved-model pin."
+if ! agentgateway -f /root/config.yaml --validate-only >/dev/null 2>&1; then
+  fail-message "Config doesn't validate. Run: agentgateway -f /root/config.yaml --validate-only"
+  exit 1
+fi
+echo "Governance in place: per-gateway token budget + approved-model pin."

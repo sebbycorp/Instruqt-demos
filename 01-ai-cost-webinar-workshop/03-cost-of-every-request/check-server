@@ -1,11 +1,16 @@
 #!/bin/bash
 set -uo pipefail
-if ! grep -q 'modelCatalog' /root/config.yaml 2>/dev/null; then
-  fail-message "No modelCatalog in /root/config.yaml yet. Add a top-level config.modelCatalog pointing at /root/costs/catalog.json so the gateway can attach USD cost, then restart (agw-restart)."
+# Drive one priced request, then confirm cost was recorded in the database.
+curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' >/dev/null 2>&1
+sleep 1
+if [ ! -f /root/data/data.db ]; then
+  fail-message "No request database at /root/data/data.db. Ensure config.database is set and the gateway restarted."
   exit 1
 fi
-if ! curl -s http://localhost:15020/metrics | grep -q 'agentgateway_cost_catalog_lookups_total{status="Exact"'; then
-  fail-message "No priced requests recorded yet. Send a request through the gateway (curl :4000 or the openai CLI), then check :15020/metrics for agentgateway_cost_catalog_lookups_total{status=\"Exact\"}."
+n=$(sqlite3 /root/data/data.db "SELECT COUNT(*) FROM request_logs WHERE cost > 0;" 2>/dev/null || echo 0)
+if [ "${n:-0}" -lt 1 ]; then
+  fail-message "No priced requests recorded yet. Send a request through :4000; the default base-costs.json catalog should populate the cost column."
   exit 1
 fi
-echo "Cost tracking is live — every request now carries token usage and USD cost."
+echo "Cost tracking is live — requests are priced (USD) and logged to the database."

@@ -1,17 +1,17 @@
 #!/bin/bash
 set -uo pipefail
 if ! pgrep -f "agentgateway -f /root/config.yaml" >/dev/null; then
-  fail-message "Agentgateway isn't running. Write /root/config.yaml, then start it: nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &"
+  fail-message "Agentgateway isn't running. Start it: nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &"
   exit 1
 fi
 code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
   -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
 if [ "$code" != "200" ]; then
-  fail-message "Gateway is up but a test call to :4000 returned HTTP $code. Check /root/agentgateway.log and that backendAuth.key resolves your OPENAI_API_KEY."
+  fail-message "A test call to :4000 returned HTTP $code. Add an OpenAI model (UI: Models -> Add model, or an llm.models entry) with params.apiKey set to \$OPENAI_API_KEY, then restart the gateway."
   exit 1
 fi
-if ! curl -s http://localhost:15000/config_dump | grep -q '"bind/4000"'; then
-  fail-message "The admin API on :15000 doesn't show the :4000 bind. Is the gateway running with /root/config.yaml?"
+if ! curl -s http://localhost:15000/config_dump | grep -q '4000'; then
+  fail-message "The admin API on :15000 isn't reporting the gateway. Is it running with /root/config.yaml?"
   exit 1
 fi
-echo "Gateway is routing OpenAI traffic on :4000."
+echo "Gateway is up on :4000 and routing OpenAI traffic."

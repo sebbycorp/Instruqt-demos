@@ -7,29 +7,30 @@ config:
   database:
     url: "sqlite:///root/data/data.db"
   modelCatalog:
-  - file: /root/costs/catalog.json
-binds:
-- port: 4000
-  listeners:
-  - protocol: HTTP
-    routes:
-    - name: premium-route
-      matches:
-      - path: { pathPrefix: /v1 }
-        headers:
-        - name: x-priority
-          value: { exact: high }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
-    - name: default-route
-      matches:
-      - path: { pathPrefix: /v1 }
-      policies:
-        backendAuth: { key: "$OPENAI_API_KEY" }
-        ai: { overrides: { model: gpt-4o-mini } }
-      backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    localRateLimit:
+    - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
+  models:
+  - name: "*"
+    matches:
+    - headers:
+      - name: x-priority
+        value: { exact: high }
+    provider: openAI
+    params:
+      model: gpt-4o
+      apiKey: "$OPENAI_API_KEY"
+  - name: "*"
+    provider: openAI
+    params:
+      model: gpt-4o-mini
+      apiKey: "$OPENAI_API_KEY"
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
 YAML
 agentgateway -f /root/config.yaml --validate-only
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
