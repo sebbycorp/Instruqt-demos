@@ -4,6 +4,8 @@ export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI
 cat > /root/config.yaml <<'YAML'
 config:
   adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
   modelCatalog:
   - file: /root/costs/catalog.json
 binds:

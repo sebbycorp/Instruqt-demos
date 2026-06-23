@@ -41,6 +41,8 @@ command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt
 # Stage workshop files onto the VM. Instruqt assets become markdown URLs (not VM
 # files), so the cost catalog and the request-log generator are embedded here.
 mkdir -p /root/costs
+# Directory for the gateway's SQLite request-log database (config.database).
+mkdir -p /root/data
 cat > /root/costs/catalog.json <<'CATEOF'
 {
   "providers": {

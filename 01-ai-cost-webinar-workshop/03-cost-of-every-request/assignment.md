@@ -45,17 +45,23 @@ cat /root/costs/catalog.json
 Rates are **USD per 1 million tokens**, split into input and output — exactly how
 providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
 
-## Step 2 — Wire the catalog into the gateway
+## Step 2 — Wire cost tracking into the gateway
 
-In the **Editor**, add `modelCatalog` under the existing `config:` block at the
-top of `/root/config.yaml`, so it reads:
+In the **Editor**, add a `database` and a `modelCatalog` under the existing
+`config:` block at the top of `/root/config.yaml`, so it reads:
 
 ```yaml
 config:
-  adminAddr: "0.0.0.0:15000"   # already there from the last challenge
+  adminAddr: "0.0.0.0:15000"             # already there from the last challenge
+  database:
+    url: "sqlite:///root/data/data.db"   # persist every request to SQLite
   modelCatalog:
-  - file: /root/costs/catalog.json
+  - file: /root/costs/catalog.json       # price tokens in USD
 ```
+
+The **catalog** turns tokens into dollars; the **database** records every
+request (model, tokens, cost, user) to a SQLite table — the gateway's own log of
+spend that you'll query in the final challenge.
 
 Validate and restart (the `agw-restart` helper does both):
 
@@ -83,6 +89,15 @@ You'll see something like
 `gen_ai.usage.input_tokens=14 gen_ai.usage.output_tokens=5 agw.ai.usage.cost.total=0.0000051`.
 **That is a dollar figure on a single call** — something the provider dashboard
 will never give you.
+
+That same call was also **written to the database**:
+
+```bash
+sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model, input_tokens, output_tokens, cost FROM request_logs ORDER BY completed_at DESC LIMIT 3;"
+```
+
+Every request the gateway handles is now a row you can query — we'll come back to
+this in the final challenge.
 
 ## Step 5 — The teaching moment: same answer, 17× the price
 

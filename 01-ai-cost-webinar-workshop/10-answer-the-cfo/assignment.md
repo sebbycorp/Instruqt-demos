@@ -26,13 +26,26 @@ enhanced_loading: null
 
 # Answer the CFO
 
-In production, Agentgateway streams its access logs (with `agentgateway.user`,
-`agentgateway.group`, `gen_ai.*`, and `agw.ai.usage.cost.*`) to your log store.
-We've pre-loaded a representative **week of that data** — 5,000 requests, 12
-users, 4 providers — into `/root/gw-logs.db`. The schema matches the real thing,
-so these queries are exactly what you'd run against production.
+## Step 0 — Your gateway already kept the receipts
 
-## Step 1 — (Re)generate the dataset
+Since Challenge 3, `config.database` has been writing **every request you made**
+to a SQLite table at `/root/data/data.db`. Look at your own real traffic:
+
+```bash
+sqlite3 -box /root/data/data.db \
+  "SELECT gen_ai_request_model model, COUNT(*) calls, ROUND(SUM(cost),6) usd \
+   FROM request_logs GROUP BY model ORDER BY usd DESC;"
+```
+
+That's real — but it's only the handful of calls *you* made in this lab. To
+answer the CFO you need **fleet scale**: many users, teams, and providers over a
+week. Same schema, more rows — so we generate a representative week of it.
+
+> The mock dataset uses the **exact same `request_logs` schema** Agentgateway
+> writes above; in production you'd point these queries at your real database or
+> log store.
+
+## Step 1 — Generate a fleet-scale week
 
 ```bash
 uv run /root/gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db

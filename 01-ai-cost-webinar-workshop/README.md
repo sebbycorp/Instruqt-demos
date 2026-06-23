@@ -27,6 +27,11 @@ The config in `/root/config.yaml` **evolves across challenges** — each `solve`
 writes a complete, validated config and restarts the gateway, so a learner can
 skip ahead from any point.
 
+From Challenge 3 on, `config.database` (`sqlite:///root/data/data.db`) makes the
+gateway **persist every request** to a `request_logs` table — the same schema the
+mock generator uses, so Challenge 10 first queries the learner's *real* captured
+calls, then scales up with the generated fleet dataset.
+
 ## Layout
 
 - `config.yml` — single VM, `OPENAI_API_KEY` secret.

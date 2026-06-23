@@ -47,6 +47,8 @@ Add a listener-level `apiKey` policy with one key per team. Paste the full confi
 cat > /root/config.yaml <<'EOF'
 config:
   adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
   modelCatalog:
   - file: /root/costs/catalog.json
   logging:

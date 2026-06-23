@@ -45,6 +45,8 @@ Add `logging` and `metrics` blocks under the existing `config:` in
 cat > /root/config.yaml <<'EOF'
 config:
   adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
   modelCatalog:
   - file: /root/costs/catalog.json
   logging:
