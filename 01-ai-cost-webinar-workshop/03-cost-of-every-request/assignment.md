@@ -49,14 +49,18 @@ providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
 
 ## Step 2 — Drive a call through the OpenAI CLI
 
-The official `openai` CLI is already pointed at the gateway
-(`OPENAI_BASE_URL=http://localhost:4000/v1`):
+Point the official `openai` CLI at the gateway and send a chat request:
 
 ```bash
+export OPENAI_BASE_URL=http://localhost:4000/v1
 openai api chat.completions.create -m gpt-4o-mini -g user "Say hi in 3 words."
 ```
 
-## Step 4 — See the cost in the gateway log
+You'll see the model's short reply printed (e.g. `Hello there, friend!`) — that's
+the call going through **your** gateway to OpenAI and back. (New terminals get
+`OPENAI_BASE_URL` automatically; we export it here so the current shell uses it.)
+
+## Step 3 — See the cost in the gateway log
 
 ```bash
 grep -oE 'gen_ai.usage.input_tokens=[^ ]+|gen_ai.usage.output_tokens=[^ ]+|agw.ai.usage.cost.total=[^ ]+' /root/agentgateway.log | tail -3

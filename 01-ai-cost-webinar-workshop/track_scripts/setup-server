@@ -31,8 +31,9 @@ ln -sf "$HOME/.local/bin/uv" /usr/local/bin/uv 2>/dev/null || true
 ln -sf "$HOME/.local/bin/uvx" /usr/local/bin/uvx 2>/dev/null || true
 export PATH="$HOME/.local/bin:$PATH"
 
-# Official OpenAI CLI via uv (this image has no pip); expose the shim on PATH.
-uv tool install openai >/dev/null 2>&1 || true
+# Official OpenAI CLI via uv (this image has no pip). Pin to 1.x — the 2.x package
+# dropped the `openai` CLI entrypoint, so `openai<2` is required to get the binary.
+uv tool install 'openai<2' >/dev/null 2>&1 || true
 ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true
 
 # sqlite3 for the fleet-analysis challenge (defensive; jq is already on the image).
