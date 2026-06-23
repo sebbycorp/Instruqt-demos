@@ -11,6 +11,9 @@ cat > /root/config.yaml <<'YAML'
 # Agentgateway — your first AI gateway.
 # Listens on :4000, authenticates to OpenAI, and forwards /v1/* requests.
 # Review this, then: agentgateway -f /root/config.yaml --validate-only
+config:
+  # Expose the admin UI (:15000/ui) on all interfaces so the lab's UI tab can reach it.
+  adminAddr: "0.0.0.0:15000"
 binds:
 - port: 4000
   listeners:

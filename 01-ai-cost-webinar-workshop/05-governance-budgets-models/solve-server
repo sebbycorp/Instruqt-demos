@@ -3,6 +3,7 @@ set -euo pipefail
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
 cat > /root/config.yaml <<'YAML'
 config:
+  adminAddr: "0.0.0.0:15000"
   modelCatalog:
   - file: /root/costs/catalog.json
 binds:

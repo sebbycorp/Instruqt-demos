@@ -16,6 +16,7 @@ cat > /root/costs/catalog.json <<'JSON'
 JSON
 cat > /root/config.yaml <<'YAML'
 config:
+  adminAddr: "0.0.0.0:15000"
   modelCatalog:
   - file: /root/costs/catalog.json
 binds:

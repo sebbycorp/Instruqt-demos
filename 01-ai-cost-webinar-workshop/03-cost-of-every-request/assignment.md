@@ -47,11 +47,12 @@ providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
 
 ## Step 2 — Wire the catalog into the gateway
 
-In the **Editor**, add this block to the **top** of `/root/config.yaml` (above
-`binds:`):
+In the **Editor**, add `modelCatalog` under the existing `config:` block at the
+top of `/root/config.yaml`, so it reads:
 
 ```yaml
 config:
+  adminAddr: "0.0.0.0:15000"   # already there from the last challenge
   modelCatalog:
   - file: /root/costs/catalog.json
 ```

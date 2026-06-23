@@ -52,6 +52,9 @@ it is to **paste this into the Terminal** (it creates or overwrites the file):
 
 ```bash
 cat > /root/config.yaml <<'EOF'
+config:
+  # expose the admin UI (:15000/ui) so the "Agentgateway UI" tab can reach it
+  adminAddr: "0.0.0.0:15000"
 binds:
 - port: 4000
   listeners:
