@@ -46,4 +46,4 @@ for m in gpt-4o-mini gpt-4o; do
     -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hi in 3 words.\"}],\"max_tokens\":20}" >/dev/null
 done
 sleep 1
-grep -oE 'gen_ai.request.model=[^ ]+|gen_ai.usage.input_tokens=[^ ]+|gen_ai.usage.output_tokens=[^ ]+|agw.ai.usage.cost.total=[^ ]+' /root/agentgateway.log | tail -8
+grep -oE 'gen_ai.request.model=[^ ]+|gen_ai.usage.input_tokens=[^ ]+|gen_ai.usage.output_tokens=[^ ]+|agw.ai.usage.cost.total=[^ ]+' /root/agentgateway.log | tail -8 || true

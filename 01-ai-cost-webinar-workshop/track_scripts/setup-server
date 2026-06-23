@@ -23,11 +23,21 @@ curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1
 # Ensure on PATH for non-login shells
 ln -sf "$(command -v agentgateway || echo /usr/local/bin/agentgateway)" /usr/local/bin/agentgateway 2>/dev/null || true
 
-# Install the official OpenAI CLI (used to drive traffic through the gateway)
-pip3 install --quiet --upgrade openai || pip install --quiet --upgrade openai || true
+# Install uv (drives the OpenAI CLI and the mock-data generator) and expose it on
+# the system PATH so non-interactive challenge scripts can find it.
+if ! command -v uv >/dev/null 2>&1; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+fi
+ln -sf "$HOME/.local/bin/uv" /usr/local/bin/uv 2>/dev/null || true
+ln -sf "$HOME/.local/bin/uvx" /usr/local/bin/uvx 2>/dev/null || true
+export PATH="$HOME/.local/bin:$PATH"
 
-# Ensure uv exists for the mock-data generator (needs Python >=3.11)
-command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/install.sh | sh
+# Official OpenAI CLI via uv (this image has no pip); expose the shim on PATH.
+uv tool install openai >/dev/null 2>&1 || true
+ln -sf "$HOME/.local/bin/openai" /usr/local/bin/openai 2>/dev/null || true
+
+# sqlite3 for the fleet-analysis challenge (defensive; jq is already on the image).
+command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt-get install -y sqlite3 >/dev/null 2>&1; } || true
 
 # Stage workshop assets onto the VM
 mkdir -p /root/costs
