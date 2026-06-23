@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Nothing to pre-deploy — the learner installs substrate in this challenge.
+kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+echo "Challenge 2 setup complete"

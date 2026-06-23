@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euxo pipefail
+
+helm upgrade --install substrate-crds \
+  oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
+  --version 0.0.6 \
+  --namespace ate-system --create-namespace --wait
+
+helm upgrade --install substrate \
+  oci://ghcr.io/kagent-dev/substrate/helm/substrate \
+  --version 0.0.6 \
+  --namespace ate-system --wait --timeout 10m
+
+kubectl wait --for=condition=Available deployment --all -n ate-system --timeout=300s
+
+echo "Challenge 2 solved"

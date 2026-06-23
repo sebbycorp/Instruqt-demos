@@ -1,0 +1,28 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get namespace ate-system >/dev/null 2>&1; then
+  fail-message "Namespace 'ate-system' not found. Run the helm install commands from the assignment."
+  exit 1
+fi
+
+# Core control-plane workloads must exist and be progressing toward Ready.
+for deploy in ate-api-server ate-controller atenet-router; do
+  if ! kubectl get deploy -n ate-system 2>/dev/null | grep -q "${deploy}"; then
+    fail-message "Substrate component '${deploy}' not found in ate-system. Did the 'substrate' helm install finish?"
+    exit 1
+  fi
+done
+
+if ! kubectl get crd workerpools.ate.dev actortemplates.ate.dev >/dev/null 2>&1; then
+  fail-message "Substrate CRDs (workerpools/actortemplates) missing. Run the 'substrate-crds' helm install."
+  exit 1
+fi
+
+# All ate-system deployments should be Available.
+if ! kubectl wait --for=condition=Available deployment --all -n ate-system --timeout=120s >/dev/null 2>&1; then
+  fail-message "Substrate components are not all Available yet. Run 'kubectl get pods -n ate-system' and wait for them to be Running."
+  exit 1
+fi
+
+echo "Challenge 2 complete!"
