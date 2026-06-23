@@ -40,4 +40,4 @@ else
 fi
 sleep 1
 echo "=== token + USD cost per request (priced by default base-costs.json) ==="
-sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok, cost FROM request_logs ORDER BY completed_at DESC LIMIT 4;" 2>/dev/null || true
+sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok, printf('\$%.7f', cost) AS cost_usd, printf('\$%.2f', cost*1000000) AS per_1M_calls FROM request_logs ORDER BY completed_at DESC LIMIT 4;" 2>/dev/null || true

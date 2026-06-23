@@ -60,37 +60,53 @@ You'll see the model's short reply printed (e.g. `Hello there, friend!`) — tha
 the call going through **your** gateway to OpenAI and back. (New terminals get
 `OPENAI_BASE_URL` automatically; we export it here so the current shell uses it.)
 
-## Step 3 — See the cost in the gateway log
+## Step 3 — See the cost, cleanly
+
+Every call is priced and written to the database. Pull the last few as a tidy
+table (no log-grepping):
 
 ```bash
-grep -oE 'gen_ai.usage.input_tokens=[^ ]+|gen_ai.usage.output_tokens=[^ ]+|agw.ai.usage.cost.total=[^ ]+' /root/agentgateway.log | tail -3
+sqlite3 -box /root/data/data.db \
+  "SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok,
+          printf('\$%.7f', cost) AS cost_usd
+   FROM request_logs ORDER BY completed_at DESC LIMIT 3;"
 ```
 
-You'll see something like
-`gen_ai.usage.input_tokens=14 gen_ai.usage.output_tokens=5 agw.ai.usage.cost.total=0.0000051`.
-**That is a dollar figure on a single call** — something the provider dashboard
-will never give you.
-
-That same call was also **written to the database**:
-
-```bash
-sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model, input_tokens, output_tokens, cost FROM request_logs ORDER BY completed_at DESC LIMIT 3;"
+```
+┌─────────────┬────────┬─────────┬────────────┐
+│ model       │ in_tok │ out_tok │ cost_usd   │
+├─────────────┼────────┼─────────┼────────────┤
+│ gpt-4o-mini │ 14     │ 5       │ $0.0000051 │
+└─────────────┴────────┴─────────┴────────────┘
 ```
 
-Every request the gateway handles is now a row you can query — we'll come back to
-this in the final challenge.
+**A clean dollar figure on every single call** — something the provider dashboard
+never gives you. (It's in the access log too if you ever need it:
+`grep cost /root/agentgateway.log`.)
 
 ## Step 4 — The teaching moment: same answer, 17× the price
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
   -d '{"model":"gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
-grep 'agw.ai.usage.cost.total' /root/agentgateway.log | tail -2
+
+sqlite3 -box /root/data/data.db \
+  "SELECT gen_ai_request_model AS model, printf('\$%.6f', cost) AS per_call,
+          printf('\$%.2f', cost*1000000) AS per_1M_calls
+   FROM request_logs ORDER BY completed_at DESC LIMIT 2;"
 ```
 
-Compare the two `cost.total` values: roughly `$0.0000051` (mini) vs `$0.000085`
-(gpt-4o) for the *same* trivial answer. At a million calls a day, that gap is the
-difference between a $5 bill and an $85 bill.
+```
+┌─────────────┬───────────┬──────────────┐
+│ model       │ per_call  │ per_1M_calls │
+├─────────────┼───────────┼──────────────┤
+│ gpt-4o      │ $0.000085 │ $85.00       │
+│ gpt-4o-mini │ $0.000005 │ $5.10        │
+└─────────────┴───────────┴──────────────┘
+```
+
+Same trivial answer — **$5 vs $85 per million calls.** That ~17× gap is exactly
+why "which model?" is a budget decision, not a detail.
 
 ## Step 5 — It's a metric too
 
