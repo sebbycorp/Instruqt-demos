@@ -6,14 +6,11 @@ title: The Cost of Every Request
 teaser: See the real USD cost of every call — and why gpt-4o costs ~17× gpt-4o-mini.
 notes:
 - type: text
-  contents: |
-    # 💵 The Cost of Every Request
-
-    Here's the magic: you didn't *configure* any of this. The moment the gateway
-    came up, it started pricing every call in real USD and recording it.
-
-    In this challenge you'll watch a single request become a dollar figure — and
-    see why choosing gpt-4o over gpt-4o-mini is a budget decision, not a detail.
+  contents: "# \U0001F4B5 The Cost of Every Request\n\nHere's the magic: you didn't
+    *configure* any of this. The moment the gateway\ncame up, it started pricing every
+    call in real USD and recording it.\n\nIn this challenge you'll watch a single
+    request become a dollar figure — and\nsee why choosing gpt-4o over gpt-4o-mini
+    is a budget decision, not a detail.\n"
 tabs:
 - id: ujaxcjanrprx
   title: Terminal
