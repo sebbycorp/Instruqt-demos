@@ -41,7 +41,8 @@ skip ahead from any point.
 
 ## Ports
 
-- `4000` — OpenAI-compatible API (clients point here; also `/mcp` for MCP).
+- `4000` — OpenAI-compatible LLM API (clients point here).
+- `3000` — MCP endpoint (separate bind; `binds`, `llm`, and `mcp` must use unique ports).
 - `15000` — admin API + UI (`/config_dump`, `/ui`). Bound to `0.0.0.0` via
   `config.adminAddr` so the lab's **Agentgateway UI** tab can reach it.
 - `15020` — Prometheus metrics (`/metrics`).

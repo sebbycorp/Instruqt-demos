@@ -83,10 +83,23 @@ binds:
         backendAuth: { key: "$OPENAI_API_KEY" }
         ai: { overrides: { model: gpt-4o-mini } }
       backends: [{ ai: { name: openai, provider: { openAI: {} } } }]
+- port: 3000
+  listeners:
+  - protocol: HTTP
+    routes:
+    - name: mcp-route
+      backends:
+      - mcp:
+          targets:
+          - name: everything
+            stdio: { cmd: npx, args: ["-y","@modelcontextprotocol/server-everything"] }
 EOF
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
+
+The virtual-key gate is on the **`:4000` (LLM)** listener; MCP keeps its own
+`:3000` bind from the previous challenge.
 
 ## Step 2 — No key, no service
 

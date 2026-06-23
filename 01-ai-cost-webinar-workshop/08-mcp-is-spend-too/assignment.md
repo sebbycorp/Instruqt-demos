@@ -41,16 +41,18 @@ spend that's completely invisible if MCP traffic doesn't go through your gateway
 Agentgateway proxies MCP servers too, so LLM **and** tool traffic share one
 control point.
 
-## Step 1 — Add an MCP route
+## Step 1 — Add an MCP bind on its own port
 
-In the **Editor**, add another route to `/root/config.yaml` — a sibling of your
-`premium-route` and `default-route`, under the same listener's `routes:`:
+LLM lives on `:4000`. Give MCP its **own port, `:3000`** — `binds`, `llm`, and
+`mcp` must each use a unique port. In the **Editor**, add a second entry to the
+`binds:` list in `/root/config.yaml` (a sibling of the `- port: 4000` block):
 
 ```yaml
+- port: 3000
+  listeners:
+  - protocol: HTTP
+    routes:
     - name: mcp-route
-      matches:
-      - path:
-          pathPrefix: /mcp
       backends:
       - mcp:
           targets:
@@ -61,21 +63,32 @@ In the **Editor**, add another route to `/root/config.yaml` — a sibling of you
 ```
 
 This proxies the reference `server-everything` MCP server (started on demand via
-`npx`) and exposes it at **`:4000/mcp`** — right next to your LLM route.
+`npx`) and exposes it at **`:3000`** — alongside your LLM gateway on `:4000`.
+
+> ⚠️ Don't add a top-level `llm:` or `mcp:` block while you also have `binds:` —
+> that's the `port ... configured by both binds and llm` error. Use `binds` only.
 
 ```bash
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
 
-## Step 2 — Confirm both routes are live
+## Step 2 — Confirm both binds are live
 
 ```bash
-curl -s http://localhost:15000/config_dump | jq '.binds[].listeners[].routes[]?.name? // empty'
+curl -s http://localhost:15000/config_dump | jq -r '.binds | to_entries[] | "\(.value.address): " + ([.value.listeners[].routes[]?.name] | join(", "))'
 ```
 
-You should see `premium-route`, `default-route`, **and** `mcp-route`. One gateway,
-both LLM and tool traffic.
+You should see `:4000` carrying `premium-route, default-route` and `:3000`
+carrying `mcp-route`. Quick MCP liveness check:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}'
+```
+
+`200` means the MCP server is proxied and answering.
 
 ## Step 3 — Explore MCP in the UI
 
