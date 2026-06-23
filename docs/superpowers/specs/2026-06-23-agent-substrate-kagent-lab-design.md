@@ -75,7 +75,8 @@ sessions — the actor resumes exactly where it left off.
   tight). Docker is assumed present on the base image; if the chosen image lacks it, setup
   installs Docker.
 - **Tools:** `track_scripts/setup-server` installs/pins `kind`, `kubectl`, `helm`, and
-  creates the `kagent-substrate` kind cluster, then pre-pulls the substrate/kagent images.
+  `grpcurl` (used in challenge 5 to drive the actor lifecycle directly), and creates the
+  `kagent-substrate` kind cluster, then pre-pulls the substrate/kagent images.
 - **Secret:** `OPENAI_API_KEY` — provided by Instruqt's secrets mechanism (declared in
   `config.yml` under `secrets:`), injected as an env var into the VM. This is the only secret
   required (no `AGENTGATEWAY_LICENSE_KEY` — we are on OSS kagent). The setup script exports
@@ -92,13 +93,20 @@ sessions — the actor resumes exactly where it left off.
 3. **Install kagent, wired to substrate** — `helm install kagent 0.9.7` with the
    `controller.substrate.*` + `substrateWorkerPool.*` flags; explain each flag and the
    `WorkerPool` / worker-slot model. Includes the documented `kubectl wait
-   deploy/kagent-controller` fallback for the helm cold-start race.
+   deploy/kagent-controller` fallback for the helm cold-start race. `check-server` verifies
+   the integration via the controller's status API
+   (`http://kagent-controller:8083/api/substrate/status` → `"enabled": true`).
 4. **Deploy a SandboxAgent** — apply `hello-substrate.yaml`; explain `SandboxAgent` /
    `platform: substrate` / `ActorTemplate` / golden snapshot; `kubectl wait` for Ready
-   (first golden snapshot takes ~60–90s).
+   (first golden snapshot takes ~60–90s). Inspect the generated `ActorTemplate`
+   (`kubectl get actortemplates.ate.dev -A`).
 5. **Chat & watch suspend/resume** — open the kagent UI (systemd port-forward + a `service`
-   tab), chat with the agent, then inspect the actor inventory showing `Suspended` ↔
-   `Running`. The payoff moment.
+   tab) and chat with the agent on the `/substrate` page. Then make the lifecycle explicit
+   from the CLI: `kubectl get workerpools.ate.dev -A`, mint a short-lived token
+   (`kubectl create token kagent-controller -n kagent --audience=api.ate-system.svc`),
+   port-forward `svc/api`, and call `ateapi.Control/ListActors` + `ResumeActor` via
+   `grpcurl` to watch an actor go `SUSPENDED` → `RUNNING`. This CLI path is the robust
+   primary verification; the UI is the visual layer on top. The payoff moment.
 6. **Recap & what's next** — scaling the WorkerPool (`kubectl scale workerpool`), the
    long-lived `AgentHarness` path, where substrate is headed, and cleanup notes.
 
@@ -144,15 +152,35 @@ helm upgrade --install kagent-crds \
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --version 0.9.7 --namespace kagent --timeout 10m --wait \
-  --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
   --set providers.default=openAI \
+  --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
   --set controller.substrate.enabled=true \
-  --set controller.substrate.ateApiEndpoint=dns:///api.ate-system.svc:443 \
+  --set controller.substrate.ateApiEndpoint="dns:///api.ate-system.svc:443" \
   --set controller.substrate.ateApiInsecure=true \
+  --set controller.substrate.atenetRouterURL="http://atenet-router.ate-system.svc:80" \
+  --set controller.substrate.ateApiTokenFile="/var/run/secrets/tokens/ate-api/token" \
+  --set controller.substrate.defaultWorkerPool.namespace=kagent \
+  --set controller.substrate.defaultWorkerPool.name=kagent-default \
   --set substrateWorkerPool.create=true \
+  --set substrateWorkerPool.name=kagent-default \
   --set substrateWorkerPool.replicas=1 \
   --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6
 ```
+
+The `controller.substrate.defaultWorkerPool.*` settings (from Levan's guide) register
+`kagent/kagent-default` as the controller's default pool — without them, creating a
+substrate agent fails because no pool is resolvable. They also let a `SandboxAgent` omit
+`spec.substrate.workerPoolRef` entirely. `atenetRouterURL` and `ateApiTokenFile` wire the
+controller to the substrate router and its ServiceAccount-token auth path.
+
+> **Fallback only:** if the published controller/ui images fail to resolve in this
+> environment, Levan's guide adds explicit `controller.image.*` / `ui.image.*` overrides.
+> We omit these by default (the canonical release path resolves images fine) and document
+> them as a troubleshooting fallback, not the happy path.
+
+> **Provider note:** Levan's guide uses Anthropic (`ANTHROPIC_API_KEY`); we use OpenAI
+> because that is the secret Instruqt provides. To switch, set `providers.default=anthropic`
+> and `providers.anthropic.apiKey=...`.
 
 ```yaml
 # Challenge 4 — hello-substrate.yaml
@@ -177,14 +205,33 @@ spec:
       name: kagent-default
 ```
 
+`workerPoolRef` is kept explicit here for teaching clarity. Because challenge 3 configures
+`controller.substrate.defaultWorkerPool`, the shorter `substrate: {}` form also works.
+
+```bash
+# Challenge 5 — make suspend/resume explicit from the CLI (from resume-actor.md)
+kubectl get workerpools.ate.dev -A
+kubectl port-forward -n ate-system svc/api 18443:443 &     # separate terminal
+TOKEN=$(kubectl create token kagent-controller -n kagent \
+  --audience=api.ate-system.svc --duration=15m)
+grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors          # note the SUSPENDED actor + its id
+grpcurl -insecure -H "authorization: Bearer $TOKEN" \
+  -d '{"actor_id":"<ACTOR_ID>"}' \
+  localhost:18443 ateapi.Control/ResumeActor         # watch it flip to RUNNING
+```
+
 ## 8. Risks & mitigations (flagged honestly)
 
 1. **gVisor checkpoint/restore on kind-in-a-VM is the real unknown.** Substrate is pre-1.0
    and needs privileged worker pods + host kernel support. This cannot be fully de-risked
    from research; it requires a live test on the actual Instruqt VM. **Mitigation:** the lab
    is structured so challenges 1–4 (concept, deploy substrate, deploy kagent, deploy agent)
-   still teach successfully even if challenge 5's live suspend/resume misbehaves. We test on
-   a real VM before finalizing.
+   still teach successfully even if challenge 5's live suspend/resume misbehaves. Challenge 5
+   itself has two layers — the `grpcurl` `ListActors`/`ResumeActor` CLI path (robust,
+   scriptable, used by `check-server`) and the UI `/substrate` page (visual). If gVisor
+   checkpoint/restore is unavailable on the VM, the CLI still demonstrates actor state and we
+   degrade gracefully. We test on a real VM before finalizing.
 2. **Helm 10-min cold-start race** (controller restarts waiting on postgres). **Mitigation:**
    bake the `kubectl wait deploy/kagent-controller --for=condition=Available --timeout=10m`
    fallback into the assignment notes and `check-server`.
@@ -210,4 +257,9 @@ spec:
 - `agent-substrate/substrate@main` — `README.md`, `docs/architecture.md`, `docs/api-guide.md`,
   `hack/*.sh`.
 - `christian-posta/substrate@ceposta-learn` — `atlas/` learning docs (topology, flows, concepts).
+- `AdminTurnedDevOps/agentic-demo-repo@main` — `substrate/kagent-substrate/`:
+  `kagent-substrate-install-and-configure.md` (fuller install flag set incl.
+  `defaultWorkerPool`, controller status API), `kagent-substrate.md` (AgentHarness path —
+  out of scope, needs GCS), `resume-actor.md` (grpcurl `ListActors`/`ResumeActor` — adopted
+  for challenge 5).
 - Existing repo patterns: `kagent-enterprise-workshop/` (track.yml, config.yml, setup/check/solve structure).
