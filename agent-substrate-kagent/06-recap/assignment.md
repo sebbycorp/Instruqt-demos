@@ -1,18 +1,15 @@
 ---
 slug: recap
-id: u8wh2rxd5zmq
+id: vv1lzrz8r3ut
 type: challenge
 title: Recap and what's next
 teaser: Review what you built and where Agent Substrate goes from here.
 notes:
 - type: text
-  contents: |
-    # 🎓 Nicely done
-
-    You deployed Agent Substrate and kagent on kind, ran a SandboxAgent inside a
-    gVisor actor, and watched it suspend and resume.
+  contents: "# \U0001F393 Nicely done\n\nYou deployed Agent Substrate and kagent on
+    kind, ran a SandboxAgent inside a\ngVisor actor, and watched it suspend and resume.\n"
 tabs:
-- id: trm6ff06recp
+- id: vuz6w324gqw8
   title: Terminal
   type: terminal
   hostname: server

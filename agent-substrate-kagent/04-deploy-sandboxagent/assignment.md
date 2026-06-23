@@ -1,36 +1,30 @@
 ---
 slug: deploy-sandboxagent
-id: s6uf0pvb3xko
+id: a05yn8u6sbdr
 type: challenge
 title: Deploy a SandboxAgent
-teaser: Deploy a declarative SandboxAgent that runs inside a gVisor actor on the substrate, and watch its golden snapshot build.
+teaser: Deploy a declarative SandboxAgent that runs inside a gVisor actor on the substrate,
+  and watch its golden snapshot build.
 notes:
 - type: text
-  contents: |
-    # 🚀 SandboxAgent
-
-    kagent's `SandboxAgent` (`platform: substrate`) is a per-session declarative agent
-    that runs as a substrate **actor**.
-
-    When you create one, kagent generates an `ActorTemplate`, which triggers the
-    **golden snapshot** — the version-0 frozen image every session is restored from.
-    The first snapshot takes ~60–90s.
-
-    > The runtime must be **Go** — Python ADK isn't compatible with gVisor checkpointing.
-
-    The manifest is pre-written to `/root/hello-substrate.yaml` (open it in the Code
-    Editor tab).
+  contents: "# \U0001F680 SandboxAgent\n\nkagent's `SandboxAgent` (`platform: substrate`)
+    is a per-session declarative agent\nthat runs as a substrate **actor**.\n\nWhen
+    you create one, kagent generates an `ActorTemplate`, which triggers the\n**golden
+    snapshot** — the version-0 frozen image every session is restored from.\nThe first
+    snapshot takes ~60–90s.\n\n> The runtime must be **Go** — Python ADK isn't compatible
+    with gVisor checkpointing.\n\nThe manifest is pre-written to `/root/hello-substrate.yaml`
+    (open it in the Code\nEditor tab).\n"
 tabs:
-- id: trm4dd04sbox
+- id: pmy2ofmq4zy9
   title: Terminal
   type: terminal
   hostname: server
-- id: cod4dd04sbox
+- id: n0pjxl727ydy
   title: Code Editor
   type: code
   hostname: server
   path: /root/hello-substrate.yaml
-- id: svc4dd04ui00
+- id: yb3qixaevgdk
   title: kagent UI
   type: service
   hostname: server

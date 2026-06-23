@@ -1,34 +1,28 @@
 ---
 slug: install-kagent
-id: r5te9nua2wjm
+id: x6oajuycfl7g
 type: challenge
 title: Install kagent, wired to substrate
-teaser: Install OSS kagent v0.9.7 with the substrate integration enabled, and create the default WorkerPool.
+teaser: Install OSS kagent v0.9.7 with the substrate integration enabled, and create
+  the default WorkerPool.
 notes:
 - type: text
-  contents: |
-    # 🤖 kagent on substrate
-
-    kagent is the agent runtime/control plane. Substrate is the execution layer
-    *underneath* it. kagent v0.9.7 is the first release with substrate support
-    (PR #1981).
-
-    The substrate-specific install flags:
-
-    - `controller.substrate.enabled=true` — turn on the integration
-    - `controller.substrate.ateApiEndpoint` — where the substrate control plane lives
-    - `controller.substrate.atenetRouterURL` — the substrate request router
-    - `controller.substrate.defaultWorkerPool.*` — the pool agents land on by default
-    - `substrateWorkerPool.create=true` + `.replicas=1` — create one warm worker
-
-    ⚠️ The kagent controller **hard-fails (crash-loops)** if the substrate API isn't
-    reachable at startup — which is why substrate had to be installed first.
+  contents: "# \U0001F916 kagent on substrate\n\nkagent is the agent runtime/control
+    plane. Substrate is the execution layer\n*underneath* it. kagent v0.9.7 is the
+    first release with substrate support\n(PR #1981).\n\nThe substrate-specific install
+    flags:\n\n- `controller.substrate.enabled=true` — turn on the integration\n- `controller.substrate.ateApiEndpoint`
+    — where the substrate control plane lives\n- `controller.substrate.atenetRouterURL`
+    — the substrate request router\n- `controller.substrate.defaultWorkerPool.*` —
+    the pool agents land on by default\n- `substrateWorkerPool.create=true` + `.replicas=1`
+    — create one warm worker\n\n⚠️ The kagent controller **hard-fails (crash-loops)**
+    if the substrate API isn't\nreachable at startup — which is why substrate had
+    to be installed first.\n"
 tabs:
-- id: trm3cc03kgnt
+- id: n76nycbc1pjq
   title: Terminal
   type: terminal
   hostname: server
-- id: cod3cc03kgnt
+- id: 3vwfebpmrx0v
   title: Code Editor
   type: code
   hostname: server

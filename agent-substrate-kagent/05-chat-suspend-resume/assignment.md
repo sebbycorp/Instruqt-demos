@@ -1,27 +1,24 @@
 ---
 slug: chat-suspend-resume
-id: t7vg1qwc4ylp
+id: ysrnblrrigyt
 type: challenge
 title: Chat and watch suspend/resume
-teaser: Chat with your agent in the kagent UI, then drive the actor lifecycle from the CLI to watch it go Suspended → Running.
+teaser: Chat with your agent in the kagent UI, then drive the actor lifecycle from
+  the CLI to watch it go Suspended → Running.
 notes:
 - type: text
-  contents: |
-    # 🔍 The payoff
-
-    When you chat with `hello-substrate`, a per-session gVisor **actor** is restored
-    from the golden snapshot, runs the LLM call, and snapshots itself back to object
-    storage — returning the worker to the pool.
-
-    Between requests the actor sits **SUSPENDED**. On the next request it's **RESUMED**
-    sub-second. You'll see this both in the UI's `/substrate` page and directly from the
-    `ate-api` via `grpcurl`.
+  contents: "# \U0001F50D The payoff\n\nWhen you chat with `hello-substrate`, a per-session
+    gVisor **actor** is restored\nfrom the golden snapshot, runs the LLM call, and
+    snapshots itself back to object\nstorage — returning the worker to the pool.\n\nBetween
+    requests the actor sits **SUSPENDED**. On the next request it's **RESUMED**\nsub-second.
+    You'll see this both in the UI's `/substrate` page and directly from the\n`ate-api`
+    via `grpcurl`.\n"
 tabs:
-- id: trm5ee05chat
+- id: 230yqdteuzzs
   title: Terminal
   type: terminal
   hostname: server
-- id: svc5ee05ui00
+- id: p5xyfpiaxk3n
   title: kagent UI
   type: service
   hostname: server

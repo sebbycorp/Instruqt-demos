@@ -1,33 +1,29 @@
 ---
 slug: install-substrate
-id: p4qd8mtzk1rn
+id: jnlv0kxhpazk
 type: challenge
 title: Install Agent Substrate
-teaser: Install the Agent Substrate control plane into the ate-system namespace and map each running pod to its role.
+teaser: Install the Agent Substrate control plane into the ate-system namespace and
+  map each running pod to its role.
 notes:
 - type: text
-  contents: |
-    # 🏗️ The substrate control plane
-
-    Agent Substrate installs into the `ate-system` namespace. The key components:
-
-    | Pod | Role |
-    |-----|------|
-    | `ate-api-server` | Control plane: actor lifecycle, scheduling, suspend/resume. Bypasses kube-scheduler. |
-    | `ate-controller` | Reconciles `WorkerPool` + `ActorTemplate` CRDs into Deployments. |
-    | `atelet` (DaemonSet) | Node supervisor: pulls images, manages sandbox lifecycle, talks to object storage. |
-    | `atenet-router` | Envoy L7 router; resolves which worker serves each request. |
-    | `valkey-cluster-{0..5}` | State store: actor/worker records and locks. |
-    | `rustfs` | In-cluster S3-compatible object storage holding snapshot images. |
-
-    The substrate v0.0.6 chart defaults to **JWT auth** (ServiceAccount tokens), so a
-    stock kind cluster works — no feature gates, no custom kind config.
+  contents: "# \U0001F3D7️ The substrate control plane\n\nAgent Substrate installs
+    into the `ate-system` namespace. The key components:\n\n| Pod | Role |\n|-----|------|\n|
+    `ate-api-server` | Control plane: actor lifecycle, scheduling, suspend/resume.
+    Bypasses kube-scheduler. |\n| `ate-controller` | Reconciles `WorkerPool` + `ActorTemplate`
+    CRDs into Deployments. |\n| `atelet` (DaemonSet) | Node supervisor: pulls images,
+    manages sandbox lifecycle, talks to object storage. |\n| `atenet-router` | Envoy
+    L7 router; resolves which worker serves each request. |\n| `valkey-cluster-{0..5}`
+    | State store: actor/worker records and locks. |\n| `rustfs` | In-cluster S3-compatible
+    object storage holding snapshot images. |\n\nThe substrate v0.0.6 chart defaults
+    to **JWT auth** (ServiceAccount tokens), so a\nstock kind cluster works — no feature
+    gates, no custom kind config.\n"
 tabs:
-- id: trm2bb02inst
+- id: pjfb7jimodtk
   title: Terminal
   type: terminal
   hostname: server
-- id: cod2bb02inst
+- id: clx8pad1jvyq
   title: Code Editor
   type: code
   hostname: server

@@ -1,42 +1,30 @@
 ---
 slug: what-is-substrate
-id: m3vx9twha2qk
+id: migxm5gsxgie
 type: challenge
 title: What is an Agent Substrate?
-teaser: Understand the substrate model — actors, workers, golden snapshots, and suspend/resume — then confirm your kind cluster is ready.
+teaser: Understand the substrate model — actors, workers, golden snapshots, and suspend/resume
+  — then confirm your kind cluster is ready.
 notes:
 - type: text
-  contents: |
-    # 🧠 Agent Substrate
-
-    **Agent Substrate** is a Kubernetes-native runtime for running huge numbers of
-    *stateful* agent sessions on a *small* pool of pre-warmed pods.
-
-    ## The problem
-
-    Agent workloads are bursty and idle most of the time. Plain Kubernetes handles
-    this badly:
-    - idle pods still consume resources
-    - the API server can't track millions of objects
-    - pod cold-start takes seconds — too slow for millisecond tasks
-
-    ## The idea
-
-    Decouple **actor** lifecycle from **pod** lifecycle:
-    - An **Actor** is one logical agent session.
-    - A **Worker** is a pre-warmed pod that can host one actor at a time.
-    - Idle actors are **suspended**: gVisor checkpoints their full state (RAM +
-      filesystem) to object storage, and the worker is returned to the pool.
-    - On the next request the actor is **resumed** sub-second into a free worker —
-      exactly where it left off.
-
-    Think serverless scale-to-zero, but for *stateful* sessions.
+  contents: "# \U0001F9E0 Agent Substrate\n\n**Agent Substrate** is a Kubernetes-native
+    runtime for running huge numbers of\n*stateful* agent sessions on a *small* pool
+    of pre-warmed pods.\n\n## The problem\n\nAgent workloads are bursty and idle most
+    of the time. Plain Kubernetes handles\nthis badly:\n- idle pods still consume
+    resources\n- the API server can't track millions of objects\n- pod cold-start
+    takes seconds — too slow for millisecond tasks\n\n## The idea\n\nDecouple **actor**
+    lifecycle from **pod** lifecycle:\n- An **Actor** is one logical agent session.\n-
+    A **Worker** is a pre-warmed pod that can host one actor at a time.\n- Idle actors
+    are **suspended**: gVisor checkpoints their full state (RAM +\n  filesystem) to
+    object storage, and the worker is returned to the pool.\n- On the next request
+    the actor is **resumed** sub-second into a free worker —\n  exactly where it left
+    off.\n\nThink serverless scale-to-zero, but for *stateful* sessions.\n"
 tabs:
-- id: trm1aa01what
+- id: oipuhogxgcgd
   title: Terminal
   type: terminal
   hostname: server
-- id: cod1aa01what
+- id: tm6bqcaklaum
   title: Code Editor
   type: code
   hostname: server
