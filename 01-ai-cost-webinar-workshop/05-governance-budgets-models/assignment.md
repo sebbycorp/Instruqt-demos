@@ -8,7 +8,7 @@ teaser: Enforce a token budget and pin traffic to an approved model. Stop the ru
 notes:
 - type: text
   contents: "# \U0001F6E1️ Governance\n\nVisibility tells you what happened. **Policy**
-    stops it from happening. Two\nroute policies — a token budget and an approved-model
+    stops it from happening. Two\npolicies — a token budget and an approved-model
     pin — and the surprise\nbill can't repeat the same way.\n"
 tabs:
 - id: bqrrq2hu93rs

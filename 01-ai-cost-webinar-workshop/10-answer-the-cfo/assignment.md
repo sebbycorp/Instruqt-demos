@@ -114,12 +114,19 @@ exactly what would have caught alice's batch job before it ran up $229.**
 
 ## You did it 🎉
 
-In ~15 minutes you put Agentgateway in front of all AI traffic and turned an
-unanswerable bill into a governed, fully-attributed system: live token + USD
-cost, admin-API troubleshooting, per-team token budgets, an approved-model pin,
-MCP under the same control point, and fleet-scale spend analysis.
+You started blind — a five-figure bill and no idea who spent it. You finished
+with a gateway that turns every AI call into an answer. Along the way you built:
 
-**Try it on your own traffic:** point any OpenAI client at
-`http://localhost:4000/v1` and it flows through the gateway — instantly metered
-and governed.
+- 💵 **Live cost + token tracking** on every request, priced in real USD
+- 🔧 **Day-2 troubleshooting** through the admin API and UI
+- 🛡️ **Token budgets** that throttle runaway spend before it bills
+- 🎯 **Cost-aware routing** — cheap by default, premium only on demand
+- 🏷️ **CEL cost tagging** to slice spend by tier
+- 🔌 **MCP tool traffic** under the same roof
+- 🔑 **Per-team virtual keys** so the real provider key never leaks
+- 📊 **Fleet-scale attribution** — spend by team, user, model, and workload
+
+**Now make it yours:** point any OpenAI client (or agent, or copilot) at
+`http://localhost:4000/v1`, and it's instantly metered, priced, and governed —
+no app changes. That's the whole pitch: **one gateway, total control of AI spend.**
 

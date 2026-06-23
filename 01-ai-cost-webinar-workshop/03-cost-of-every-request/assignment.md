@@ -3,14 +3,17 @@ slug: cost-of-every-request
 id: zzrir3nvtmi0
 type: challenge
 title: The Cost of Every Request
-teaser: Attach real USD cost and token counts to every call — and watch models differ
-  by 17×.
+teaser: See the real USD cost of every call — and why gpt-4o costs ~17× gpt-4o-mini.
 notes:
 - type: text
-  contents: "# \U0001F4B5 The Cost of Every Request\n\nRouting isn't the point — **attribution**
-    is. Give the gateway a price list\nand it stamps every request with token usage
-    and **realized USD cost**, in\nreal time. Then you'll see why model choice is
-    a budget decision.\n"
+  contents: |
+    # 💵 The Cost of Every Request
+
+    Here's the magic: you didn't *configure* any of this. The moment the gateway
+    came up, it started pricing every call in real USD and recording it.
+
+    In this challenge you'll watch a single request become a dollar figure — and
+    see why choosing gpt-4o over gpt-4o-mini is a budget decision, not a detail.
 tabs:
 - id: ujaxcjanrprx
   title: Terminal
@@ -80,7 +83,7 @@ sqlite3 -box /root/data/data.db "SELECT gen_ai_request_model, input_tokens, outp
 Every request the gateway handles is now a row you can query — we'll come back to
 this in the final challenge.
 
-## Step 5 — The teaching moment: same answer, 17× the price
+## Step 4 — The teaching moment: same answer, 17× the price
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
@@ -92,7 +95,7 @@ Compare the two `cost.total` values: roughly `$0.0000051` (mini) vs `$0.000085`
 (gpt-4o) for the *same* trivial answer. At a million calls a day, that gap is the
 difference between a $5 bill and an $85 bill.
 
-## Step 6 — It's a metric too
+## Step 5 — It's a metric too
 
 ```bash
 curl -s http://localhost:15020/metrics | grep cost_catalog
@@ -102,7 +105,7 @@ curl -s http://localhost:15020/metrics | grep cost_catalog
 priced the request. Point Prometheus/Grafana at `:15020` and cost becomes a
 dashboard.
 
-## Step 7 — Watch it in the UI
+## Step 6 — Watch it in the UI
 
 Open the **Agentgateway UI** tab (`:15000/ui`) and use the **Playground** to send
 a chat request, then look at the request view — you'll see the model, token
