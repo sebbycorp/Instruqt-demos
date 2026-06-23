@@ -1,34 +1,33 @@
 ---
 slug: virtual-keys
-id: ""
+id: doybwiiiixus
 type: challenge
 title: Per-Team Virtual Keys
-teaser: Issue your own gateway keys per team — the real provider key never leaves the gateway.
+teaser: Issue your own gateway keys per team — the real provider key never leaves
+  the gateway.
 notes:
 - type: text
-  contents: |
-    # 🔑 Per-Team Virtual Keys
-
-    Right now the gateway holds one real OpenAI key and accepts anyone who can
-    reach :4000. In production you issue **your own** keys — one per team — and the
-    gateway validates them. The real provider key never leaves the gateway, and
-    every call is attributable to the team that made it.
+  contents: "# \U0001F511 Per-Team Virtual Keys\n\nRight now the gateway holds one
+    real OpenAI key and accepts anyone who can\nreach :4000. In production you issue
+    **your own** keys — one per team — and the\ngateway validates them. The real provider
+    key never leaves the gateway, and\nevery call is attributable to the team that
+    made it.\n"
 tabs:
-- id: ""
+- id: 3xrnkpjxn0zz
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: ygvfvwyuktlh
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: ""
+- id: vfxojhwunhxo
   title: Agentgateway UI
   type: service
   hostname: server
-  port: 15000
   path: /ui
+  port: 15000
 difficulty: ""
 enhanced_loading: null
 ---

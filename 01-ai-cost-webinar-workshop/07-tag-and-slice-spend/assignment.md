@@ -1,34 +1,32 @@
 ---
 slug: tag-and-slice-spend
-id: ""
+id: 6ati5cvb227q
 type: challenge
 title: Tag & Slice Spend
-teaser: Use CEL on llm.cost.total to tag expensive calls and split metrics by cost tier.
+teaser: Use CEL on llm.cost.total to tag expensive calls and split metrics by cost
+  tier.
 notes:
 - type: text
-  contents: |
-    # 🏷️ Tag & Slice Spend
-
-    The gateway already knows the realized USD cost of every call. With a one-line
-    **CEL** expression you can tag each request (`expensive: true/false`) and add a
-    `cost_tier` label to your metrics — so "high-cost traffic" becomes something
-    you can filter logs by and chart in Grafana.
+  contents: "# \U0001F3F7️ Tag & Slice Spend\n\nThe gateway already knows the realized
+    USD cost of every call. With a one-line\n**CEL** expression you can tag each request
+    (`expensive: true/false`) and add a\n`cost_tier` label to your metrics — so \"high-cost
+    traffic\" becomes something\nyou can filter logs by and chart in Grafana.\n"
 tabs:
-- id: ""
+- id: ms0cvommpjfe
   title: Terminal
   type: terminal
   hostname: server
-- id: ""
+- id: pmekesvfzosb
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: ""
+- id: focswpre7xck
   title: Agentgateway UI
   type: service
   hostname: server
-  port: 15000
   path: /ui
+  port: 15000
 difficulty: ""
 enhanced_loading: null
 ---
