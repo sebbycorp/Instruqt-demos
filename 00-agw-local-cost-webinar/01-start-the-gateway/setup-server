@@ -1,17 +1,13 @@
 #!/bin/bash
 set -euo pipefail
-
-# Make the cost catalog + request-log dirs exist (track setup also does this;
-# safe to repeat so the lab is resumable on its own).
 mkdir -p /root/costs /root/data
 
-# Seed a SKELETON config: it boots the gateway + UI + cost tracking, but has NO
-# models and NO MCP target yet — that is the learner's job in this lab.
+# Seed a SKELETON config: it boots the gateway + UI with cost tracking on, but
+# has NO models and NO MCP yet. The learner adds those in later labs.
 if [ ! -f /root/config.yaml ]; then
 cat > /root/config.yaml <<'YAML'
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
 # Skeleton config — boots the gateway, UI, and cost tracking with no routes yet.
-# Add an llm.models entry and an mcp: block, then run `agw-up`.
 config:
   adminAddr: "0.0.0.0:15000"
   database:
@@ -34,7 +30,6 @@ frontendPolicies:
 YAML
 fi
 
-# The gateway should NOT be running yet — the learner starts it with agw-up.
+# Gateway should NOT be running yet — the learner starts it in this lab.
 docker rm -f agentgateway >/dev/null 2>&1 || true
-
 echo "lab 01 setup complete"

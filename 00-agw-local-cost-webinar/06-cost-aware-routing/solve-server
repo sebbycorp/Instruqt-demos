@@ -2,9 +2,7 @@
 set -euo pipefail
 source /root/agw-helpers.sh
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
-mkdir -p /root/costs /root/data
 
-# Start from the Lab 2 end-state: working gateway, NO budget policy yet.
 cat > /root/config.yaml <<'YAML'
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
 config:
@@ -22,6 +20,15 @@ llm:
       allowMethods: ["GET","POST","OPTIONS"]
   models:
   - name: "openai/*"
+    matches:
+    - headers:
+      - name: x-priority
+        value: { exact: high }
+    provider: openAI
+    params:
+      model: gpt-4.1
+      apiKey: "$OPENAI_API_KEY"
+  - name: "openai/*"
     provider: openAI
     params:
       model: gpt-4.1-nano
@@ -34,13 +41,16 @@ mcp:
       allowHeaders: ["*"]
       exposeHeaders: ["Mcp-Session-Id"]
   targets:
-  - name: everything
+  - name: solo-tools
     mcp:
-      host: http://mcp-everything:3001/mcp
+      host: http://mcp-custom:8000/mcp
 frontendPolicies:
   http:
     maxBufferSize: 33554432
 YAML
 
-agw-up >/dev/null 2>&1 || true
-echo "lab 03 setup complete"
+agw-validate
+agw-up
+
+echo "default  -> $(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model)"
+echo "priority -> $(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model)"

@@ -6,12 +6,10 @@ if ! docker ps --format '{{.Names}}' | grep -q '^agentgateway$'; then
   fail-message "The agentgateway container isn't running. Run: agw-up"
   exit 1
 fi
-
 if ! grep -qi 'x-priority' /root/config.yaml 2>/dev/null; then
-  fail-message "No x-priority match found. Add a premium model with matches[].headers (name x-priority, value.exact high) that pins gpt-4.1, then agw-restart."
+  fail-message "No x-priority match found. Add a premium model with matches[].headers (x-priority exact high) pinning gpt-4.1, listed FIRST, then agw-reload."
   exit 1
 fi
-
 if ! agw-validate >/dev/null 2>&1; then
   fail-message "Config doesn't validate. Run: agw-validate"
   exit 1
@@ -22,7 +20,7 @@ hi=$(curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 
 lo=$(curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
   -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":6}' | jq -r .model 2>/dev/null)
 
-case "$hi" in gpt-4.1*) : ;; *) fail-message "x-priority: high routed to '$hi' (expected gpt-4.1). Check the premium model's matches/params.model and that it's listed FIRST."; exit 1;; esac
-case "$lo" in gpt-4.1-nano*) : ;; *) fail-message "Default traffic routed to '$lo' (expected gpt-4.1-nano). Check the default model is listed after the premium one."; exit 1;; esac
+case "$hi" in gpt-4.1*) : ;; *) fail-message "x-priority: high routed to '$hi' (expected gpt-4.1). Check the premium model is listed FIRST with params.model: gpt-4.1."; exit 1;; esac
+case "$lo" in gpt-4.1-nano*) : ;; *) fail-message "Default traffic routed to '$lo' (expected gpt-4.1-nano). Check the default model follows the premium one."; exit 1;; esac
 
 echo "Cost-aware routing live: default -> gpt-4.1-nano, x-priority: high -> gpt-4.1."

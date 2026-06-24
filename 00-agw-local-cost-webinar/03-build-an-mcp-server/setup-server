@@ -2,9 +2,9 @@
 set -euo pipefail
 source /root/agw-helpers.sh
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
-mkdir -p /root/costs /root/data
+mkdir -p /root/costs /root/data /root/mcp-server
 
-# Start from a clean working gateway: cheap default route only, no budget.
+# Start from the Lab 2 end-state: gateway routing OpenAI, no MCP yet.
 cat > /root/config.yaml <<'YAML'
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
 config:
@@ -26,21 +26,26 @@ llm:
     params:
       model: gpt-4.1-nano
       apiKey: "$OPENAI_API_KEY"
-mcp:
-  port: 3000
-  policies:
-    cors:
-      allowOrigins: ["*"]
-      allowHeaders: ["*"]
-      exposeHeaders: ["Mcp-Session-Id"]
-  targets:
-  - name: everything
-    mcp:
-      host: http://mcp-everything:3001/mcp
 frontendPolicies:
   http:
     maxBufferSize: 33554432
 YAML
 
+# Seed a starter server.py with a TODO so the Editor opens something to complete.
+if [ ! -f /root/mcp-server/server.py ]; then
+cat > /root/mcp-server/server.py <<'PY'
+from mcp.server.fastmcp import FastMCP
+
+# Bind to all interfaces on :8000 so the gateway container can reach us by name.
+mcp = FastMCP("solo-tools", host="0.0.0.0", port=8000)
+
+# TODO: add at least one @mcp.tool() function here (see the assignment).
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")
+PY
+fi
+
 agw-up >/dev/null 2>&1 || true
-echo "lab 04 setup complete"
+docker rm -f mcp-custom >/dev/null 2>&1 || true
+echo "lab 03 setup complete"

@@ -2,9 +2,7 @@
 set -euo pipefail
 source /root/agw-helpers.sh
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
-mkdir -p /root/costs /root/data
 
-# Start this lab from the Lab 1 end-state: gateway fronting OpenAI + MCP, cost on.
 cat > /root/config.yaml <<'YAML'
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
 config:
@@ -20,6 +18,11 @@ llm:
       allowOrigins: ["*"]
       allowHeaders: ["*"]
       allowMethods: ["GET","POST","OPTIONS"]
+    localRateLimit:
+    - maxTokens: 300
+      tokensPerFill: 300
+      fillInterval: 1h
+      type: tokens
   models:
   - name: "openai/*"
     provider: openAI
@@ -34,16 +37,20 @@ mcp:
       allowHeaders: ["*"]
       exposeHeaders: ["Mcp-Session-Id"]
   targets:
-  - name: everything
+  - name: solo-tools
     mcp:
-      host: http://mcp-everything:3001/mcp
+      host: http://mcp-custom:8000/mcp
 frontendPolicies:
   http:
     maxBufferSize: 33554432
 YAML
 
-# Fresh request log so this lab's cost numbers start from zero.
-rm -f /root/data/data.db
-agw-up >/dev/null 2>&1 || true
+agw-validate
+agw-up
 
-echo "lab 02 setup complete"
+for i in $(seq 1 8); do
+  code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Write a detailed paragraph about cloud cost governance."}],"max_tokens":120}')
+  echo "request $i -> $code"
+done

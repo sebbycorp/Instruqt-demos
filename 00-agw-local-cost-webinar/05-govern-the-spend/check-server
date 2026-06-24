@@ -5,14 +5,11 @@ if ! docker ps --format '{{.Names}}' | grep -q '^agentgateway$'; then
   fail-message "The agentgateway container isn't running. Run: agw-up"
   exit 1
 fi
-
-# Config must declare a token-based localRateLimit.
 if ! grep -q "localRateLimit" /root/config.yaml || ! grep -q "type: tokens" /root/config.yaml; then
-  fail-message "No token budget found. Add a localRateLimit with 'type: tokens' under llm.policies, then agw-restart."
+  fail-message "No token budget found. Add a localRateLimit with 'type: tokens' under llm.policies, then agw-reload."
   exit 1
 fi
 
-# Spend past the budget and confirm the gateway returns 429.
 saw429=0
 for i in $(seq 1 10); do
   code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/v1/chat/completions \
@@ -22,8 +19,7 @@ for i in $(seq 1 10); do
 done
 
 if [ "$saw429" != "1" ]; then
-  fail-message "Sent 10 requests but never hit a 429. Is the budget small enough (maxTokens ~300) and the gateway restarted? Try agw-restart, then check again."
+  fail-message "Sent 10 requests but never hit a 429. Is maxTokens small (~300) and did you agw-reload?"
   exit 1
 fi
-
 echo "Token budget is enforcing — over-budget requests get 429."

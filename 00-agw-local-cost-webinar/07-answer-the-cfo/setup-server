@@ -2,10 +2,22 @@
 set -euo pipefail
 source /root/agw-helpers.sh
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
-mkdir -p /root/costs /root/data
+mkdir -p /root/mcp-server /root/costs /root/data
 
-# End-state config: cost-aware routing (cheap default + x-priority premium) AND the
-# MCP target — the full stack from the whole webinar.
+cat > /root/mcp-server/server.py <<'PY'
+from mcp.server.fastmcp import FastMCP
+mcp = FastMCP("solo-tools", host="0.0.0.0", port=8000)
+
+@mcp.tool()
+def estimate_tokens(text: str) -> int:
+    """Roughly estimate the number of tokens in a piece of text (~4 chars per token)."""
+    return max(1, len(text) // 4)
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")
+PY
+
+# Full end-state: cost-aware routing + the MCP server, all under one gateway.
 cat > /root/config.yaml <<'YAML'
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
 config:
@@ -44,14 +56,15 @@ mcp:
       allowHeaders: ["*"]
       exposeHeaders: ["Mcp-Session-Id"]
   targets:
-  - name: everything
+  - name: solo-tools
     mcp:
-      host: http://mcp-everything:3001/mcp
+      host: http://mcp-custom:8000/mcp
 frontendPolicies:
   http:
     maxBufferSize: 33554432
 YAML
 
+mcp-up >/dev/null 2>&1 || true
 agw-up >/dev/null 2>&1 || true
 
 # Seed a mix of cheap + premium traffic so the CFO summary has something to report.
@@ -62,4 +75,4 @@ done
 curl -s -o /dev/null http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' \
   -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Write a short board update on AI spend."}],"max_tokens":120}' || true
 
-echo "lab 05 setup complete"
+echo "lab 07 setup complete"

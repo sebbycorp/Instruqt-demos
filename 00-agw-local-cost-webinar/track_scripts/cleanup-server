@@ -1,6 +1,6 @@
 #!/bin/bash
 set -uo pipefail
-docker rm -f agentgateway   >/dev/null 2>&1 || true
-docker rm -f mcp-everything >/dev/null 2>&1 || true
-docker network rm agw-net   >/dev/null 2>&1 || true
+docker rm -f agentgateway >/dev/null 2>&1 || true
+docker rm -f mcp-custom   >/dev/null 2>&1 || true
+docker network rm agw-net >/dev/null 2>&1 || true
 echo "cleanup complete"

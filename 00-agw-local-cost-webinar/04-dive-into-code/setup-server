@@ -1,0 +1,80 @@
+#!/bin/bash
+set -euo pipefail
+source /root/agw-helpers.sh
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+mkdir -p /root/mcp-server /root/app /root/costs /root/data
+
+# Lab 3 end-state: MCP server + gateway (OpenAI + MCP) both running.
+cat > /root/mcp-server/server.py <<'PY'
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("solo-tools", host="0.0.0.0", port=8000)
+
+@mcp.tool()
+def estimate_tokens(text: str) -> int:
+    """Roughly estimate the number of tokens in a piece of text (~4 chars per token)."""
+    return max(1, len(text) // 4)
+
+@mcp.tool()
+def estimate_cost(input_tokens: int, output_tokens: int) -> str:
+    """Estimate the USD cost of a gpt-4.1-nano call from token counts."""
+    cost = (input_tokens * 0.10 + output_tokens * 0.40) / 1_000_000
+    return f"${cost:.6f}"
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http")
+PY
+
+cat > /root/config.yaml <<'YAML'
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///data/data.db"
+  modelCatalog:
+    - file: /costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
+  models:
+  - name: "openai/*"
+    provider: openAI
+    params:
+      model: gpt-4.1-nano
+      apiKey: "$OPENAI_API_KEY"
+mcp:
+  port: 3000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      exposeHeaders: ["Mcp-Session-Id"]
+  targets:
+  - name: solo-tools
+    mcp:
+      host: http://mcp-custom:8000/mcp
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+YAML
+
+mcp-up >/dev/null 2>&1 || true
+agw-up >/dev/null 2>&1 || true
+
+# Seed a starter client app stub so the Editor opens something to complete.
+if [ ! -f /root/app/app.py ]; then
+cat > /root/app/app.py <<'PY'
+# A tiny client that talks to BOTH planes of the gateway:
+#   - the OpenAI-compatible LLM API on :4000
+#   - your MCP server on :3000
+# Run it with:  uv run --with openai --with 'mcp==1.12.4' /root/app/app.py
+#
+# TODO: complete ask_llm() and use_tools() per the assignment.
+PY
+fi
+
+echo "lab 04 setup complete"

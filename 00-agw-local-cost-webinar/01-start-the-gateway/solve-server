@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+source /root/agw-helpers.sh
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+agw-up
+docker ps --filter name=agentgateway
+curl -s -o /dev/null -w "UI on :15000 -> %{http_code}\n" http://localhost:15000/ui/ || true
