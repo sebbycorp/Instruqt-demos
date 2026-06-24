@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS request_logs (
 	cost REAL,
 	agentgateway_user TEXT,
 	agentgateway_group TEXT,
+	user_agent_name TEXT,
 	has_payload INTEGER NOT NULL,
 	attributes_json TEXT NOT NULL CHECK (json_valid(attributes_json))
 );
@@ -499,6 +500,7 @@ def insert_logs(
 				cost,
 				user,
 				group,
+				user_agent_name,
 				1 if has_payload else 0,
 				json.dumps(attributes, separators=(",", ":")),
 			)
@@ -518,8 +520,8 @@ def insert_logs(
 			id, started_at, completed_at, duration_ms, trace_id, span_id, http_status, error,
 			gen_ai_operation_name, gen_ai_provider_name, gen_ai_request_model, gen_ai_response_model,
 			input_tokens, output_tokens, total_tokens, cost, agentgateway_user, agentgateway_group,
-			has_payload, attributes_json
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			user_agent_name, has_payload, attributes_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		""",
 		log_rows,
 	)

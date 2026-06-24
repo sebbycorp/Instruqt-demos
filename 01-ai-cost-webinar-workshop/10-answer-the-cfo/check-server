@@ -1,12 +1,13 @@
 #!/bin/bash
 set -uo pipefail
-if [ ! -f /root/gw-logs.db ]; then
-  fail-message "No /root/gw-logs.db yet. Generate it: uv run /root/gen-mock-logs.py --replace --requests 5000 --days 7 -o /root/gw-logs.db"
+n=$(sqlite3 /root/data/data.db "SELECT COUNT(*) FROM request_logs;" 2>/dev/null || echo 0)
+if [ "${n:-0}" -lt 4000 ]; then
+  fail-message "Fleet data not loaded yet. Append a week into your gateway DB: uv run /root/gen-mock-logs.py --append --requests 5000 --days 7 -o /root/data/data.db"
   exit 1
 fi
-n=$(sqlite3 /root/gw-logs.db "SELECT COUNT(*) FROM request_logs;" 2>/dev/null || echo 0)
-if [ "${n:-0}" -lt 1 ]; then
-  fail-message "request_logs is empty. Re-run the generator with --replace."
+prov=$(sqlite3 /root/data/data.db "SELECT COUNT(DISTINCT gen_ai_provider_name) FROM request_logs;" 2>/dev/null || echo 0)
+if [ "${prov:-0}" -lt 2 ]; then
+  fail-message "Expected a multi-provider fleet (OpenAI, Anthropic, Google, ...). Re-run the generator with --append."
   exit 1
 fi
-echo "Dataset ready ($n requests). You can answer 'who spent the money?'"
+echo "Fleet loaded ($n requests across $prov providers). You can answer 'who spent the money?'"
