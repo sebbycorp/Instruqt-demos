@@ -1,28 +1,25 @@
 ---
 slug: run-gateway-docker
-id: e9f1jny3pmpq
+id: jb3bysq5ryex
 type: challenge
 title: Run the Gateway in Docker
 teaser: Put one Docker container in front of all your AI traffic.
 notes:
 - type: text
-  contents: |
-    # 🐳 Run the Gateway in Docker
-
-    Agentgateway is a single Rust binary — and a single Docker container. Start it
-    with a minimal config and connect to its built-in web UI. No Kubernetes, no
-    sidecars.
+  contents: "# \U0001F433 Run the Gateway in Docker\n\nAgentgateway is a single Rust
+    binary — and a single Docker container. Start it\nwith a minimal config and connect
+    to its built-in web UI. No Kubernetes, no\nsidecars.\n"
 tabs:
-- id: terminal
+- id: eemwgichzjbp
   title: Terminal
   type: terminal
   hostname: server
-- id: editor
+- id: pjaqr0b8tbkg
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui
+- id: kuebxvrqykcl
   title: Agentgateway UI
   type: service
   hostname: server

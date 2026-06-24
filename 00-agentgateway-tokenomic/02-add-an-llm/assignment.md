@@ -1,27 +1,25 @@
 ---
 slug: add-an-llm
-id: e05hjhwdl3c1
+id: ss7rwb9xy9yo
 type: challenge
 title: Add an LLM
 teaser: Turn the gateway into an OpenAI-compatible proxy.
 notes:
 - type: text
-  contents: |
-    # 🌐 Add an LLM
-
-    Point the gateway at OpenAI and it becomes an OpenAI-compatible proxy your apps
-    call instead of api.openai.com — with cost tracking on by default.
+  contents: "# \U0001F310 Add an LLM\n\nPoint the gateway at OpenAI and it becomes
+    an OpenAI-compatible proxy your apps\ncall instead of api.openai.com — with cost
+    tracking on by default.\n"
 tabs:
-- id: terminal
+- id: 2x4vmpolxfao
   title: Terminal
   type: terminal
   hostname: server
-- id: editor
+- id: bev7veegqx0l
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui
+- id: curkyxyh00us
   title: Agentgateway UI
   type: service
   hostname: server

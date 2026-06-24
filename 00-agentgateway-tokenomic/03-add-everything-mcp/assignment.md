@@ -1,27 +1,25 @@
 ---
 slug: add-everything-mcp
-id: hccegz8zjb6m
+id: zq7kl5qxngxj
 type: challenge
 title: Add an MCP Server
 teaser: Bring agent tool traffic under the same gateway.
 notes:
 - type: text
-  contents: |
-    # 🔌 Add an MCP Server
-
-    Agents call tools over MCP. Run a separate MCP container and put it behind the
-    same gateway so LLM and tool traffic share one control point.
+  contents: "# \U0001F50C Add an MCP Server\n\nAgents call tools over MCP. Run a separate
+    MCP container and put it behind the\nsame gateway so LLM and tool traffic share
+    one control point.\n"
 tabs:
-- id: terminal
+- id: qjndfrkykexn
   title: Terminal
   type: terminal
   hostname: server
-- id: editor
+- id: knu8xrxene6y
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui
+- id: jlzgrbmgoaaz
   title: Agentgateway UI
   type: service
   hostname: server

@@ -1,22 +1,20 @@
 ---
 slug: analyze-the-traffic
-id: rtxkc88wbx0k
+id: v1bvclky1gmc
 type: challenge
 title: Analyze the Traffic
 teaser: Turn captured traffic into cost and usage answers.
 notes:
 - type: text
-  contents: |
-    # 📊 Analyze the Traffic
-
-    A week of traffic has already flowed through your gateway. Every call was logged
-    with tokens and cost. Time to answer the questions a CFO would ask.
+  contents: "# \U0001F4CA Analyze the Traffic\n\nA week of traffic has already flowed
+    through your gateway. Every call was logged\nwith tokens and cost. Time to answer
+    the questions a CFO would ask.\n"
 tabs:
-- id: terminal
+- id: adtgydpflis0
   title: Terminal
   type: terminal
   hostname: server
-- id: ui
+- id: atzyfal7r4ww
   title: Agentgateway UI
   type: service
   hostname: server
