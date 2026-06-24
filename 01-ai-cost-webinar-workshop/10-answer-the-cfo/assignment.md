@@ -20,7 +20,7 @@ tabs:
   type: code
   hostname: server
   path: /root
-- id: cfoui0w23xnj
+- id: 1hk6nljxy8am
   title: Agentgateway UI
   type: service
   hostname: server
