@@ -3,7 +3,7 @@ slug: cost-of-every-request
 id: zzrir3nvtmi0
 type: challenge
 title: The Cost of Every Request
-teaser: See the real USD cost of every call — and why gpt-4.1 costs ~17× gpt-4.1-nano.
+teaser: See the real USD cost of every call — and why gpt-4.1 costs ~20× gpt-4.1-nano.
 notes:
 - type: text
   contents: "# \U0001F4B5 The Cost of Every Request\n\nHere's the magic: you didn't
@@ -45,12 +45,49 @@ grep -A4 '"gpt-4.1-nano"\|"gpt-4.1"' /root/costs/base-costs.json | head
 ```
 
 Rates are **USD per 1 million tokens**, split into input and output — exactly how
-providers bill. Note `gpt-4.1` costs ~17× `gpt-4.1-nano`.
+providers bill. Note `gpt-4.1` ($2.00 / $8.00) costs **~20×** `gpt-4.1-nano`
+($0.10 / $0.40).
 
-## Step 2 — Drive a couple of calls
+## Step 2 — Offer both a premium and a cheap model
 
-Send a cheap and a premium request through the gateway. Note the **`openai/`**
-prefix on the model — that's how the gateway's `openai/*` model matches:
+To compare costs you need the gateway to actually *serve* both models. Add a
+**premium** model matched by name (`openai/gpt-4.1` → real `gpt-4.1`) alongside the
+**cheap** catch-all (`openai/*` → `gpt-4.1-nano`). Paste this into the **Terminal**:
+
+```bash
+cat > /root/config.yaml <<'EOF'
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///root/data/data.db"
+  modelCatalog:
+    - file: /root/costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
+  models:
+  - name: "openai/gpt-4.1"                # asked for by name → real gpt-4.1
+    provider: openAI
+    params: { model: gpt-4.1, apiKey: "$OPENAI_API_KEY" }
+  - name: "openai/*"                       # everything else → cheap nano
+    provider: openAI
+    params: { model: gpt-4.1-nano, apiKey: "$OPENAI_API_KEY" }
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+EOF
+agentgateway -f /root/config.yaml --validate-only
+agw-restart
+```
+
+The gateway picks the model by **matching the requested name**: `openai/gpt-4.1`
+hits the specific entry; anything else falls through to the `openai/*` default.
+
+## Step 3 — Drive a cheap call and a premium call
 
 ```bash
 # cheap model
@@ -65,7 +102,7 @@ curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/
 Each prints the model's short reply — the calls went through **your** gateway to
 OpenAI and back, and were just priced and logged.
 
-## Step 3 — See the cost, cleanly
+## Step 4 — See the cost, cleanly
 
 Every call is priced and written to the database. Pull the last few as a tidy
 table (no log-grepping):
@@ -78,23 +115,21 @@ sqlite3 -box /root/data/data.db \
 ```
 
 ```
-┌─────────────┬────────┬─────────┬────────────┐
-│ model       │ in_tok │ out_tok │ cost_usd   │
-├─────────────┼────────┼─────────┼────────────┤
-│ gpt-4.1-nano │ 14     │ 5       │ $0.0000051 │
-└─────────────┴────────┴─────────┴────────────┘
+┌──────────────┬────────┬─────────┬────────────┐
+│ model        │ in_tok │ out_tok │ cost_usd   │
+├──────────────┼────────┼─────────┼────────────┤
+│ gpt-4.1      │ 14     │ 5       │ $0.0000680 │
+│ gpt-4.1-nano │ 14     │ 5       │ $0.0000034 │
+└──────────────┴────────┴─────────┴────────────┘
 ```
 
-**A clean dollar figure on every single call** — something the provider dashboard
-never gives you. (It's in the access log too if you ever need it:
-`grep cost /root/agentgateway.log`.)
+**A clean dollar figure on every single call** — and the model column shows what
+*actually ran* (the gateway logs the served model, not the name you typed). It's
+in the access log too if you ever need it: `grep cost /root/agentgateway.log`.
 
-## Step 4 — The teaching moment: same answer, 17× the price
+## Step 5 — The teaching moment: same answer, 20× the price
 
 ```bash
-curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
-
 sqlite3 -box /root/data/data.db \
   "SELECT gen_ai_request_model AS model, printf('\$%.6f', cost) AS per_call,
           printf('\$%.2f', cost*1000000) AS per_1M_calls
@@ -102,18 +137,18 @@ sqlite3 -box /root/data/data.db \
 ```
 
 ```
-┌─────────────┬───────────┬──────────────┐
-│ model       │ per_call  │ per_1M_calls │
-├─────────────┼───────────┼──────────────┤
-│ gpt-4.1      │ $0.000085 │ $85.00       │
-│ gpt-4.1-nano │ $0.000005 │ $5.10        │
-└─────────────┴───────────┴──────────────┘
+┌──────────────┬───────────┬──────────────┐
+│ model        │ per_call  │ per_1M_calls │
+├──────────────┼───────────┼──────────────┤
+│ gpt-4.1      │ $0.000068 │ $68.00       │
+│ gpt-4.1-nano │ $0.000003 │ $3.40        │
+└──────────────┴───────────┴──────────────┘
 ```
 
-Same trivial answer — **$5 vs $85 per million calls.** That ~17× gap is exactly
-why "which model?" is a budget decision, not a detail.
+Same trivial answer — **$3.40 vs $68.00 per million calls.** That ~20× gap is
+exactly why "which model?" is a budget decision, not a detail.
 
-## Step 5 — It's a metric too
+## Step 6 — It's a metric too
 
 ```bash
 curl -s http://localhost:15020/metrics | grep cost_catalog
@@ -123,11 +158,11 @@ curl -s http://localhost:15020/metrics | grep cost_catalog
 priced the request. Point Prometheus/Grafana at `:15020` and cost becomes a
 dashboard.
 
-## Step 6 — See it as a chart
+## Step 7 — See it as a chart
 
 Open the **Agentgateway UI** tab (`:15000/ui`) → left nav → **Costs**. The same
 numbers you just queried are here as **charts** — spend broken down by model, no
-SQL required. Fire another call from the **Terminal** (re-run a curl from Step 2)
+SQL required. Fire another call from the **Terminal** (re-run a curl from Step 3)
 and refresh the page to watch the spend tick up. This is the view you'd hand a
 manager.
 
