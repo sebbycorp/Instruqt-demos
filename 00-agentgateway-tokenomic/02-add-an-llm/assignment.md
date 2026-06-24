@@ -1,6 +1,6 @@
 ---
 slug: add-an-llm
-id: GENERATED_ON_PUSH
+id: e05hjhwdl3c1
 type: challenge
 title: Add an LLM
 teaser: Turn the gateway into an OpenAI-compatible proxy.

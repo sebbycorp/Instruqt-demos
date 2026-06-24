@@ -1,6 +1,6 @@
 ---
 slug: add-everything-mcp
-id: GENERATED_ON_PUSH
+id: hccegz8zjb6m
 type: challenge
 title: Add an MCP Server
 teaser: Bring agent tool traffic under the same gateway.

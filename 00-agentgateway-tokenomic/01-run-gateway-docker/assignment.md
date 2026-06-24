@@ -1,6 +1,6 @@
 ---
 slug: run-gateway-docker
-id: GENERATED_ON_PUSH
+id: e9f1jny3pmpq
 type: challenge
 title: Run the Gateway in Docker
 teaser: Put one Docker container in front of all your AI traffic.

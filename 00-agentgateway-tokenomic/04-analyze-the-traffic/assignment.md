@@ -1,6 +1,6 @@
 ---
 slug: analyze-the-traffic
-id: GENERATED_ON_PUSH
+id: rtxkc88wbx0k
 type: challenge
 title: Analyze the Traffic
 teaser: Turn captured traffic into cost and usage answers.
