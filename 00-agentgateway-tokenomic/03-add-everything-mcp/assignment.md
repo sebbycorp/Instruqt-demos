@@ -33,9 +33,9 @@ enhanced_loading: null
 
 ![Lab 3 — LLM + MCP behind one gateway](../assets/diagram-03-mcp.png)
 
-**What we're building:** a **separate** `mcp-everything` container on the shared
-`agw` Docker network, with the gateway proxying it on `:3000`. The gateway reaches
-it by container name over HTTP.
+**What we're building:** a **separate** `mcp-everything` server on the shared
+`agw` network, with the gateway proxying it on `:3000`. The gateway reaches it by
+name over HTTP.
 
 ## Step 1 — Run the MCP server as its own container
 
