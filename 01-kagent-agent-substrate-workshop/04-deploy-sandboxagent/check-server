@@ -1,0 +1,27 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get sandboxagent hello-substrate -n kagent >/dev/null 2>&1; then
+  fail-message "SandboxAgent 'hello-substrate' not found. Run: kubectl apply -f /root/hello-substrate.yaml"
+  exit 1
+fi
+
+if ! kubectl wait sandboxagent/hello-substrate -n kagent --for=condition=Ready --timeout=300s >/dev/null 2>&1; then
+  fail-message "SandboxAgent is not Ready yet. The first golden snapshot takes ~60-90s — wait and re-check. Inspect with: kubectl describe sandboxagent hello-substrate -n kagent"
+  exit 1
+fi
+
+# Ensure the kagent UI is reachable on host port 8080 (the "kagent UI" service tab).
+systemctl restart kagent-ui 2>/dev/null || true
+ui_code="000"
+for _ in $(seq 1 10); do
+  ui_code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:8080 2>/dev/null || echo "000")
+  [ "$ui_code" != "000" ] && break
+  sleep 3
+done
+if [ "$ui_code" = "000" ]; then
+  fail-message "kagent UI not reachable on http://localhost:8080. Check: systemctl status kagent-ui ; kubectl get svc kagent-ui -n kagent"
+  exit 1
+fi
+
+echo "Challenge 4 complete!"

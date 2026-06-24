@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euxo pipefail
+
+kubectl apply -f /root/hello-substrate.yaml
+kubectl wait sandboxagent/hello-substrate -n kagent --for=condition=Ready --timeout=300s
+
+echo "Challenge 4 solved"

@@ -113,7 +113,7 @@ sessions — the actor resumes exactly where it left off.
 ## 6. Repo layout (matches existing tracks)
 
 ```
-agent-substrate-kagent/
+01-kagent-agent-substrate-workshop/
   track.yml          # metadata, tags, idle_timeout 1800, timelimit ~5400
   config.yml         # n1-standard-8 VM + OPENAI_API_KEY secret
   track_scripts/setup-server          # tools + kind cluster + image pre-pull

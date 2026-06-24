@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Demonstrate the actor lifecycle non-interactively.
+kubectl port-forward -n ate-system svc/api 18443:443 >/tmp/pf-api.log 2>&1 &
+PF_PID=$!
+sleep 3
+
+# Disable xtrace so the bearer token isn't echoed into logs.
+set +x
+TOKEN=$(kubectl create token kagent-controller -n kagent --audience=api.ate-system.svc --duration=15m)
+grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors || true
+set -x
+
+kill "$PF_PID" 2>/dev/null || true
+
+echo "export SUBSTRATE_LAB_DONE=true" >> ~/.bashrc
+
+echo "Challenge 5 solved"

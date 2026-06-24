@@ -25,14 +25,14 @@ This is an Instruqt track, not an app — there is no unit-test runner. The veri
 
 **IDs**: the `id` values below are pre-generated unique 12-char lowercase-alphanumeric strings (matching the format Instruqt uses, e.g. `vxjkcawnavuq`). If the team's Instruqt CLI reassigns ids/checksum on push (as in recent commits "Sync assigned ids/checksum…"), let it — these are valid placeholders that satisfy uniqueness.
 
-**Track directory:** `agent-substrate-kagent/` at the repo root (sibling to `kagent-enterprise-workshop/`).
+**Track directory:** `01-kagent-agent-substrate-workshop/` at the repo root (sibling to `kagent-enterprise-workshop/`).
 
 ---
 
 ## File Structure
 
 ```
-agent-substrate-kagent/
+01-kagent-agent-substrate-workshop/
   track.yml                                   # track metadata
   config.yml                                  # VM + OPENAI_API_KEY secret
   track_scripts/setup-server                  # tools + kind cluster + key validation
@@ -57,23 +57,23 @@ Each file has one responsibility: `track.yml`/`config.yml` declare the lab; `tra
 ## Task 1: Scaffold track skeleton (`track.yml`, `config.yml`, directories)
 
 **Files:**
-- Create: `agent-substrate-kagent/track.yml`
-- Create: `agent-substrate-kagent/config.yml`
+- Create: `01-kagent-agent-substrate-workshop/track.yml`
+- Create: `01-kagent-agent-substrate-workshop/config.yml`
 
 - [ ] **Step 1: Create the directory tree**
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-mkdir -p agent-substrate-kagent/track_scripts \
-         agent-substrate-kagent/01-what-is-substrate \
-         agent-substrate-kagent/02-install-substrate \
-         agent-substrate-kagent/03-install-kagent \
-         agent-substrate-kagent/04-deploy-sandboxagent \
-         agent-substrate-kagent/05-chat-suspend-resume \
-         agent-substrate-kagent/06-recap
+mkdir -p 01-kagent-agent-substrate-workshop/track_scripts \
+         01-kagent-agent-substrate-workshop/01-what-is-substrate \
+         01-kagent-agent-substrate-workshop/02-install-substrate \
+         01-kagent-agent-substrate-workshop/03-install-kagent \
+         01-kagent-agent-substrate-workshop/04-deploy-sandboxagent \
+         01-kagent-agent-substrate-workshop/05-chat-suspend-resume \
+         01-kagent-agent-substrate-workshop/06-recap
 ```
 
-- [ ] **Step 2: Write `agent-substrate-kagent/track.yml`**
+- [ ] **Step 2: Write `01-kagent-agent-substrate-workshop/track.yml`**
 
 ```yaml
 slug: agent-substrate-kagent
@@ -121,7 +121,7 @@ checksum: "0"
 enhanced_loading: false
 ```
 
-- [ ] **Step 3: Write `agent-substrate-kagent/config.yml`**
+- [ ] **Step 3: Write `01-kagent-agent-substrate-workshop/config.yml`**
 
 ```yaml
 version: "3"
@@ -141,7 +141,7 @@ secrets:
 - [ ] **Step 4: Commit**
 
 ```bash
-git add agent-substrate-kagent/track.yml agent-substrate-kagent/config.yml
+git add 01-kagent-agent-substrate-workshop/track.yml 01-kagent-agent-substrate-workshop/config.yml
 git commit -m "scaffold: agent-substrate-kagent track metadata and config"
 ```
 
@@ -150,9 +150,9 @@ git commit -m "scaffold: agent-substrate-kagent track metadata and config"
 ## Task 2: Track setup script (tools + kind cluster + key validation)
 
 **Files:**
-- Create: `agent-substrate-kagent/track_scripts/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/track_scripts/setup-server`
 
-- [ ] **Step 1: Write `agent-substrate-kagent/track_scripts/setup-server`**
+- [ ] **Step 1: Write `01-kagent-agent-substrate-workshop/track_scripts/setup-server`**
 
 ```bash
 #!/bin/bash
@@ -217,25 +217,28 @@ fi
 kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
 # --- Validate the OpenAI key (footgun: empty key installs silently) ---------
+# Disable xtrace around the secret so the key value is never echoed into logs.
+set +x
 if [ -n "${OPENAI_API_KEY:-}" ]; then
   echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
   echo "=== OPENAI_API_KEY present (len=${#OPENAI_API_KEY}) ==="
 else
   echo "=== WARNING: OPENAI_API_KEY is empty — kagent install in challenge 3 will fail ==="
 fi
+set -x
 
 echo "=== Track setup complete: kind cluster '${KIND_CLUSTER}' ready ==="
 ```
 
 - [ ] **Step 2: Lint the script**
 
-Run: `shellcheck agent-substrate-kagent/track_scripts/setup-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/track_scripts/setup-server`
 Expected: no errors. (Instruqt helpers `set-workdir` are external; if shellcheck flags them as undefined commands that is acceptable — they are provided at runtime. Use `# shellcheck disable=SC2154` only if needed; do not silence real issues.)
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add agent-substrate-kagent/track_scripts/setup-server
+git add 01-kagent-agent-substrate-workshop/track_scripts/setup-server
 git commit -m "feat: track setup installs tooling and creates kind cluster"
 ```
 
@@ -244,10 +247,10 @@ git commit -m "feat: track setup installs tooling and creates kind cluster"
 ## Task 3: Challenge 1 — What is an Agent Substrate?
 
 **Files:**
-- Create: `agent-substrate-kagent/01-what-is-substrate/assignment.md`
-- Create: `agent-substrate-kagent/01-what-is-substrate/setup-server`
-- Create: `agent-substrate-kagent/01-what-is-substrate/check-server`
-- Create: `agent-substrate-kagent/01-what-is-substrate/solve-server`
+- Create: `01-kagent-agent-substrate-workshop/01-what-is-substrate/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/01-what-is-substrate/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/01-what-is-substrate/check-server`
+- Create: `01-kagent-agent-substrate-workshop/01-what-is-substrate/solve-server`
 
 - [ ] **Step 1: Write `01-what-is-substrate/assignment.md`**
 
@@ -399,13 +402,13 @@ echo "Challenge 1 solved"
 
 - [ ] **Step 5: Lint all three scripts**
 
-Run: `shellcheck agent-substrate-kagent/01-what-is-substrate/{setup,check,solve}-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/01-what-is-substrate/{setup,check,solve}-server`
 Expected: no errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent-substrate-kagent/01-what-is-substrate
+git add 01-kagent-agent-substrate-workshop/01-what-is-substrate
 git commit -m "feat: challenge 1 — what is an agent substrate"
 ```
 
@@ -414,10 +417,10 @@ git commit -m "feat: challenge 1 — what is an agent substrate"
 ## Task 4: Challenge 2 — Install Agent Substrate
 
 **Files:**
-- Create: `agent-substrate-kagent/02-install-substrate/assignment.md`
-- Create: `agent-substrate-kagent/02-install-substrate/setup-server`
-- Create: `agent-substrate-kagent/02-install-substrate/check-server`
-- Create: `agent-substrate-kagent/02-install-substrate/solve-server`
+- Create: `01-kagent-agent-substrate-workshop/02-install-substrate/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/02-install-substrate/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/02-install-substrate/check-server`
+- Create: `01-kagent-agent-substrate-workshop/02-install-substrate/solve-server`
 
 - [ ] **Step 1: Write `02-install-substrate/assignment.md`**
 
@@ -580,13 +583,13 @@ echo "Challenge 2 solved"
 
 - [ ] **Step 5: Lint all three scripts**
 
-Run: `shellcheck agent-substrate-kagent/02-install-substrate/{setup,check,solve}-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/02-install-substrate/{setup,check,solve}-server`
 Expected: no errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent-substrate-kagent/02-install-substrate
+git add 01-kagent-agent-substrate-workshop/02-install-substrate
 git commit -m "feat: challenge 2 — install agent substrate"
 ```
 
@@ -595,10 +598,10 @@ git commit -m "feat: challenge 2 — install agent substrate"
 ## Task 5: Challenge 3 — Install kagent, wired to substrate
 
 **Files:**
-- Create: `agent-substrate-kagent/03-install-kagent/assignment.md`
-- Create: `agent-substrate-kagent/03-install-kagent/setup-server`
-- Create: `agent-substrate-kagent/03-install-kagent/check-server`
-- Create: `agent-substrate-kagent/03-install-kagent/solve-server`
+- Create: `01-kagent-agent-substrate-workshop/03-install-kagent/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/03-install-kagent/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/03-install-kagent/check-server`
+- Create: `01-kagent-agent-substrate-workshop/03-install-kagent/solve-server`
 
 - [ ] **Step 1: Write `03-install-kagent/assignment.md`**
 
@@ -767,6 +770,8 @@ helm upgrade --install kagent-crds \
   --version 0.9.7 \
   --namespace kagent --create-namespace --wait
 
+# Disable xtrace for the kagent install so the OpenAI key isn't echoed into logs.
+set +x
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --version 0.9.7 --namespace kagent --timeout 10m --wait \
@@ -784,6 +789,7 @@ helm upgrade --install kagent \
   --set substrateWorkerPool.replicas=1 \
   --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6 \
   || true
+set -x
 
 kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=600s
 
@@ -792,13 +798,13 @@ echo "Challenge 3 solved"
 
 - [ ] **Step 5: Lint all three scripts**
 
-Run: `shellcheck agent-substrate-kagent/03-install-kagent/{setup,check,solve}-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/03-install-kagent/{setup,check,solve}-server`
 Expected: no errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent-substrate-kagent/03-install-kagent
+git add 01-kagent-agent-substrate-workshop/03-install-kagent
 git commit -m "feat: challenge 3 — install kagent wired to substrate"
 ```
 
@@ -807,10 +813,10 @@ git commit -m "feat: challenge 3 — install kagent wired to substrate"
 ## Task 6: Challenge 4 — Deploy a SandboxAgent
 
 **Files:**
-- Create: `agent-substrate-kagent/04-deploy-sandboxagent/assignment.md`
-- Create: `agent-substrate-kagent/04-deploy-sandboxagent/setup-server`
-- Create: `agent-substrate-kagent/04-deploy-sandboxagent/check-server`
-- Create: `agent-substrate-kagent/04-deploy-sandboxagent/solve-server`
+- Create: `01-kagent-agent-substrate-workshop/04-deploy-sandboxagent/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/04-deploy-sandboxagent/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/04-deploy-sandboxagent/check-server`
+- Create: `01-kagent-agent-substrate-workshop/04-deploy-sandboxagent/solve-server`
 
 - [ ] **Step 1: Write `04-deploy-sandboxagent/assignment.md`**
 
@@ -1000,13 +1006,13 @@ echo "Challenge 4 solved"
 
 - [ ] **Step 5: Lint all three scripts**
 
-Run: `shellcheck agent-substrate-kagent/04-deploy-sandboxagent/{setup,check,solve}-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/04-deploy-sandboxagent/{setup,check,solve}-server`
 Expected: no errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent-substrate-kagent/04-deploy-sandboxagent
+git add 01-kagent-agent-substrate-workshop/04-deploy-sandboxagent
 git commit -m "feat: challenge 4 — deploy a SandboxAgent on substrate"
 ```
 
@@ -1015,10 +1021,10 @@ git commit -m "feat: challenge 4 — deploy a SandboxAgent on substrate"
 ## Task 7: Challenge 5 — Chat & watch suspend/resume
 
 **Files:**
-- Create: `agent-substrate-kagent/05-chat-suspend-resume/assignment.md`
-- Create: `agent-substrate-kagent/05-chat-suspend-resume/setup-server`
-- Create: `agent-substrate-kagent/05-chat-suspend-resume/check-server`
-- Create: `agent-substrate-kagent/05-chat-suspend-resume/solve-server`
+- Create: `01-kagent-agent-substrate-workshop/05-chat-suspend-resume/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/05-chat-suspend-resume/setup-server`
+- Create: `01-kagent-agent-substrate-workshop/05-chat-suspend-resume/check-server`
+- Create: `01-kagent-agent-substrate-workshop/05-chat-suspend-resume/solve-server`
 
 - [ ] **Step 1: Write `05-chat-suspend-resume/assignment.md`**
 
@@ -1179,13 +1185,13 @@ echo "Challenge 5 solved"
 
 - [ ] **Step 5: Lint all three scripts**
 
-Run: `shellcheck agent-substrate-kagent/05-chat-suspend-resume/{setup,check,solve}-server`
+Run: `shellcheck 01-kagent-agent-substrate-workshop/05-chat-suspend-resume/{setup,check,solve}-server`
 Expected: no errors.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent-substrate-kagent/05-chat-suspend-resume
+git add 01-kagent-agent-substrate-workshop/05-chat-suspend-resume
 git commit -m "feat: challenge 5 — chat and watch suspend/resume"
 ```
 
@@ -1194,7 +1200,7 @@ git commit -m "feat: challenge 5 — chat and watch suspend/resume"
 ## Task 8: Challenge 6 — Recap & what's next
 
 **Files:**
-- Create: `agent-substrate-kagent/06-recap/assignment.md`
+- Create: `01-kagent-agent-substrate-workshop/06-recap/assignment.md`
 
 - [ ] **Step 1: Write `06-recap/assignment.md`**
 
@@ -1271,7 +1277,7 @@ kind delete cluster --name kagent-substrate
 - [ ] **Step 2: Commit**
 
 ```bash
-git add agent-substrate-kagent/06-recap
+git add 01-kagent-agent-substrate-workshop/06-recap
 git commit -m "feat: challenge 6 — recap and what's next"
 ```
 
@@ -1280,7 +1286,7 @@ git commit -m "feat: challenge 6 — recap and what's next"
 ## Task 9: Track README + final verification
 
 **Files:**
-- Create: `agent-substrate-kagent/README.md`
+- Create: `01-kagent-agent-substrate-workshop/README.md`
 - Modify: `README.md` (repo root — add the new track to the index, matching existing entries)
 
 - [ ] **Step 1: Inspect the repo-root README to match its track-index format**
@@ -1288,7 +1294,7 @@ git commit -m "feat: challenge 6 — recap and what's next"
 Run: `sed -n '1,80p' README.md`
 Expected: shows how existing tracks are listed. Add an `agent-substrate-kagent` entry in the same style/section as the other tracks (title, one-line description, challenge count). Keep formatting identical to neighbors.
 
-- [ ] **Step 2: Write `agent-substrate-kagent/README.md`**
+- [ ] **Step 2: Write `01-kagent-agent-substrate-workshop/README.md`**
 
 ```markdown
 # Agent Substrate with kagent
@@ -1321,14 +1327,14 @@ OSS kagent on a `kind` cluster and running a `SandboxAgent` inside a gVisor acto
 
 - [ ] **Step 3: Lint every script in the track at once**
 
-Run: `find agent-substrate-kagent -name '*-server' -exec shellcheck {} +`
+Run: `find 01-kagent-agent-substrate-workshop -name '*-server' -exec shellcheck {} +`
 Expected: no errors across all setup/check/solve scripts.
 
 - [ ] **Step 4: Validate all assignment.md frontmatter parses and ids are unique**
 
 Run:
 ```bash
-for f in agent-substrate-kagent/*/assignment.md; do
+for f in 01-kagent-agent-substrate-workshop/*/assignment.md; do
   awk 'NR==1&&/^---/{f=1;next} f&&/^---/{exit} f&&/^id:/{print FILENAME": "$0}' "$f"
 done | sort -t: -k3 | awk '{print $NF}' | sort | uniq -d
 ```
@@ -1337,7 +1343,7 @@ Expected: empty output (no duplicate ids). Each file should print exactly one `i
 - [ ] **Step 5: Commit**
 
 ```bash
-git add agent-substrate-kagent/README.md README.md
+git add 01-kagent-agent-substrate-workshop/README.md README.md
 git commit -m "docs: add agent-substrate-kagent track README and repo index entry"
 ```
 

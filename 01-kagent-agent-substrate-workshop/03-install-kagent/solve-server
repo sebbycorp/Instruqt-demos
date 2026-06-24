@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euxo pipefail
+
+helm upgrade --install kagent-crds \
+  oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --version 0.9.7 \
+  --namespace kagent --create-namespace --wait
+
+# Disable xtrace for the kagent install so the OpenAI key isn't echoed into logs.
+set +x
+helm upgrade --install kagent \
+  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --version 0.9.7 --namespace kagent --timeout 10m --wait \
+  --set providers.default=openAI \
+  --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
+  --set controller.substrate.enabled=true \
+  --set controller.substrate.ateApiEndpoint="dns:///api.ate-system.svc:443" \
+  --set controller.substrate.ateApiInsecure=true \
+  --set controller.substrate.atenetRouterURL="http://atenet-router.ate-system.svc:80" \
+  --set controller.substrate.ateApiTokenFile="/var/run/secrets/tokens/ate-api/token" \
+  --set controller.substrate.defaultWorkerPool.namespace=kagent \
+  --set controller.substrate.defaultWorkerPool.name=kagent-default \
+  --set substrateWorkerPool.create=true \
+  --set substrateWorkerPool.name=kagent-default \
+  --set substrateWorkerPool.replicas=1 \
+  --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6 \
+  || true
+set -x
+
+kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=600s
+
+echo "Challenge 3 solved"

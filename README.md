@@ -97,6 +97,23 @@ Built for the [Instruqt](https://instruqt.com/) platform by the Solo.io GTM team
 
 ---
 
+### Track 6: [Agent Substrate with kagent](01-kagent-agent-substrate-workshop/)
+
+> Learn what an **Agent Substrate** is, then deploy Agent Substrate + OSS **kagent** on a `kind` cluster and run a `SandboxAgent` whose state is checkpointed/restored by **gVisor**.
+
+| # | Challenge | What You'll Learn |
+|---|-----------|-------------------|
+| 1 | What is an Agent Substrate? | Actors, workers, golden snapshots, suspend/resume |
+| 2 | Install Agent Substrate | substrate 0.0.6 into `ate-system`; map each component |
+| 3 | Install kagent, wired to substrate | kagent 0.9.7 + substrate flags + default WorkerPool |
+| 4 | Deploy a SandboxAgent | A declarative Go agent running as a substrate actor |
+| 5 | Chat & watch suspend/resume | UI chat + `grpcurl` actor lifecycle (Suspended → Running) |
+| 6 | Recap & what's next | Scaling the WorkerPool, `AgentHarness`, cleanup |
+
+**Time:** ~90 min · **Level:** Advanced · **Prerequisites:** Kubernetes basics (kubectl, Helm, pods, services)
+
+---
+
 ## 🏗️ Architecture
 
 Tracks 1–4 run on Instruqt with:
@@ -108,6 +125,11 @@ Tracks 1–4 run on Instruqt with:
 **Track 5 differs:** it runs **standalone Agentgateway OSS** (the single binary,
 no Kubernetes) and uses a **real `OPENAI_API_KEY`** secret to make live, priced
 LLM calls — the point of the workshop is real token/cost data.
+
+**Track 6 differs:** it provisions a **`kind`** cluster on an n1-standard-8 VM and
+installs **Agent Substrate** + **OSS kagent** from published OCI Helm charts, using a
+real `OPENAI_API_KEY`. Agent Substrate is pre-1.0 and relies on gVisor
+checkpoint/restore.
 
 ## 🔗 Resources
 

@@ -1,0 +1,19 @@
+#!/bin/bash
+set -uxo pipefail
+
+if ! kubectl get sandboxagent hello-substrate -n kagent >/dev/null 2>&1; then
+  fail-message "SandboxAgent 'hello-substrate' not found — complete challenge 4 first."
+  exit 1
+fi
+
+if ! grpcurl --version >/dev/null 2>&1; then
+  fail-message "grpcurl is not installed. The track setup may not have completed."
+  exit 1
+fi
+
+if ! grep -q "SUBSTRATE_LAB_DONE" /root/.bashrc; then
+  fail-message "Marker not saved. Run: echo \"export SUBSTRATE_LAB_DONE=true\" >> ~/.bashrc"
+  exit 1
+fi
+
+echo "Challenge 5 complete!"
