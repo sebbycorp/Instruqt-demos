@@ -22,7 +22,7 @@ llm:
   - name: "openai/*"
     provider: openAI
     params:
-      model: gpt-4o-mini
+      model: gpt-4.1-nano
       apiKey: "$OPENAI_API_KEY"
 frontendPolicies:
   http:
@@ -33,4 +33,4 @@ pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 4
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content' || true
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content' || true

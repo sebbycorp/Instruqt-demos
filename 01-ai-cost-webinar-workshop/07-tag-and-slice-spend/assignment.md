@@ -70,9 +70,9 @@ agw-restart
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 ```
 
 ## Step 3 — See the tags in the log
@@ -81,7 +81,7 @@ curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Cont
 grep -oE 'cost_usd=[^ ]+|expensive=[^ ]+' /root/agentgateway.log | tail -4
 ```
 
-The cheap call shows `expensive=false`; the gpt-4o call shows `expensive=true`.
+The cheap call shows `expensive=false`; the gpt-4.1 call shows `expensive=true`.
 You can now `grep expensive=true` to find every costly request.
 
 ## Step 4 — Slice metrics by cost tier

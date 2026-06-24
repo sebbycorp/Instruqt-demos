@@ -3,13 +3,13 @@ slug: cost-of-every-request
 id: zzrir3nvtmi0
 type: challenge
 title: The Cost of Every Request
-teaser: See the real USD cost of every call — and why gpt-4o costs ~17× gpt-4o-mini.
+teaser: See the real USD cost of every call — and why gpt-4.1 costs ~17× gpt-4.1-nano.
 notes:
 - type: text
   contents: "# \U0001F4B5 The Cost of Every Request\n\nHere's the magic: you didn't
     *configure* any of this. The moment the gateway\ncame up, it started pricing every
     call in real USD and recording it.\n\nIn this challenge you'll watch a single
-    request become a dollar figure — and\nsee why choosing gpt-4o over gpt-4o-mini
+    request become a dollar figure — and\nsee why choosing gpt-4.1 over gpt-4.1-nano
     is a budget decision, not a detail.\n"
 tabs:
 - id: ujaxcjanrprx
@@ -41,11 +41,11 @@ recording every call. This challenge is about *seeing* it.
 ## Step 1 — Look at the price list
 
 ```bash
-grep -A4 '"gpt-4o-mini"\|"gpt-4o"' /root/costs/base-costs.json | head
+grep -A4 '"gpt-4.1-nano"\|"gpt-4.1"' /root/costs/base-costs.json | head
 ```
 
 Rates are **USD per 1 million tokens**, split into input and output — exactly how
-providers bill. Note `gpt-4o` costs ~17× `gpt-4o-mini`.
+providers bill. Note `gpt-4.1` costs ~17× `gpt-4.1-nano`.
 
 ## Step 2 — Drive a couple of calls
 
@@ -55,11 +55,11 @@ prefix on the model — that's how the gateway's `openai/*` model matches:
 ```bash
 # cheap model
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 
 # premium model
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
+  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
 Each prints the model's short reply — the calls went through **your** gateway to
@@ -81,7 +81,7 @@ sqlite3 -box /root/data/data.db \
 ┌─────────────┬────────┬─────────┬────────────┐
 │ model       │ in_tok │ out_tok │ cost_usd   │
 ├─────────────┼────────┼─────────┼────────────┤
-│ gpt-4o-mini │ 14     │ 5       │ $0.0000051 │
+│ gpt-4.1-nano │ 14     │ 5       │ $0.0000051 │
 └─────────────┴────────┴─────────┴────────────┘
 ```
 
@@ -93,7 +93,7 @@ never gives you. (It's in the access log too if you ever need it:
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
+  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
 
 sqlite3 -box /root/data/data.db \
   "SELECT gen_ai_request_model AS model, printf('\$%.6f', cost) AS per_call,
@@ -105,8 +105,8 @@ sqlite3 -box /root/data/data.db \
 ┌─────────────┬───────────┬──────────────┐
 │ model       │ per_call  │ per_1M_calls │
 ├─────────────┼───────────┼──────────────┤
-│ gpt-4o      │ $0.000085 │ $85.00       │
-│ gpt-4o-mini │ $0.000005 │ $5.10        │
+│ gpt-4.1      │ $0.000085 │ $85.00       │
+│ gpt-4.1-nano │ $0.000005 │ $5.10        │
 └─────────────┴───────────┴──────────────┘
 ```
 

@@ -29,12 +29,12 @@ llm:
         value: { exact: high }
     provider: openAI
     params:
-      model: gpt-4o
+      model: gpt-4.1
       apiKey: "$OPENAI_API_KEY"
   - name: "openai/*"
     provider: openAI
     params:
-      model: gpt-4o-mini
+      model: gpt-4.1-nano
       apiKey: "$OPENAI_API_KEY"
 mcp:
   port: 3000

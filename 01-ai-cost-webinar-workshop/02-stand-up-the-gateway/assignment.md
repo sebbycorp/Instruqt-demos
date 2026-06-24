@@ -61,7 +61,7 @@ Agentgateway** → you can **Enable LLM** (or **Skip setup**). Then:
 4. **Provider API Key:** choose **Env var**, value `OPENAI_API_KEY`
 5. **Save model**
 
-Clients then call models as `openai/gpt-4o-mini`, `openai/gpt-4o`, etc.
+Clients then call models as `openai/gpt-4.1-nano`, `openai/gpt-4.1`, etc.
 
 That's it — the UI writes the model into your config. (Prefer YAML? The same
 thing is just an `llm.models` entry — paste this into the Terminal instead:)
@@ -85,7 +85,7 @@ llm:
   - name: "openai/*"
     provider: openAI
     params:
-      model: gpt-4o-mini
+      model: gpt-4.1-nano
       apiKey: "$OPENAI_API_KEY"
 frontendPolicies:
   http:
@@ -104,7 +104,7 @@ on, with zero extra setup.
 ```bash
 curl -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
 A normal OpenAI response — but it went through **your** gateway. You can also try

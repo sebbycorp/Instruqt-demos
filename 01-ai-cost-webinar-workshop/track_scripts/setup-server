@@ -54,7 +54,8 @@ cat > /root/costs/base-costs.json <<'JSON'
   "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
   "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
   "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
-  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } } } } } }
+  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } },
+  "gpt-4.1-nano": { "rates": { "input": "0.10", "output": "0.40" } } } } } }
 JSON
 fi
 echo "base-costs.json provisioned: $(wc -c < /root/costs/base-costs.json 2>/dev/null || echo MISSING) bytes"

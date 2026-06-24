@@ -14,10 +14,10 @@ Kubernetes).
 |---|-----------|-------------|
 | 1 | **The Blind Spot** | Visual intro: how tokens are spent, what inflates the bill, why dashboards fail (read-only). |
 | 2 | **Stand Up the Gateway** | Install the binary, route OpenAI through `:4000`. |
-| 3 | **The Cost of Every Request** | Model cost catalog → live token + USD cost in logs; gpt-4o vs gpt-4o-mini (~17×). |
+| 3 | **The Cost of Every Request** | Model cost catalog → live token + USD cost in logs; gpt-4.1 vs gpt-4.1-nano (~20×). |
 | 4 | **Day-2 Operations** | Troubleshoot via the admin API on `:15000` (`config_dump`, UI) + metrics on `:15020`. |
 | 5 | **Governance: Budgets & Model Pin** | `localRateLimit` token budget (→429) + approved-model `overrides`. *(Mike's C-10)* |
-| 6 | **Cost-Aware Routing** | Header-based routing: `x-priority: high` → gpt-4o, default → gpt-4o-mini. *(C-8)* |
+| 6 | **Cost-Aware Routing** | Header-based routing: `x-priority: high` → gpt-4.1, default → gpt-4.1-nano. *(C-8)* |
 | 7 | **Tag & Slice Spend** | CEL on `llm.cost.total` → custom log fields + `cost_tier` metric label. *(C-9)* |
 | 8 | **MCP Is Spend Too** | Proxy an MCP server on the same gateway; why tool calls cost tokens. |
 | 9 | **Per-Team Virtual Keys** | Listener `apiKey` gate (strict) + per-key metadata; real provider key stays hidden. |
@@ -36,8 +36,8 @@ calls, then scales up with the generated fleet dataset.
 
 - `config.yml` — single VM, `OPENAI_API_KEY` secret.
 - `track.yml` — track metadata (`id`/`checksum` assigned on push).
-- `track_scripts/setup-server` — installs the agentgateway binary + the `openai`
-  CLI + `uv` + `sqlite3`; **provisions the default `base-costs.json` catalog** (by
+- `track_scripts/setup-server` — installs the agentgateway binary + `uv` +
+  `sqlite3`; **provisions the default `base-costs.json` catalog** (by
   briefly bootstrapping the binary) and embeds the request-log generator onto the
   VM (Instruqt assets are markdown URLs, not VM files).
 - `assets/gen-mock-logs.py` — request-log generator (run via `uv run`; needs Python ≥3.11).
@@ -61,7 +61,7 @@ calls, then scales up with the generated fleet dataset.
 
 | Demo | k8s (AdminTurnedDevOps) | This track (standalone, `llm:` style) |
 |------|--------------------------|--------------------------|
-| **C-8** Cost-aware routing | HTTPRoute header match → premium backend | `llm.models[].matches.headers` `x-priority: high` → `params.model: gpt-4o` |
+| **C-8** Cost-aware routing | HTTPRoute header match → premium backend | `llm.models[].matches.headers` `x-priority: high` → `params.model: gpt-4.1` |
 | **C-9** CEL cost policy | `rawConfig` logging/metrics fields | `config.logging.fields.add` / `config.metrics.fields.add` on `llm.cost.total` |
 | **C-10** Budget enforcement | `traffic.rateLimit.local.tokens` | `llm.policies.localRateLimit` `type: tokens` |
 

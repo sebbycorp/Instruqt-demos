@@ -9,7 +9,7 @@ notes:
   contents: "# \U0001F500 Cost-Aware Routing\n\nThe cheapest token is the one you
     never send to an expensive model. Default\neveryone to a small model and let the
     gateway promote to a premium model\n**only when a request opts in** — no client
-    gets to silently pick gpt-4o.\n"
+    gets to silently pick gpt-4.1.\n"
 tabs:
 - id: 95kjhyqqhydb
   title: Terminal
@@ -34,7 +34,7 @@ enhanced_loading: null
 
 ![Cost-aware routing: cheap default, premium on x-priority](../assets/diagram-routing.png)
 
-In the last challenge you pinned *everyone* to `gpt-4o-mini`. But some requests
+In the last challenge you pinned *everyone* to `gpt-4.1-nano`. But some requests
 genuinely need a frontier model. Instead of trusting clients to choose (and pay)
 responsibly, make the **gateway** decide: cheap by default, premium only when a
 request carries an explicit `x-priority: high` header.
@@ -68,10 +68,10 @@ llm:
       - name: x-priority
         value: { exact: high }
     provider: openAI
-    params: { model: gpt-4o, apiKey: "$OPENAI_API_KEY" }
+    params: { model: gpt-4.1, apiKey: "$OPENAI_API_KEY" }
   - name: "openai/*"
     provider: openAI
-    params: { model: gpt-4o-mini, apiKey: "$OPENAI_API_KEY" }
+    params: { model: gpt-4.1-nano, apiKey: "$OPENAI_API_KEY" }
 frontendPolicies:
   http:
     maxBufferSize: 33554432
@@ -85,28 +85,30 @@ listed first, so it's matched before the catch-all default.
 
 ## Step 2 — Prove it
 
-Default traffic → cheap model:
+The client asks for the **same** model both times (`openai/gpt-4.1-nano` — note the
+`openai/` prefix, which is what the `openai/*` routes match on). Only the header
+changes. First, default traffic → cheap model:
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"anything","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
 ```
 
-Returns **`gpt-4o-mini`**. Now escalate with the header:
+Returns **`gpt-4.1-nano`**. Now escalate with the header:
 
 ```bash
 curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' \
-  -d '{"model":"anything","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
 ```
 
-Returns **`gpt-4o`**. Same endpoint, same client code — the **gateway** decided
-the price tier.
+Returns **`gpt-4.1`**. Same endpoint, same request body — the **gateway** decided
+the price tier from the header, even overriding the model the client asked for.
 
 ## Step 3 — Why this saves real money
 
 Most traffic is routine (summaries, classification, simple Q&A) and runs fine on
 a small model at ~1/17th the cost. Reserve the frontier model for the few
 requests that truly need it. Your apps set `x-priority: high` only on those — and
-they physically *cannot* reach gpt-4o any other way.
+they physically *cannot* reach gpt-4.1 any other way.
 
 > Next: tag and slice that spend so you can see exactly where it lands. ➡️

@@ -79,7 +79,7 @@ The gate is on the **`llm`** frontend (`:4000`); MCP keeps its own `:3000` port.
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4000/v1/chat/completions \
   -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":5}'
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":5}'
 ```
 
 Returns **401** — `mode: strict` rejects unkeyed traffic. Shadow AI can't even
@@ -91,10 +91,10 @@ connect.
 curl -s http://localhost:4000/v1/chat/completions \
   -H 'Authorization: Bearer sk-team-sales-DEMO' \
   -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
 ```
 
-Returns a normal response (`gpt-4o-mini`) — and the gateway used the **real**
+Returns a normal response (`gpt-4.1-nano`) — and the gateway used the **real**
 OpenAI key, which the sales team never saw. Check the log:
 
 ```bash

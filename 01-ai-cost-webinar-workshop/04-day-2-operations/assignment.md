@@ -38,7 +38,7 @@ Left nav → **Chat Playground**. This sends a **real** chat completion *through
 gateway* (great for setup debugging).
 
 - **Model:** pick `openai/*` (your catch-all model)
-- **Specific model:** type `gpt-4o-mini`
+- **Specific model:** type `gpt-4.1-nano`
 - Type a question in **User message** and hit **Send**
 
 You'll get a live reply — and because it went through the gateway, it was just

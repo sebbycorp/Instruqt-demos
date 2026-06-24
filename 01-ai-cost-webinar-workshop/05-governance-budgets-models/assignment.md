@@ -3,13 +3,15 @@ slug: governance-budgets-models
 id: g0j34nzxlg1d
 type: challenge
 title: Governance — Budgets & Approved Models
-teaser: Enforce a token budget and pin traffic to an approved model. Stop the runaway
-  spender.
+teaser: Enforce a token budget and pin traffic to an approved model. Stop the runaway spender.
 notes:
 - type: text
-  contents: "# \U0001F6E1️ Governance\n\nVisibility tells you what happened. **Policy**
-    stops it from happening. Two\npolicies — a token budget and an approved-model
-    pin — and the surprise\nbill can't repeat the same way.\n"
+  contents: |
+    # 🛡️ Governance
+
+    Visibility tells you what happened. **Policy** stops it from happening. Two
+    levers — a token budget and an approved-model pin — and the surprise bill
+    can't repeat the same way.
 tabs:
 - id: bqrrq2hu93rs
   title: Terminal
@@ -32,23 +34,24 @@ enhanced_loading: null
 
 # Governance — Budgets & Approved Models
 
-Now that every call is metered, attach guardrails to the `llm` block.
+Visibility told you *what* happened. **Policy** stops it from happening. You'll
+attach two levers to the `llm` block, then watch each one work.
 
-## Part A — A token budget (the spend cap)
+## Set the config
 
-In the **Editor**, add a `policies` block with `localRateLimit` under `llm:` in
-`/root/config.yaml`:
+In the **Editor**, make your `llm` block look like this — one `policies:` block
+holding both `cors` and a `localRateLimit`, and a `params.model` pin on the model.
+Paste it over the `llm:` section of `/root/config.yaml`:
 
 ```yaml
 llm:
   port: 4000
   policies:
-    cors:
+    cors:                       # lets the UI Playground call the gateway
       allowOrigins: ["*"]
       allowHeaders: ["*"]
       allowMethods: ["GET","POST","OPTIONS"]
-  policies:                 # <-- add this block
-    localRateLimit:
+    localRateLimit:             # lever 1 — the spend cap
     - maxTokens: 50
       tokensPerFill: 50
       fillInterval: "1h"
@@ -57,65 +60,67 @@ llm:
   - name: "openai/*"
     provider: openAI
     params:
+      model: gpt-4.1-nano       # lever 2 — pin every request to the approved model
       apiKey: "$OPENAI_API_KEY"
 ```
 
-`type: tokens` counts **LLM tokens**, not requests. We use a tiny 50-token
-bucket so you can trip it in one call (in production this would be, say, 2M
-tokens/hour per team).
+> ⚠️ Note there's a **single** `policies:` key with `cors` and `localRateLimit`
+> nested under it — not two `policies:` keys.
 
 ```bash
 agentgateway -f /root/config.yaml --validate-only
 agw-restart
 ```
 
-Now spend the budget:
+---
+
+## Lever 1 — Approved-model pin
+
+- **What:** `params.model` forces every request to one model, ignoring whatever
+  model the client asked for.
+- **Why:** the frontier model (`gpt-4.1`) is **~20× pricier** than `gpt-4.1-nano`.
+  Pinning removes that line item entirely — no app or agent can opt into the
+  expensive model, even by accident.
+- **See it:** ask for the *expensive* model and watch what actually runs:
+
+```bash
+curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
+```
+
+Returns **`gpt-4.1-nano`** — the expensive model is simply unreachable.
+
+---
+
+## Lever 2 — Token budget
+
+- **What:** `localRateLimit` with `type: tokens` is a bucket of N tokens per
+  window. When it's empty, further requests get **429 Too Many Requests**.
+- **Why:** a runaway agent or a stuck batch job gets throttled *before* it runs
+  up the bill — the #1 cause of surprise spend. (We use a tiny 50-token bucket so
+  you can trip it in one call; in production this might be 2M tokens/hour.)
+- **See it:** spend the budget:
 
 ```bash
 for i in 1 2 3 4; do
   echo "req $i -> $(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions \
     -H 'Content-Type: application/json' \
-    -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Write a paragraph about budgets."}],"max_tokens":80}')"
+    -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Write a paragraph about budgets."}],"max_tokens":80}')"
 done
 ```
 
-The first call returns **200**; the rest return **429 Too Many Requests**. The
-runaway agent is throttled — *before* it runs up the bill.
+The first call returns **200**; the rest return **429**. Throttled before the bill.
 
-## Part B — Pin to an approved model (the model lever)
+---
 
-A frontier model costs ~17× more. Force everything to the approved cheap model,
-no matter what the client asks for. Add `params.model` to your model:
+## How this scales in production
 
-```yaml
-  models:
-  - name: "openai/*"
-    provider: openAI
-    params:
-      model: gpt-4o-mini      # <-- pin the OUTGOING model, ignore what's requested
-      apiKey: "$OPENAI_API_KEY"
-```
+- **What:** budgets **per API key or per team**, not one global bucket.
+- **Why:** `sales` and `eng` each need their own cap — and it has to hold across
+  every gateway replica, not just one process.
+- **How:** swap `localRateLimit` for **`remoteRateLimit`** with descriptors (keyed
+  on the virtual key or a team header), backed by a shared rate-limit service.
+  Same idea you just saw, enforced cluster-wide.
 
-```bash
-agw-restart
-```
-
-Now ask for the **expensive** model and watch what actually runs:
-
-```bash
-curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4o","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' | jq -r .model
-```
-
-The response model comes back **`gpt-4o-mini`** — the expensive model is simply
-unreachable. (The full `solve` config combines both policies; your edits match it.)
-
-## Part C — How this scales
-
-A 50-token bucket is a demo. In production you enforce budgets **per API key or
-per team** with `remoteRateLimit` descriptors backed by a shared rate-limit
-service — so `sales` and `eng` each get their own cap across every gateway
-replica. Same idea, distributed.
-
-> Two policies, and the runaway bill is structurally prevented. Next: stop
-> over-paying by **routing cheap by default**. ➡️
+> Two levers, and the runaway bill is structurally prevented. Next: stop
+> *over-paying* by **routing cheap by default**. ➡️
