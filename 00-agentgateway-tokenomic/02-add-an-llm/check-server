@@ -8,11 +8,20 @@ if ! grep -q 'openai/\*' /root/agentgateway/config.yaml 2>/dev/null && ! grep -q
   fail-message "No OpenAI model found in /root/agentgateway/config.yaml. Add the llm.models entry (or use the UI) and run agw-restart."
   exit 1
 fi
-code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions \
-  -H 'Content-Type: application/json' \
-  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
+
+# Poll :4000 — a restarted container needs a moment to re-read config and bind.
+code=000
+for i in $(seq 1 30); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 http://localhost:4000/v1/chat/completions \
+    -H 'Content-Type: application/json' \
+    -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"ping"}],"max_tokens":5}' 2>/dev/null)
+  [ "$code" = "200" ] && break
+  sleep 1
+done
 if [ "$code" != "200" ]; then
-  fail-message "A test call to :4000 returned HTTP $code. Ensure the model has params.apiKey set to \$OPENAI_API_KEY and run agw-restart."
+  echo "--- diagnostics: docker logs agentgateway (tail) ---"
+  docker logs agentgateway 2>&1 | tail -20
+  fail-message "A test call to :4000 returned HTTP $code. Ensure the model has params.apiKey set to \$OPENAI_API_KEY, the container was started with -e OPENAI_API_KEY, and run agw-restart."
   exit 1
 fi
 echo "Gateway is proxying OpenAI on :4000 (test call returned 200)."

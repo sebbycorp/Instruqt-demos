@@ -8,13 +8,28 @@ if ! grep -q 'mcp-everything:8080/mcp' /root/agentgateway/config.yaml 2>/dev/nul
   fail-message "No MCP target in /root/agentgateway/config.yaml. Add the top-level mcp: block (port 3000, host http://mcp-everything:8080/mcp/), then agw-restart."
   exit 1
 fi
-code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000 \
-  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}')
+
+# Poll :3000 — the MCP container needs npx warmup time and the gateway needs to
+# (re)connect to it after the restart.
+code=000
+for i in $(seq 1 45); do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -X POST http://localhost:3000 \
+    -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+    -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}' 2>/dev/null)
+  [ "$code" = "200" ] && break
+  sleep 1
+done
 if [ "$code" != "200" ]; then
-  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Check the mcp: block port and run agw-restart."
+  echo "--- diagnostics: docker ps -a ---"
+  docker ps -a --format '{{.Names}}: {{.Status}}'
+  echo "--- diagnostics: docker logs mcp-everything (tail) ---"
+  docker logs mcp-everything 2>&1 | tail -15
+  echo "--- diagnostics: docker logs agentgateway (tail) ---"
+  docker logs agentgateway 2>&1 | tail -15
+  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Check the mcp: block (host http://mcp-everything:8080/mcp/) and run agw-restart."
   exit 1
 fi
+
 SID=$(curl -s -D - -o /dev/null -X POST http://localhost:3000 \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"cli","version":"1"}}}' \

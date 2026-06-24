@@ -1,5 +1,6 @@
 #!/bin/bash
 set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
 docker rm -f agentgateway >/dev/null 2>&1 || true
 docker run -d --name agentgateway --network agw \
   -v /root/agentgateway:/config \

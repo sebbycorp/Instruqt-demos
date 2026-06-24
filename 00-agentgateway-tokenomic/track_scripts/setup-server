@@ -867,12 +867,11 @@ frontendPolicies:
     maxBufferSize: 33554432
 YAML
 
-# --- Pre-seed a week of traffic into the gateway's own request DB (BEFORE gateway start) ---
-uv run --python 3.12 /root/agentgateway/gen-mock-logs.py \
-  --output /root/agentgateway/data/data.db --replace --requests 5000 --days 7 --seed 7 \
-  || echo "WARNING: mock-log pre-seed failed"
+# NOTE: the request DB is seeded in the Lab 04 challenge setup (04-analyze-the-traffic),
+# NOT here. Track-lifecycle scripts have an unreliable $HOME, so `uv run` may not resolve;
+# challenge scripts run with $HOME=/root where uv installs/links cleanly. The gateway
+# creates the request_logs schema itself on first boot.
 chmod -R 777 /root/agentgateway/data
-echo "pre-seeded rows: $(sqlite3 /root/agentgateway/data/data.db 'SELECT COUNT(*) FROM request_logs;' 2>/dev/null || echo MISSING)"
 
 # --- Convenience helper: restart the gateway after config edits ---
 cat >> ~/.bashrc <<'RC'

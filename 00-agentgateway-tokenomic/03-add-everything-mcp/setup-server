@@ -1,5 +1,6 @@
 #!/bin/bash
 set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
 docker network inspect agw >/dev/null 2>&1 || docker network create agw >/dev/null
 docker pull node:20-alpine >/dev/null 2>&1 || true
 if ! docker ps --filter name=agentgateway --filter status=running --format '{{.Names}}' | grep -q '^agentgateway$'; then
