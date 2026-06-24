@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euo pipefail
+source /root/agw-helpers.sh
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+
+# Ensure the gateway is up (setup starts it; defensive here).
+docker ps --format '{{.Names}}' | grep -q '^agentgateway$' || agw-up
+
+# MCP handshake + tools/list.
+SID=$(curl -s -D - -o /dev/null -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"cli","version":"1"}}}' \
+  | tr -d '\r' | awk -F': ' 'tolower($1)=="mcp-session-id"{print $2}')
+curl -s -o /dev/null -X POST http://localhost:3000 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+echo "=== MCP tools ==="
+curl -s -X POST http://localhost:3000 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "mcp-session-id: $SID" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | grep '^data:' | sed 's/^data: //' \
+  | jq '{tool_count: (.result.tools|length), tool_names: [.result.tools[].name]}' || true
+
+# Make sure there is some spend to report.
+for p in "Summarize FinOps in one line" "Name two AI cost risks"; do
+  curl -s -o /dev/null http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+    -d "{\"model\":\"openai/gpt-4.1-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"$p\"}],\"max_tokens\":60}" || true
+done
+sleep 2
+
+echo "=== CFO summary ==="
+sqlite3 -box /root/data/data.db \
+"SELECT gen_ai_request_model AS model, COUNT(*) AS calls,
+        SUM(input_tokens) AS in_tok, SUM(output_tokens) AS out_tok,
+        printf('\$%.6f', SUM(cost)) AS spend_usd
+ FROM request_logs GROUP BY gen_ai_request_model ORDER BY SUM(cost) DESC;" || true
+sqlite3 /root/data/data.db \
+"SELECT printf('Total spend: \$%.6f across %d calls', SUM(cost), COUNT(*)) FROM request_logs;" || true

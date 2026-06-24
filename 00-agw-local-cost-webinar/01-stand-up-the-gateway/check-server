@@ -1,0 +1,29 @@
+#!/bin/bash
+set -uo pipefail
+
+# 1. Gateway container must be running.
+if ! docker ps --format '{{.Names}}' | grep -q '^agentgateway$'; then
+  fail-message "The agentgateway container isn't running. Edit /root/config.yaml, then run: agw-validate && agw-up"
+  exit 1
+fi
+
+# 2. LLM endpoint on :4000 must route an OpenAI completion.
+code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
+if [ "$code" != "200" ]; then
+  fail-message "A test call to :4000 returned HTTP $code. Add an llm.models entry (name: \"openai/*\", provider: openAI, params.apiKey: \$OPENAI_API_KEY), then agw-restart."
+  exit 1
+fi
+
+# 3. MCP endpoint on :3000 must answer the initialize handshake.
+mcode=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}')
+if [ "$mcode" != "200" ]; then
+  fail-message "MCP on :3000 returned HTTP $mcode. Add a top-level mcp: block targeting http://mcp-everything:3001/mcp, then agw-restart."
+  exit 1
+fi
+
+echo "Gateway is up: OpenAI on :4000, MCP on :3000, cost tracking on."

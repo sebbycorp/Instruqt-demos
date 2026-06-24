@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+source /root/agw-helpers.sh
+
+# Ensure the gateway is up (setup already starts it; defensive here).
+docker ps --format '{{.Names}}' | grep -q '^agentgateway$' || agw-up
+
+# Generate priced traffic.
+for p in "Write a haiku about cost control" \
+         "List three benefits of an AI gateway" \
+         "Explain token-based pricing in two sentences" \
+         "Summarize why MCP traffic costs money"; do
+  curl -s http://localhost:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d "{\"model\":\"openai/gpt-4.1-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"$p\"}],\"max_tokens\":120}" \
+    >/dev/null || true
+done
+sleep 2
+
+sqlite3 -box /root/data/data.db \
+"SELECT gen_ai_request_model AS model, input_tokens AS in_tok, output_tokens AS out_tok,
+        printf('\$%.7f', cost) AS cost_usd
+ FROM request_logs ORDER BY completed_at DESC LIMIT 10;" || true

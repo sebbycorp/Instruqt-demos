@@ -1,0 +1,37 @@
+#!/bin/bash
+set -uo pipefail
+
+if ! docker ps --format '{{.Names}}' | grep -q '^agentgateway$'; then
+  fail-message "The agentgateway container isn't running. Run: agw-up"
+  exit 1
+fi
+
+# MCP endpoint must answer.
+code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"c","version":"1"}}}')
+if [ "$code" != "200" ]; then
+  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Ensure the mcp: block targets http://mcp-everything:3001/mcp and the gateway is up."
+  exit 1
+fi
+
+# Tools must be discoverable over MCP.
+SID=$(curl -s -D - -o /dev/null -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"cli","version":"1"}}}' \
+  | tr -d '\r' | awk -F': ' 'tolower($1)=="mcp-session-id"{print $2}')
+curl -s -o /dev/null -X POST http://localhost:3000 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+tools=$(curl -s -X POST http://localhost:3000 -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -H "mcp-session-id: $SID" -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | grep '^data:' | sed 's/^data: //' | jq -r '.result.tools | length' 2>/dev/null)
+if [ -z "${tools:-}" ] || ! [ "$tools" -ge 1 ] 2>/dev/null; then
+  fail-message "MCP tools/list returned no tools. Re-run the Step 1 handshake (initialize -> notifications/initialized -> tools/list) against :3000."
+  exit 1
+fi
+
+# The CFO summary needs spend data to report.
+rows=$(sqlite3 /root/data/data.db "SELECT COUNT(*) FROM request_logs WHERE cost > 0;" 2>/dev/null || echo 0)
+if ! [ "$rows" -ge 1 ] 2>/dev/null; then
+  fail-message "No priced requests to total. Send a few completions through :4000, then run the Step 3 summary."
+  exit 1
+fi
+
+echo "MCP exposes $tools tools and the log holds $rows priced calls — LLM + MCP spend, one gateway. 🎉"

@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Wait for instruqt bootstrap
+until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
+  sleep 1
+done
+
+set -euo pipefail
+set-workdir /root
+
+AGW_IMAGE="cr.agentgateway.dev/agentgateway:v1.3.1"
+MCP_IMAGE="node:22-alpine"
+
+# ---------------------------------------------------------------------------
+# 1. Store the OpenAI key so every challenge script can reach it.
+#    (Instruqt check/solve scripts run non-interactively and do NOT source
+#    ~/.bashrc, so we also persist the key to a file they can read.)
+# ---------------------------------------------------------------------------
+if [ -n "${OPENAI_API_KEY:-}" ]; then
+  echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
+  echo "${OPENAI_API_KEY}" > /root/.openai-api-key
+  echo "=== OpenAI API key stored ==="
+else
+  echo "=== WARNING: OPENAI_API_KEY not set ==="
+fi
+
+# ---------------------------------------------------------------------------
+# 2. Defensive tooling (jq + sqlite3 are used by the cost queries).
+# ---------------------------------------------------------------------------
+command -v jq      >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt-get install -y jq      >/dev/null 2>&1; } || true
+command -v sqlite3 >/dev/null 2>&1 || { apt-get update -y >/dev/null 2>&1 && apt-get install -y sqlite3 >/dev/null 2>&1; } || true
+
+# ---------------------------------------------------------------------------
+# 3. Working directories + the model cost catalog.
+#    Rates are USD per 1,000,000 tokens. Provisioned inline (Instruqt does not
+#    reliably ship asset files into the VM), then layered via modelCatalog.
+# ---------------------------------------------------------------------------
+mkdir -p /root/costs /root/data
+cat > /root/costs/base-costs.json <<'JSON'
+{
+  "providers": {
+    "anthropic": {
+      "models": {
+        "claude-3-5-haiku-latest": { "rates": { "input": "0.8", "output": "4", "cacheRead": "0.08", "cacheWrite": "1" } },
+        "claude-haiku-4-5": { "rates": { "input": "1", "output": "5", "cacheRead": "0.1", "cacheWrite": "1.25" } },
+        "claude-opus-4-1": { "rates": { "input": "15", "output": "75", "cacheRead": "1.5", "cacheWrite": "18.75" } },
+        "claude-sonnet-4-5": { "rates": { "input": "3", "output": "15", "cacheRead": "0.3", "cacheWrite": "3.75" } }
+      }
+    },
+    "azure": {
+      "models": {
+        "gpt-4.1": { "rates": { "input": "2", "output": "8", "cacheRead": "0.5" } },
+        "gpt-4.1-mini": { "rates": { "input": "0.4", "output": "1.6", "cacheRead": "0.1" } },
+        "gpt-4.1-nano": { "rates": { "input": "0.1", "output": "0.4", "cacheRead": "0.025" } }
+      }
+    },
+    "gcp.gemini": {
+      "models": {
+        "gemini-2.5-flash": { "rates": { "input": "0.3", "output": "2.5", "cacheRead": "0.03" } },
+        "gemini-2.5-pro": {
+          "rates": { "input": "1.25", "output": "10", "cacheRead": "0.125" },
+          "tiers": [ { "contextOver": 200000, "rates": { "input": "2.5", "output": "15", "cacheRead": "0.25" } } ]
+        }
+      }
+    },
+    "openai": {
+      "models": {
+        "gpt-3.5-turbo": { "rates": { "input": "0.5", "output": "1.5", "cacheRead": "0" } },
+        "gpt-4": { "rates": { "input": "30", "output": "60" } },
+        "gpt-4-turbo": { "rates": { "input": "10", "output": "30" } },
+        "gpt-4.1": { "rates": { "input": "2", "output": "8", "cacheRead": "0.5" } },
+        "gpt-4.1-mini": { "rates": { "input": "0.4", "output": "1.6", "cacheRead": "0.1" } },
+        "gpt-4.1-nano": { "rates": { "input": "0.1", "output": "0.4", "cacheRead": "0.025" } },
+        "gpt-4o": { "rates": { "input": "2.5", "output": "10", "cacheRead": "1.25" } },
+        "gpt-4o-mini": { "rates": { "input": "0.15", "output": "0.6", "cacheRead": "0.075" } },
+        "gpt-5": { "rates": { "input": "1.25", "output": "10", "cacheRead": "0.125" } },
+        "gpt-5-mini": { "rates": { "input": "0.25", "output": "2", "cacheRead": "0.025" } },
+        "gpt-5-nano": { "rates": { "input": "0.05", "output": "0.4", "cacheRead": "0.005" } },
+        "o3": { "rates": { "input": "2", "output": "8", "cacheRead": "0.5" } },
+        "o4-mini": { "rates": { "input": "1.1", "output": "4.4", "cacheRead": "0.275" } }
+      }
+    }
+  }
+}
+JSON
+echo "base-costs.json provisioned: $(wc -c < /root/costs/base-costs.json) bytes"
+
+# ---------------------------------------------------------------------------
+# 4. Pull container images up front so labs start fast.
+# ---------------------------------------------------------------------------
+echo "=== Pulling images (this can take a moment) ==="
+docker pull "$AGW_IMAGE" >/dev/null 2>&1 || echo "WARN: could not pre-pull $AGW_IMAGE"
+docker pull "$MCP_IMAGE" >/dev/null 2>&1 || echo "WARN: could not pre-pull $MCP_IMAGE"
+
+# ---------------------------------------------------------------------------
+# 5. Docker network + the MCP "everything" tool server container.
+#    server-everything in streamableHttp mode listens on PORT (3001) at /mcp.
+#    The gateway reaches it over agw-net via http://mcp-everything:3001/mcp.
+# ---------------------------------------------------------------------------
+docker network create agw-net >/dev/null 2>&1 || true
+docker rm -f mcp-everything >/dev/null 2>&1 || true
+docker run -d --name mcp-everything --network agw-net --restart unless-stopped \
+  -e PORT=3001 \
+  "$MCP_IMAGE" sh -c "npx -y @modelcontextprotocol/server-everything streamableHttp" \
+  >/dev/null 2>&1 || echo "WARN: mcp-everything failed to start"
+
+# ---------------------------------------------------------------------------
+# 6. Shared helper functions. Written to /root/agw-helpers.sh so BOTH the
+#    learner's interactive shell (via ~/.bashrc) and the non-interactive
+#    check/solve scripts (via `source`) get the same agw-* commands.
+# ---------------------------------------------------------------------------
+cat > /root/agw-helpers.sh <<'HELP'
+# Agentgateway local helpers — shared by the terminal and the lab scripts.
+export AGW_IMAGE="cr.agentgateway.dev/agentgateway:v1.3.1"
+
+_agw_key() { echo "${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"; }
+
+# Validate /root/config.yaml without starting anything.
+agw-validate() {
+  docker run --rm \
+    -v /root/config.yaml:/config.yaml \
+    -v /root/costs:/costs \
+    "$AGW_IMAGE" -f /config.yaml --validate-only
+}
+
+# (Re)create the gateway container from /root/config.yaml.
+agw-up() {
+  docker rm -f agentgateway >/dev/null 2>&1 || true
+  docker run -d --name agentgateway --network agw-net --restart unless-stopped \
+    -e OPENAI_API_KEY="$(_agw_key)" \
+    -v /root/config.yaml:/config.yaml \
+    -v /root/costs:/costs \
+    -v /root/data:/data \
+    -p 4000:4000 -p 3000:3000 -p 15000:15000 \
+    "$AGW_IMAGE" -f /config.yaml >/dev/null
+  sleep 4
+  echo "agentgateway up — LLM :4000  MCP :3000  UI :15000"
+}
+
+agw-restart() { agw-up; }
+agw-logs()    { docker logs -f agentgateway; }
+agw-down()    { docker rm -f agentgateway >/dev/null 2>&1 || true; echo "agentgateway stopped"; }
+HELP
+
+if ! grep -q "agw-helpers.sh" ~/.bashrc 2>/dev/null; then
+  echo 'source /root/agw-helpers.sh' >> ~/.bashrc
+fi
+
+echo "=== track setup complete ==="

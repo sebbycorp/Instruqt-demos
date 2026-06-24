@@ -1,0 +1,49 @@
+#!/bin/bash
+set -euo pipefail
+source /root/agw-helpers.sh
+export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
+mkdir -p /root/costs /root/data
+
+# Start this lab from the Lab 1 end-state: gateway fronting OpenAI + MCP, cost on.
+cat > /root/config.yaml <<'YAML'
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:///data/data.db"
+  modelCatalog:
+    - file: /costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
+  models:
+  - name: "openai/*"
+    provider: openAI
+    params:
+      model: gpt-4.1-nano
+      apiKey: "$OPENAI_API_KEY"
+mcp:
+  port: 3000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      exposeHeaders: ["Mcp-Session-Id"]
+  targets:
+  - name: everything
+    mcp:
+      host: http://mcp-everything:3001/mcp
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+YAML
+
+# Fresh request log so this lab's cost numbers start from zero.
+rm -f /root/data/data.db
+agw-up >/dev/null 2>&1 || true
+
+echo "lab 02 setup complete"
