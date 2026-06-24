@@ -97,7 +97,7 @@ Built for the [Instruqt](https://instruqt.com/) platform by the Solo.io GTM team
 
 ---
 
-### Track 6: [Agent Substrate with kagent](agent-substrate-kagent/)
+### Track 6: [Agent Substrate with kagent](01-kagent-agent-substrate-workshop/)
 
 > Learn what an **Agent Substrate** is, then deploy Agent Substrate + OSS **kagent** on a `kind` cluster and run a `SandboxAgent` whose state is checkpointed/restored by **gVisor**.
 
