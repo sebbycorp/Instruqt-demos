@@ -3,7 +3,8 @@ slug: day-2-operations
 id: a3xmnpwlqjxt
 type: challenge
 title: Explore the Gateway UI
-teaser: Take the Agentgateway web UI for a spin — live costs, logs, config, and client setup.
+teaser: Take the Agentgateway web UI for a spin — live costs, logs, config, and client
+  setup.
 notes:
 - type: text
   contents: "# \U0001F9ED Explore the Gateway UI\n\nEverything you've done in YAML,
