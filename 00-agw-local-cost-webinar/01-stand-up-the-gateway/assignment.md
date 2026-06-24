@@ -33,6 +33,8 @@ enhanced_loading: null
 
 # Stand Up the Gateway in Docker
 
+![All in Docker on one VM: a gateway container fronts OpenAI and an MCP tool server](../assets/diagram-architecture.png)
+
 Your apps talk to OpenAI directly today, so nobody can see or shape the spend.
 Let's fix that with a single container in front of everything.
 
