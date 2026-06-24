@@ -3,15 +3,13 @@ slug: governance-budgets-models
 id: g0j34nzxlg1d
 type: challenge
 title: Governance — Budgets & Approved Models
-teaser: Enforce a token budget and pin traffic to an approved model. Stop the runaway spender.
+teaser: Enforce a token budget and pin traffic to an approved model. Stop the runaway
+  spender.
 notes:
 - type: text
-  contents: |
-    # 🛡️ Governance
-
-    Visibility tells you what happened. **Policy** stops it from happening. Two
-    levers — a token budget and an approved-model pin — and the surprise bill
-    can't repeat the same way.
+  contents: "# \U0001F6E1️ Governance\n\nVisibility tells you what happened. **Policy**
+    stops it from happening. Two\nlevers — a token budget and an approved-model pin
+    — and the surprise bill\ncan't repeat the same way.\n"
 tabs:
 - id: bqrrq2hu93rs
   title: Terminal
