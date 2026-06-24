@@ -1,0 +1,18 @@
+#!/bin/bash
+set -uo pipefail
+if ! docker ps --filter name=agentgateway --filter status=running --format '{{.Names}}' | grep -q '^agentgateway$'; then
+  fail-message "The 'agentgateway' container isn't running. Start it (Lab 1) then add the model."
+  exit 1
+fi
+if ! grep -q 'openai/\*' /root/agentgateway/config.yaml 2>/dev/null && ! grep -q 'provider: openAI' /root/agentgateway/config.yaml 2>/dev/null; then
+  fail-message "No OpenAI model found in /root/agentgateway/config.yaml. Add the llm.models entry (or use the UI) and run agw-restart."
+  exit 1
+fi
+code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"ping"}],"max_tokens":5}')
+if [ "$code" != "200" ]; then
+  fail-message "A test call to :4000 returned HTTP $code. Ensure the model has params.apiKey set to \$OPENAI_API_KEY and run agw-restart."
+  exit 1
+fi
+echo "Gateway is proxying OpenAI on :4000 (test call returned 200)."
