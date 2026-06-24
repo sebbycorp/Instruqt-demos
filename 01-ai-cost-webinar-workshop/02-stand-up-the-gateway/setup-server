@@ -2,17 +2,7 @@
 set -euo pipefail
 command -v agentgateway >/dev/null 2>&1 || { curl -sL https://agentgateway.dev/install | bash -s -- --version 1.3.1; }
 mkdir -p /root/data /root/costs
-# Ensure the default cost catalog exists (track setup provisions it; re-bootstrap if missing).
-if [ ! -s /root/costs/base-costs.json ]; then
-cat > /root/costs/base-costs.json <<'JSON'
-{ "providers": { "openai": { "models": {
-  "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
-  "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
-  "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
-  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } },
-  "gpt-4.1-nano": { "rates": { "input": "0.10", "output": "0.40" } } } } } }
-JSON
-fi
+# Cost catalog (/root/costs/base-costs.json) is provisioned by track_scripts/setup-server.
 
 # Pre-seed a MINIMAL config so it opens in the Editor (no models yet). The gateway
 # is NOT started here — the learner starts it and adds a model (UI or YAML).
