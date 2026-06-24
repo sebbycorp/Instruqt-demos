@@ -58,7 +58,11 @@ providers bill. Note `gpt-4.1` ($2.00 / $8.00) costs **~20×** `gpt-4.1-nano`
 
 To compare costs you need the gateway to actually *serve* both models. Add a
 **premium** model matched by name (`openai/gpt-4.1` → real `gpt-4.1`) alongside the
-**cheap** catch-all (`openai/*` → `gpt-4.1-nano`). Paste this into the **Terminal**:
+**cheap** catch-all (`openai/*` → `gpt-4.1-nano`).
+
+![Two models, two price points: the model name picks the tier; the gateway prices every call](../assets/diagram-cost-models.png)
+
+Paste this into the **Terminal**:
 
 ```bash
 cat > /root/config.yaml <<'EOF'
@@ -135,11 +139,15 @@ in the access log too if you ever need it: `grep cost /root/agentgateway.log`.
 
 ## Step 5 — The teaching moment: same answer, 20× the price
 
+Pick **one row per model** (so it doesn't matter which call you ran last):
+
 ```bash
 sqlite3 -box /root/data/data.db \
-  "SELECT gen_ai_request_model AS model, printf('\$%.6f', cost) AS per_call,
-          printf('\$%.2f', cost*1000000) AS per_1M_calls
-   FROM request_logs ORDER BY completed_at DESC LIMIT 2;"
+  "SELECT gen_ai_request_model AS model, printf('\$%.6f', MAX(cost)) AS per_call,
+          printf('\$%.2f', MAX(cost)*1000000) AS per_1M_calls
+   FROM request_logs
+   WHERE gen_ai_request_model IN ('gpt-4.1','gpt-4.1-nano')
+   GROUP BY gen_ai_request_model ORDER BY MAX(cost) DESC;"
 ```
 
 ```
@@ -186,9 +194,13 @@ sqlite3 -box /root/data/data.db \
    FROM request_logs WHERE gen_ai_request_model='gpt-4.1' ORDER BY completed_at DESC LIMIT 2;"
 ```
 
-The newest `gpt-4.1` row drops from **~$68.00** to **~$40.80** per 1M — your
-override took effect, no base-catalog edit required. This is how you make the
-gateway's cost numbers match *your* contract.
+You'll get **two `gpt-4.1` rows, newest first** — and that's the point:
+
+- **top** = the call you *just* made → **~$40.80** / 1M (your negotiated rate)
+- **bottom** = an earlier call at list price → **~$68.00** / 1M
+
+Same model, same prompt — the override cut the price ~40% with no base-catalog
+edit. That's how you make the gateway's cost numbers match *your* contract.
 
 ## Step 7 — It's a metric too
 
