@@ -1,6 +1,6 @@
 ---
 slug: govern-spend
-id: aglc03govern
+id: hi1kqxgbfvgi
 type: challenge
 title: Govern the Spend
 teaser: A budget you can't enforce isn't a budget. Cap tokens and pin the model.
@@ -12,16 +12,16 @@ notes:
     model so nobody can quietly switch to an expensive one. Requests over budget get a
     clean HTTP 429 instead of a surprise invoice.
 tabs:
-- id: aglc03-term
+- id: pxix4bf4vvgx
   title: Terminal
   type: terminal
   hostname: server
-- id: aglc03-edit
+- id: t9qxnigt0yzi
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: aglc03-ui
+- id: rsgvwwf0ps7s
   title: Agentgateway UI
   type: service
   hostname: server

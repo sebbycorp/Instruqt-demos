@@ -1,9 +1,10 @@
 ---
 slug: cost-of-every-request
-id: aglc02costreq
+id: 2bt2uh5urdwm
 type: challenge
 title: The Cost of Every Request
-teaser: Every call now lands in a request log with its exact dollar cost. Go read it.
+teaser: Every call now lands in a request log with its exact dollar cost. Go read
+  it.
 notes:
 - type: text
   contents: |
@@ -12,16 +13,16 @@ notes:
     tokens, and dollars — the instant it completes. No exporter, no spreadsheet. In this
     lab you generate a little traffic and read the cost straight out of the log and the UI.
 tabs:
-- id: aglc02-term
+- id: 3oxi5yt11uqs
   title: Terminal
   type: terminal
   hostname: server
-- id: aglc02-edit
+- id: lxrjmt1afkbs
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: aglc02-ui
+- id: qhzohy4rsn1x
   title: Agentgateway UI
   type: service
   hostname: server

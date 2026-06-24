@@ -1,6 +1,6 @@
 ---
 slug: cost-aware-routing
-id: aglc04routing
+id: f86rf7tky2tk
 type: challenge
 title: Cost-Aware Routing
 teaser: Cheap by default, premium only when it's worth it — decided at the gateway.
@@ -12,16 +12,16 @@ notes:
     opt in with `x-priority: high` get premium `gpt-4.1`. The caller never sees an API
     key or a model list — routing and the resulting cost are decided centrally.
 tabs:
-- id: aglc04-term
+- id: 3qpnrz9earsx
   title: Terminal
   type: terminal
   hostname: server
-- id: aglc04-edit
+- id: nn9ujeydtrnc
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: aglc04-ui
+- id: k96sgwhmffiy
   title: Agentgateway UI
   type: service
   hostname: server

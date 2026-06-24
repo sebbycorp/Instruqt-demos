@@ -1,9 +1,10 @@
 ---
 slug: stand-up-the-gateway
-id: aglc01standup
+id: 1vpt5bunqhfy
 type: challenge
 title: Stand Up the Gateway in Docker
-teaser: Run Agentgateway in a container and put one chokepoint in front of OpenAI and MCP.
+teaser: Run Agentgateway in a container and put one chokepoint in front of OpenAI
+  and MCP.
 notes:
 - type: text
   contents: |
@@ -12,16 +13,16 @@ notes:
     lab you run Agentgateway OSS **in Docker**, front OpenAI on `:4000` and an MCP tool
     server on `:3000`, and turn on cost tracking — all on this one machine.
 tabs:
-- id: aglc01-term
+- id: pzsvlvgy2plp
   title: Terminal
   type: terminal
   hostname: server
-- id: aglc01-edit
+- id: xgouifys5oj8
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: aglc01-ui
+- id: 5dl3b8e1c8ft
   title: Agentgateway UI
   type: service
   hostname: server

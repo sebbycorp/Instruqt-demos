@@ -1,8 +1,9 @@
 slug: agw-local-cost-webinar
-id: 00aglcstwbnr1
+id: dzrsuiogqknj
 title: 'AgentGateway Local: Stand Up an AI Cost Control Plane in Docker'
-teaser: Run Agentgateway OSS in Docker, front OpenAI and an MCP server through it, and
-  make every dollar of LLM and tool spend visible and governable — all on one box.
+teaser: Run Agentgateway OSS in Docker, front OpenAI and an MCP server through it,
+  and make every dollar of LLM and tool spend visible and governable — all on one
+  box.
 description: |
   Most teams discover their AI bill after the fact. This hands-on webinar puts a
   single cost-aware chokepoint in front of all your LLM and MCP traffic — running
@@ -28,9 +29,9 @@ tags:
 - finops
 - agentgateway
 - solo-io
+- docker
 - mcp
 - cost
-- docker
 owner: soloio
 developers:
 - sebastian.maniak@solo.io
@@ -42,4 +43,5 @@ lab_config:
   feedback_tab_enabled: false
   loadingMessages: true
   hideStopButton: false
+checksum: "3574014154311915958"
 enhanced_loading: false

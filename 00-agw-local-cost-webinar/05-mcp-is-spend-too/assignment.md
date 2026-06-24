@@ -1,6 +1,6 @@
 ---
 slug: mcp-is-spend-too
-id: aglc05mcpcfo
+id: 5fq0gjwbtlrl
 type: challenge
 title: MCP Is Spend Too — Answer the CFO
 teaser: Tool schemas are tokens. See the hidden MCP cost, then total the whole bill.
@@ -13,16 +13,16 @@ notes:
     server is proxied by the same gateway, that traffic is as visible as your LLM calls.
     This final lab makes the MCP cost concrete, then answers the question every CFO asks.
 tabs:
-- id: aglc05-term
+- id: cxfmjz2yzvjr
   title: Terminal
   type: terminal
   hostname: server
-- id: aglc05-edit
+- id: lfk3656b4cxz
   title: Editor
   type: code
   hostname: server
   path: /root
-- id: aglc05-ui
+- id: ak1rfih5lalg
   title: Agentgateway UI
   type: service
   hostname: server
