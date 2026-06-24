@@ -123,12 +123,12 @@ curl -s http://localhost:15020/metrics | grep cost_catalog
 priced the request. Point Prometheus/Grafana at `:15020` and cost becomes a
 dashboard.
 
-## Step 6 — Watch it in the UI
+## Step 6 — See it as a chart
 
-Open the **Agentgateway UI** tab (`:15000/ui`) and use the **Playground** to send
-a chat request, then look at the request view — you'll see the model, token
-counts, and cost for each call without touching the logs. This is the same data,
-visualized.
+Open the **Agentgateway UI** tab (`:15000/ui`) → left nav → **Costs**. The same
+numbers you just queried are here as **charts** — spend broken down by model, no
+SQL required. Pop into **Chat Playground** to fire another request and watch the
+Costs page tick up. This is the view you'd hand a manager.
 
 > Now you can answer *"how much did that call cost?"* Next: explore the whole
 > gateway in its **web UI**. ➡️

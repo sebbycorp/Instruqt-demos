@@ -32,6 +32,8 @@ enhanced_loading: null
 
 # Cost-Aware Routing
 
+![Cost-aware routing: cheap default, premium on x-priority](../assets/diagram-routing.png)
+
 In the last challenge you pinned *everyone* to `gpt-4o-mini`. But some requests
 genuinely need a frontier model. Instead of trusting clients to choose (and pay)
 responsibly, make the **gateway** decide: cheap by default, premium only when a

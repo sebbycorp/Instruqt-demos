@@ -34,6 +34,8 @@ enhanced_loading: null
 
 # Per-Team Virtual Keys
 
+![Per-team virtual keys; real provider key stays in the gateway](../assets/diagram-virtual-keys.png)
+
 A **virtual key** is a credential *you* mint and hand to a team. Clients send the
 virtual key; the gateway checks it, then uses its own provider key to call
 OpenAI. Teams never see the real key, you can revoke a team's access by deleting

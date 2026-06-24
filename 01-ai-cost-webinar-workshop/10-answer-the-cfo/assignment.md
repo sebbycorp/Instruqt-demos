@@ -37,7 +37,7 @@ sqlite3 -box /root/data/data.db \
    FROM request_logs GROUP BY model ORDER BY usd DESC;"
 ```
 
-That's real — but it's only the handful of calls *you* made in this lab. To
+That's real — but it's only the handful of calls *you* made in this lab. (Prefer a chart? The **Costs** and **Analytics** pages in the UI graph these real calls.) To
 answer the CFO you need **fleet scale**: many users, teams, and providers over a
 week. Same schema, more rows — so we generate a representative week of it.
 

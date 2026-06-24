@@ -31,6 +31,8 @@ enhanced_loading: null
 
 # Stand Up the Gateway
 
+![Standalone gateway architecture](../assets/diagram-architecture.png)
+
 Agentgateway OSS is a single Rust binary — no Kubernetes, no sidecars. It comes
 with a **web UI** for setup. You'll start it with a minimal config, then add your
 OpenAI model in the UI — and it becomes an **OpenAI-compatible proxy** your apps

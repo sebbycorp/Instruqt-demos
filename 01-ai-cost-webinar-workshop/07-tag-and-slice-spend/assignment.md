@@ -94,4 +94,10 @@ You'll see both `cost_tier="low"` and `cost_tier="high"` series. In Grafana this
 becomes a single query — *what fraction of spend is high-tier?* — across every
 team and model.
 
+## Step 5 — See the breakdown in the UI
+
+Open the **Agentgateway UI** tab → **Analytics** and **Costs**. The same spend is
+charted there — by model, over time — so "where is the money going?" is a glance,
+not a query.
+
 > Next: agents don't only call models — they call **tools**. ➡️

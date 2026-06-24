@@ -32,6 +32,8 @@ enhanced_loading: null
 
 # MCP Is Spend Too
 
+![MCP tool schemas and results ride along as tokens](../assets/diagram-mcp.png)
+
 **MCP** (Model Context Protocol) is how agents discover and call tools. The cost
 catch: every tool's JSON schema is sent to the model as **input tokens**, and
 every tool **result** comes back as input tokens on the *next* call. Ten tools
