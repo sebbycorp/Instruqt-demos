@@ -15,6 +15,10 @@ config:
 llm:
   port: 4000
   policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
     apiKey:
       mode: strict
       keys:

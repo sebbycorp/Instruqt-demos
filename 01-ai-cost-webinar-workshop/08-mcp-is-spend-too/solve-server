@@ -15,6 +15,10 @@ config:
 llm:
   port: 4000
   policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
     localRateLimit:
     - { maxTokens: 200000, tokensPerFill: 200000, fillInterval: "1h", type: tokens }
   models:

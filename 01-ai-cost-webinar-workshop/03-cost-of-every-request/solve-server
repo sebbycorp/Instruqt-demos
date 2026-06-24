@@ -11,6 +11,11 @@ config:
     - file: /root/costs/base-costs.json
 llm:
   port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
   models:
   - name: "openai/gpt-4o"
     provider: openAI

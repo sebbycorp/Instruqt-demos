@@ -42,6 +42,11 @@ In the **Editor**, add a `policies` block with `localRateLimit` under `llm:` in
 ```yaml
 llm:
   port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
   policies:                 # <-- add this block
     localRateLimit:
     - maxTokens: 50

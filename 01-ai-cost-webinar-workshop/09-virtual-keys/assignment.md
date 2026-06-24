@@ -50,6 +50,10 @@ key per team:
 llm:
   port: 4000
   policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
     apiKey:                    # <-- add this
       mode: strict             # reject any request without a valid virtual key
       keys:
