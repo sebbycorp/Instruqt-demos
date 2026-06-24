@@ -86,6 +86,6 @@ setup can't give you.
 Open the **Agentgateway UI** tab and browse the request/usage pages for the same data
 visually — the gateway turns invisible AI spend into queryable, attributable data.
 
-> 🎉 You ran Agentgateway in Docker, proxied LLM + MCP traffic through one control
-> point, and turned a week of token spend into answers. That's the foundation for
-> governance: budgets, rate limits, and cost-aware routing.
+> 🎉 You stood up Agentgateway, proxied LLM + MCP traffic through one control point,
+> and turned a week of token spend into answers. That's the foundation for governance:
+> budgets, rate limits, and cost-aware routing.

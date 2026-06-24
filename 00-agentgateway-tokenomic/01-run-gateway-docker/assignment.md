@@ -2,13 +2,13 @@
 slug: run-gateway-docker
 id: jb3bysq5ryex
 type: challenge
-title: Run the Gateway in Docker
-teaser: Put one Docker container in front of all your AI traffic.
+title: Stand Up the Gateway
+teaser: Put one control point in front of all your AI traffic.
 notes:
 - type: text
-  contents: "# \U0001F433 Run the Gateway in Docker\n\nAgentgateway is a single Rust
-    binary — and a single Docker container. Start it\nwith a minimal config and connect
-    to its built-in web UI. No Kubernetes, no\nsidecars.\n"
+  contents: "# \U0001F6A6 Stand Up the Gateway\n\nStep one to regaining control: route
+    every AI call through one place you operate.\nStart Agentgateway with a minimal
+    config and connect to its built-in web UI.\n"
 tabs:
 - id: eemwgichzjbp
   title: Terminal
@@ -29,24 +29,24 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-# Run the Gateway in Docker
+# Stand Up the Gateway
 
 ![What you'll build across this lab](../assets/diagram-journey.png)
 
-**What we're building:** one Agentgateway container that becomes the single control
-point for every LLM and MCP call your agents make. We start it empty, then add an
-LLM (Lab 2), an MCP server (Lab 3), and finish by analyzing the traffic (Lab 4).
+**What we're building:** one gateway that becomes the single control point for every
+LLM and MCP call your agents make. We start it empty, then add an LLM (Lab 2), an MCP
+server (Lab 3), and finish by analyzing the traffic (Lab 4).
 
-![Lab 1 — run the gateway and open the UI](../assets/diagram-01-gateway.png)
+![Lab 1 — stand up the gateway and open the UI](../assets/diagram-01-gateway.png)
 
 A minimal **`/root/agentgateway/config.yaml`** is already staged (admin UI + a default
 cost catalog + a request database, no models yet). Three ports matter: **:4000** (LLM
 API), **:3000** (MCP), and **:15000** (admin + UI).
 
-## Step 1 — Start the gateway container
+## Step 1 — Start the gateway
 
-The config dir is bind-mounted into the container at `/config`. We publish all three
-ports and set `ADMIN_ADDR` so the UI is reachable from your browser.
+Start Agentgateway with the staged config. It exposes three ports — **:4000** (LLM),
+**:3000** (MCP), and **:15000** (admin + UI) — and reads your config from `/config`.
 
 ```bash
 docker run -d --name agentgateway --network agw \
