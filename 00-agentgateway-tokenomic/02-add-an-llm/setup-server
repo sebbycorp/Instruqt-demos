@@ -1,0 +1,12 @@
+#!/bin/bash
+set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
+docker network inspect agw >/dev/null 2>&1 || docker network create agw >/dev/null
+if ! docker ps --filter name=agentgateway --filter status=running --format '{{.Names}}' | grep -q '^agentgateway$'; then
+  docker rm -f agentgateway >/dev/null 2>&1 || true
+  docker run -d --name agentgateway --network agw -v /root/agentgateway:/config \
+    -p 4000:4000 -p 3000:3000 -p 15000:15000 -e ADMIN_ADDR=0.0.0.0:15000 -e OPENAI_API_KEY \
+    cr.agentgateway.dev/agentgateway:v1.3.1 -f /config/config.yaml >/dev/null
+  sleep 5
+fi
+echo "challenge 2 setup complete"

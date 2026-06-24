@@ -1,0 +1,26 @@
+#!/bin/bash
+set -uo pipefail
+
+# Poll for the gateway to be running AND serving the admin API on :15000.
+# Container start on a cold VM can take longer than a fixed sleep, so we wait
+# on the condition (up to ~40s) instead of checking once.
+code=000
+for i in $(seq 1 40); do
+  running=$(docker ps --filter name=agentgateway --filter status=running --format '{{.Names}}' | grep -c '^agentgateway$')
+  if [ "$running" -ge 1 ]; then
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://localhost:15000/config_dump 2>/dev/null)
+    [ "$code" = "200" ] && break
+  fi
+  sleep 1
+done
+
+if [ "$code" != "200" ]; then
+  # Diagnostics (surface in the test log to reveal why the gateway isn't up).
+  echo "--- diagnostics: docker ps -a ---"
+  docker ps -a --filter name=agentgateway --format '{{.Names}}: {{.Status}}'
+  echo "--- diagnostics: docker logs agentgateway (tail) ---"
+  docker logs agentgateway 2>&1 | tail -20
+  fail-message "The admin API on :15000 didn't return 200 (last: HTTP $code). Ensure the container is running with -e ADMIN_ADDR=0.0.0.0:15000 and -p 15000:15000, mounting /root/agentgateway at /config."
+  exit 1
+fi
+echo "Gateway container is running and the admin API on :15000 is responding."

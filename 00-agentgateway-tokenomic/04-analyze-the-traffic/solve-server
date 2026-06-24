@@ -1,0 +1,7 @@
+#!/bin/bash
+set -uo pipefail
+DB=/root/agentgateway/data/data.db
+sqlite3 -header -column "$DB" "SELECT printf('\$%.2f', SUM(cost)) total_spend, SUM(total_tokens) tokens, COUNT(*) requests FROM request_logs;"
+sqlite3 -header -column "$DB" "SELECT gen_ai_provider_name provider, printf('\$%.2f', SUM(cost)) spend FROM request_logs GROUP BY 1 ORDER BY SUM(cost) DESC;"
+sqlite3 -header -column "$DB" "SELECT agentgateway_user user, COUNT(*) calls, printf('\$%.2f', SUM(cost)) spend FROM request_logs GROUP BY 1 ORDER BY calls DESC LIMIT 5;"
+echo "solve: analysis queries ran"
