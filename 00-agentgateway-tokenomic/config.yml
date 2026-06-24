@@ -1,0 +1,8 @@
+version: "3"
+virtualmachines:
+- name: server
+  image: solo-test-236622/workshop-instruqt-kgateway-20251023
+  shell: /usr/bin/bash
+  machine_type: n1-standard-4
+secrets:
+- name: OPENAI_API_KEY

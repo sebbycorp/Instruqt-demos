@@ -1,0 +1,37 @@
+slug: agentgateway-tokenomic
+title: 'Agentgateway in Docker: Govern Your AI Token Spend'
+teaser: Run Agentgateway as a Docker container, proxy LLM and MCP traffic through one
+  control point, then analyze a week of token spend.
+description: |-
+  Your AI agents call LLMs and MCP tools directly — no chokepoint, no cost
+  visibility, no governance. **Agentgateway** is a single Rust binary you can run
+  as a Docker container to put one control point in front of all of it.
+
+  In this hands-on lab you'll:
+
+  - 🐳 Run Agentgateway as a Docker container and connect to its built-in UI
+  - 🌐 Add an OpenAI model and turn the gateway into an OpenAI-compatible proxy
+  - 🔌 Deploy a separate MCP server and bring tool traffic under the same gateway
+  - 📊 Analyze a week of captured traffic — cost by model/provider/user and usage
+
+  **No Kubernetes. No prior Agentgateway experience.** Just Docker basics and a terminal.
+icon: ""
+tags:
+- ai
+- llm
+- mcp
+- docker
+- agentgateway
+- solo-io
+owner: soloio
+developers:
+- sebastian.maniak@solo.io
+idle_timeout: 1800
+timelimit: 3600
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  hideStopButton: false
+enhanced_loading: false
