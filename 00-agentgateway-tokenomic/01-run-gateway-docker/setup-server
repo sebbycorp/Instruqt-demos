@@ -1,0 +1,7 @@
+#!/bin/bash
+set -uo pipefail
+# Track setup already provisioned /root/agentgateway and pre-pulled images.
+# Be defensive in case a challenge is started in isolation.
+docker network inspect agw >/dev/null 2>&1 || docker network create agw >/dev/null
+[ -f /root/agentgateway/config.yaml ] || echo "WARNING: config.yaml missing (track setup-server should have created it)"
+echo "challenge 1 setup complete"
