@@ -1,0 +1,14 @@
+#!/bin/bash
+set -uo pipefail
+export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
+DB=/root/agentgateway/data/data.db
+rows=$(sqlite3 "$DB" 'SELECT COUNT(*) FROM request_logs;' 2>/dev/null || echo 0)
+if [ "${rows:-0}" -lt 100 ]; then
+  echo "re-seeding mock traffic (rows=$rows)"
+  # Gateway holds the DB open; seeding into a fresh file then swapping avoids a write lock.
+  uv run --python 3.12 /root/agentgateway/gen-mock-logs.py --output /tmp/seed.db --replace --requests 5000 --days 7 --seed 7 || true
+  docker stop agentgateway >/dev/null 2>&1 || true
+  cp /tmp/seed.db "$DB" && chmod 777 "$DB"
+  docker start agentgateway >/dev/null 2>&1 || true
+fi
+echo "challenge 4 setup complete (rows=$(sqlite3 "$DB" 'SELECT COUNT(*) FROM request_logs;' 2>/dev/null || echo 0))"
