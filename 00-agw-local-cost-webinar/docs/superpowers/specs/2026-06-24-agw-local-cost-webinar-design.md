@@ -53,7 +53,7 @@ with `-e OPENAI_API_KEY`. The config references it as `apiKey: "$OPENAI_API_KEY"
 - `agw-up` — `docker rm -f agentgateway`, then `docker run -d` the gateway with the
   mounts/ports/network above. Used to (re)start after a config edit.
 - `agw-restart` — alias for `agw-up`.
-- `agw-validate` — `docker run --rm ... -f /config.yaml --validate-only`.
+- `agw-validate` — `docker run --rm -e OPENAI_API_KEY=... ... -f /config.yaml --validate-config`.
 - `agw-logs` — `docker logs -f agentgateway`.
 
 ## Per-lab plan

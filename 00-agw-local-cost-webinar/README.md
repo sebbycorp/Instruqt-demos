@@ -49,7 +49,7 @@ rather than a stdio `npx` inside the gateway).
 
 Defined in `/root/agw-helpers.sh` (sourced by `~/.bashrc` and by the check/solve scripts):
 
-- `agw-validate` — `--validate-only` against `/root/config.yaml`.
+- `agw-validate` — `--validate-config` against `/root/config.yaml` (passes the OpenAI key in).
 - `agw-up` / `agw-restart` — (re)create the gateway container from the config.
 - `agw-logs` — tail the gateway container logs.
 - `agw-down` — stop the gateway container.
