@@ -12,6 +12,9 @@ config:
     fields:
       add:
         cost_usd: "llm.cost.total"
+        cost_input: "llm.cost.input"
+        cost_output: "llm.cost.output"
+        cost_cache_read: "llm.cost.cacheRead"
         expensive: "llm.cost.total > 0.0001"
   metrics:
     fields:
@@ -52,7 +55,7 @@ sleep 4
 curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Content-Type: application/json' -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 sleep 1
-echo "=== cost_usd / expensive in the access log ==="
-grep -oE 'cost_usd=[^ ]+|expensive=[^ ]+' /root/agentgateway.log | tail -6 || true
+echo "=== cost breakdown / expensive in the access log ==="
+grep -oE 'cost_usd=[^ ]+|cost_input=[^ ]+|cost_output=[^ ]+|cost_cache_read=[^ ]+|expensive=[^ ]+' /root/agentgateway.log | tail -10 || true
 echo "=== cost_tier split in metrics ==="
 curl -s http://localhost:15020/metrics | grep -oE 'cost_tier="[a-z]+"' | sort | uniq -c || true

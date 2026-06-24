@@ -48,6 +48,12 @@ Rates are **USD per 1 million tokens**, split into input and output — exactly 
 providers bill. Note `gpt-4.1` ($2.00 / $8.00) costs **~20×** `gpt-4.1-nano`
 ($0.10 / $0.40).
 
+> **Where does this catalog come from?** It's seeded from public pricing data
+> (models.dev) — ~846 models out of the box. Keep it current from the Admin UI
+> (**Costs** page → refresh base costs) or regenerate the file with
+> `agctl costs import --out /root/costs/base-costs.json`. Pricing changes often;
+> a stale catalog means wrong cost numbers.
+
 ## Step 2 — Offer both a premium and a cheap model
 
 To compare costs you need the gateway to actually *serve* both models. Add a
@@ -148,7 +154,43 @@ sqlite3 -box /root/data/data.db \
 Same trivial answer — **$3.40 vs $68.00 per million calls.** That ~20× gap is
 exactly why "which model?" is a budget decision, not a detail.
 
-## Step 6 — It's a metric too
+## Step 6 — Correct the price with an override
+
+List price isn't *your* price. Maybe you negotiated an enterprise discount, or you
+add a markup for internal chargeback. Agentgateway lets you **layer catalogs** —
+later files win — so you override only what you need without touching the base.
+
+Write a tiny overrides file with your negotiated `gpt-4.1` rate (40% off), then
+layer it on top of the base catalog:
+
+```bash
+cat > /root/costs/overrides.json <<'EOF'
+{ "providers": { "openai": { "models": {
+  "gpt-4.1": { "rates": { "input": "1.20", "output": "4.80" } } } } } }
+EOF
+
+# point modelCatalog at base first, then overrides (later wins)
+sed -i 's#    - file: /root/costs/base-costs.json#    - file: /root/costs/base-costs.json\n    - file: /root/costs/overrides.json#' /root/config.yaml
+agentgateway -f /root/config.yaml --validate-only
+agw-restart
+```
+
+Re-run the **premium** call, then look at its cost again:
+
+```bash
+curl -s http://localhost:4000/v1/chat/completions -H "Content-Type: application/json" \
+  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}' >/dev/null
+
+sqlite3 -box /root/data/data.db \
+  "SELECT gen_ai_request_model AS model, printf('\$%.2f', cost*1000000) AS per_1M_calls
+   FROM request_logs WHERE gen_ai_request_model='gpt-4.1' ORDER BY completed_at DESC LIMIT 2;"
+```
+
+The newest `gpt-4.1` row drops from **~$68.00** to **~$40.80** per 1M — your
+override took effect, no base-catalog edit required. This is how you make the
+gateway's cost numbers match *your* contract.
+
+## Step 7 — It's a metric too
 
 ```bash
 curl -s http://localhost:15020/metrics | grep cost_catalog
@@ -158,7 +200,7 @@ curl -s http://localhost:15020/metrics | grep cost_catalog
 priced the request. Point Prometheus/Grafana at `:15020` and cost becomes a
 dashboard.
 
-## Step 7 — See it as a chart
+## Step 8 — See it as a chart
 
 Open the **Agentgateway UI** tab (`:15000/ui`) → left nav → **Costs**. The same
 numbers you just queried are here as **charts** — spend broken down by model, no

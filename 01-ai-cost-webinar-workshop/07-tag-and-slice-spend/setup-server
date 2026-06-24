@@ -1,14 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 mkdir -p /root/data /root/costs
-if [ ! -s /root/costs/base-costs.json ]; then
-cat > /root/costs/base-costs.json <<'JSON'
-{ "providers": { "openai": { "models": {
-  "gpt-4o-mini":  { "rates": { "input": "0.15", "output": "0.60" } },
-  "gpt-4o":       { "rates": { "input": "2.50", "output": "10.00" } },
-  "gpt-4.1":      { "rates": { "input": "2.00", "output": "8.00" } },
-  "gpt-4.1-mini": { "rates": { "input": "0.40", "output": "1.60" } },
-  "gpt-4.1-nano": { "rates": { "input": "0.10", "output": "0.40" } } } } } }
-JSON
-fi
+# Cost catalog (/root/costs/base-costs.json) is provisioned by track_scripts/setup-server.
 echo "challenge 7 setup complete"

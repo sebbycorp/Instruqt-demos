@@ -52,6 +52,9 @@ config:
     fields:
       add:
         cost_usd: "llm.cost.total"
+        cost_input: "llm.cost.input"
+        cost_output: "llm.cost.output"
+        cost_cache_read: "llm.cost.cacheRead"
         expensive: "llm.cost.total > 0.0001"
   metrics:                                        # <-- add
     fields:
@@ -75,14 +78,24 @@ curl -s http://localhost:4000/v1/chat/completions -H 'x-priority: high' -H 'Cont
   -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"hi"}],"max_tokens":10}' >/dev/null
 ```
 
-## Step 3 — See the tags in the log
+## Step 3 — See the tags — and the cost breakdown
 
 ```bash
-grep -oE 'cost_usd=[^ ]+|expensive=[^ ]+' /root/agentgateway.log | tail -4
+grep -oE 'cost_usd=[^ ]+|expensive=[^ ]+|cost_input=[^ ]+|cost_output=[^ ]+|cost_cache_read=[^ ]+' /root/agentgateway.log | tail -10
 ```
 
-The cheap call shows `expensive=false`; the gpt-4.1 call shows `expensive=true`.
-You can now `grep expensive=true` to find every costly request.
+The cheap call shows `expensive=false`; the premium one `expensive=true` — so you
+can `grep expensive=true` to find every costly request. The `cost_input` /
+`cost_output` / `cost_cache_read` fields split the total into its parts — the same
+components the gateway exposes as `llm.cost.input`, `.output`, `.cacheRead`,
+`.cacheWrite`, `.reasoning`, `.inputAudio`, `.outputAudio`.
+
+**Why the breakdown matters — prompt caching.** Providers bill *cached* input
+tokens at a fraction of the normal rate (often 10–25%). On agents that re-send a
+big system prompt every turn, cached input is most of the bill. When caching kicks
+in, `cost_cache_read` populates while `cost_input` drops — and because the gateway
+logs each component, you can *prove* the savings instead of guessing. Want it all
+in one field? Use `cost: "flatten(llm.cost)"`.
 
 ## Step 4 — Slice metrics by cost tier
 
