@@ -77,13 +77,40 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:3000 \
 
 `200` means the MCP server is proxied and answering.
 
-## Step 3 — Explore MCP in the UI
+## Step 3 — List the tools (and see the token cost)
 
-Open the **Agentgateway UI** tab (`:15000/ui`) and find the **MCP / Tools
-Playground**. List the tools exposed by `server-everything` and invoke one. Notice
-how much tool metadata (names, descriptions, JSON schemas) the model would have to
-carry as input tokens — that's the hidden cost of tool-heavy agents, now visible
-and governable at the gateway.
+Tools are discovered over that same MCP endpoint. From the **Terminal**, complete
+the handshake and ask the server what tools it exposes — the metadata you get back
+is exactly what gets injected into the model's context as **input tokens**:
+
+```bash
+# 1) initialize and capture the MCP session id
+SID=$(curl -s -D - -o /dev/null -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"cli","version":"1"}}}' \
+  | tr -d '\r' | awk -F': ' 'tolower($1)=="mcp-session-id"{print $2}')
+
+# 2) signal initialized, then list the tools
+curl -s -o /dev/null -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -H "mcp-session-id: $SID" \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+
+curl -s -X POST http://localhost:3000 \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -H "mcp-session-id: $SID" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | grep '^data:' | sed 's/^data: //' \
+  | jq '{tool_count: (.result.tools|length), tool_names: [.result.tools[].name]}'
+```
+
+`server-everything` exposes a dozen-plus tools. Every one of those names,
+descriptions, and JSON schemas is sent to the model on **each** turn — that's the
+hidden token cost of tool-heavy agents, now visible and governable at the gateway.
+
+> Live MCP calls go through the **Terminal** for the same reason as LLM calls — the
+> browser can't reach the gateway's `:3000` through the hosted lab. The UI's data
+> pages stay useful for *observing* traffic.
 
 ## Step 4 — Why this matters for cost
 

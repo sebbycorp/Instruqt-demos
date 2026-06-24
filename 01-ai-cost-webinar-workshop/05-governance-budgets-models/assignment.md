@@ -45,7 +45,7 @@ Paste it over the `llm:` section of `/root/config.yaml`:
 llm:
   port: 4000
   policies:
-    cors:                       # lets the UI Playground call the gateway
+    cors:                       # allow cross-origin browser/API clients
       allowOrigins: ["*"]
       allowHeaders: ["*"]
       allowMethods: ["GET","POST","OPTIONS"]

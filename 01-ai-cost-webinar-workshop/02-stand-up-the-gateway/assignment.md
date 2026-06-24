@@ -107,8 +107,9 @@ curl -s http://localhost:4000/v1/chat/completions \
   -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Say hello in one sentence."}],"max_tokens":20}' | jq -r '.choices[0].message.content'
 ```
 
-A normal OpenAI response — but it went through **your** gateway. You can also try
-the UI's **Chat Playground** tab. Every client that points at `:4000` instead of
-OpenAI directly is now under your control point.
+A normal OpenAI response — but it went through **your** gateway. Every client that
+points at `:4000` instead of OpenAI directly is now under your control point. (All
+live calls in this workshop go through the **Terminal** — it runs *on* the gateway
+VM, so `localhost:4000` reaches it directly.)
 
 > Next: see the **dollar figure** the gateway already put on that call. ➡️

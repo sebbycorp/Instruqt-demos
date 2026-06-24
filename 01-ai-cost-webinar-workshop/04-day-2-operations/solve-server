@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 export OPENAI_API_KEY="$(cat /root/.openai-api-key 2>/dev/null || echo "${OPENAI_API_KEY:-}")"
-# Ensure a running gateway so the UI (Chat Playground / Raw Config / Client Setup) works.
+# Ensure a running gateway so the UI (Costs / Logs / Raw Config / Client Setup) has data.
 if [ ! -f /root/config.yaml ]; then
 cat > /root/config.yaml <<'YAML'
 config:
@@ -31,9 +31,9 @@ fi
 pkill -f "agentgateway -f" 2>/dev/null || true; sleep 1
 nohup agentgateway -f /root/config.yaml > /root/agentgateway.log 2>&1 &
 sleep 4
-# Drive a couple of calls so Chat Playground / Costs / Logs have data to show.
+# Drive a couple of calls from the VM so Costs / Logs / Analytics have data to show.
 for q in "What is an AI gateway?" "Summarize MCP in one line."; do
   curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
-    -d "{\"model\":\"gpt-4.1-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"$q\"}],\"max_tokens\":30}" >/dev/null
+    -d "{\"model\":\"openai/gpt-4.1-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"$q\"}],\"max_tokens\":30}" >/dev/null
 done
-echo "Gateway up on :4000; UI on :15000/ui — explore Chat Playground, Raw Configuration, Client Setup."
+echo "Gateway up on :4000; UI on :15000/ui — explore Costs, Logs, Analytics, Raw Configuration, Client Setup."

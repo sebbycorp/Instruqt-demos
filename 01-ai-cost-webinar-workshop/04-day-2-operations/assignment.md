@@ -3,14 +3,13 @@ slug: day-2-operations
 id: a3xmnpwlqjxt
 type: challenge
 title: Explore the Gateway UI
-teaser: Take the Agentgateway web UI for a spin — chat playground, live config, and
-  client setup.
+teaser: Take the Agentgateway web UI for a spin — live costs, logs, config, and client setup.
 notes:
 - type: text
   contents: "# \U0001F9ED Explore the Gateway UI\n\nEverything you've done in YAML,
     Agentgateway also gives you in a **web UI** —\nyour mission control for AI traffic.
-    Let's click around: chat with your models,\nsee the live config, and grab a ready-made
-    snippet to point any app at the\ngateway.\n"
+    You'll drive a few calls from the Terminal,\nthen watch them show up as costs,
+    logs, and charts — and grab a ready-made\nsnippet to point any app at the gateway.\n"
 tabs:
 - id: fg2dsy86jle2
   title: Terminal
@@ -30,44 +29,63 @@ enhanced_loading: null
 
 Open the **Agentgateway UI** tab (served on `:15000/ui`). The left nav groups
 everything: **LLM** (Models, Providers, Policies, Costs…), **MCP**, **Traffic**,
-and **Tools**. No commands this time — just explore.
+and **Tools**.
 
-## 1. Chat Playground — talk to your gateway
+> **Where do live calls come from?** From the **Terminal**, not the browser. The
+> Terminal runs *on* the gateway VM, so `localhost:4000` is the gateway. (The UI's
+> in-browser Chat Playground talks to `:4000` from *your* laptop, which can't reach
+> the VM through the hosted lab — so we drive traffic from the Terminal and use the
+> UI to *observe* it.)
 
-Left nav → **Chat Playground**. This sends a **real** chat completion *through the
-gateway* (great for setup debugging).
+## 1. Generate some traffic (Terminal)
 
-- **Model:** pick `openai/*` (your catch-all model)
-- **Specific model:** type `gpt-4.1-nano`
-- Type a question in **User message** and hit **Send**
+In the **Terminal**, fire a few calls through the gateway so the UI has data to show:
 
-You'll get a live reply — and because it went through the gateway, it was just
-priced and logged (you'll see it on the Costs/Logs pages). Notice the **Include
-MCP tools** toggle too — that lets the model call MCP tools you expose later.
+```bash
+for q in "What is an AI gateway?" "Summarize MCP in one line." "Name three FinOps metrics."; do
+  curl -s http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+    -d "{\"model\":\"openai/gpt-4.1-nano\",\"messages\":[{\"role\":\"user\",\"content\":\"$q\"}],\"max_tokens\":40}" \
+    | jq -r '.choices[0].message.content'
+done
+```
 
-## 2. Raw Configuration — the whole gateway, in one place
+Three real replies — each priced and logged by the gateway. Now go look at them.
+
+## 2. Costs & Analytics — the spend, visualized
+
+Left nav → **Costs** (and **Analytics**). The calls you just made appear here as
+**charts** — spend by model, token volume, request counts — no SQL required. This
+is the manager-facing view of the same data you'll query directly later.
+
+## 3. Logs — every request, line by line
+
+Left nav → **Logs**. Each call you sent is a row: model, tokens, cost, status,
+latency. This is the per-request detail behind the charts.
+
+## 4. Models & Providers — what's configured
+
+Left nav → **Models** and **Providers**. Here's your `openai/*` model and its
+OpenAI provider — the same thing you defined in YAML, shown as managed objects you
+can edit in place.
+
+## 5. Raw Configuration — the whole gateway, in one place
 
 Left nav → **Tools → Raw Configuration**. This is the **full gateway YAML**, live
 and editable — your `config.database`, `modelCatalog`, `llm.models`, everything.
-You can **Copy**, **Download**, or edit and **Save** (it hot-reloads). This is the
-same config you'd otherwise hand-edit in `/root/config.yaml`.
+**Copy**, **Download**, or edit and **Save** (it hot-reloads) — the same config you'd
+otherwise hand-edit in `/root/config.yaml`.
 
-## 3. Client Setup — point any app at the gateway
+## 6. Client Setup — point any app at the gateway
 
 Left nav → **Client Setup**. This **generates connection snippets** for any
 OpenAI-compatible client:
 
 - It shows your **Gateway Base URL** (`…:4000/v1`), the **model**, and the **auth** header
 - Switch the **Integration** dropdown between **curl**, the **OpenAI Python/Node SDKs**, and more
-- Hit **Copy** — that's literally all a developer needs to route their app through your gateway
+- Hit **Copy** — that's all a developer needs to route their app through your gateway
 
 This is the "make it yours" button: any team drops in that base URL and their
 traffic is instantly metered, priced, and governed.
-
-## 4. Look around: Costs, Logs, Analytics
-
-Click **Costs**, **Logs**, and **Analytics** in the LLM section to see the spend
-and requests you've already generated — the same data, visualized.
 
 > You've seen the gateway from every angle. Next: put **guardrails on the spend**
 > so it can't run away. ➡️

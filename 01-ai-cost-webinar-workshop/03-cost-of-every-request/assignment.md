@@ -127,8 +127,9 @@ dashboard.
 
 Open the **Agentgateway UI** tab (`:15000/ui`) → left nav → **Costs**. The same
 numbers you just queried are here as **charts** — spend broken down by model, no
-SQL required. Pop into **Chat Playground** to fire another request and watch the
-Costs page tick up. This is the view you'd hand a manager.
+SQL required. Fire another call from the **Terminal** (re-run a curl from Step 2)
+and refresh the page to watch the spend tick up. This is the view you'd hand a
+manager.
 
 > Now you can answer *"how much did that call cost?"* Next: explore the whole
 > gateway in its **web UI**. ➡️
