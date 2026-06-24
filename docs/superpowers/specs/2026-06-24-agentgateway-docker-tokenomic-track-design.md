@@ -184,6 +184,42 @@ Adaptation: the DB path moves to `/root/agentgateway/data/data.db` (the mounted
 - **`sqlite:////` path** — 4 slashes needed for absolute paths; validate config with `--validate-only` equivalent (or a dry `docker run`).
 - **UI reachability** — `ADMIN_ADDR=0.0.0.0:15000` is mandatory; without it the service tab 502s.
 
+## 9b. Validation (local smoke test, 2026-06-24)
+
+The full Docker path was smoke-tested end-to-end on a local Mac (Docker Desktop)
+before writing the plan. **All stages passed**, confirming the spec's load-bearing
+assumptions:
+
+| Assumption | Result |
+|------------|--------|
+| `cr.agentgateway.dev/agentgateway:v1.3.1` exists & runs | ✅ both `:v1.3.1` and `:latest` resolve |
+| `-e ADMIN_ADDR=0.0.0.0:15000` → UI on `:15000/ui` reachable | ✅ HTTP 200 |
+| Mounted `/config`, `sqlite:////config/data/data.db` (4 slashes) | ✅ accepted, DB created |
+| Catalog `/config/costs/base-costs.json` loaded | ✅ 8 providers / 45 models |
+| LLM model with `$OPENAI_API_KEY` env-sub → live `:4000` call | ✅ HTTP 200, real completion |
+| Separate `mcp-everything` container via `http://mcp-everything:8080/mcp/` → `:3000` | ✅ `tools/list` = 13 tools |
+| Gateway's own DB uses `request_logs` + `request_log_payloads` | ✅ generator schema matches exactly |
+| Generator seeds rows; cost + usage queries run | ✅ $331 total, per-user/model/group breakdowns |
+| Gateway boots on a **pre-seeded** DB (real track ordering) | ✅ clean boot, rows intact, live call still 200 |
+
+**Refinements folded in from the test:**
+
+- **Generator requires Python ≥3.11** (`datetime.UTC`). Run via `uv run` (the PEP 723
+  header pins `>=3.11`); `track_scripts/setup-server` installs `uv` and invokes it that
+  way. Plain VM `python3` may be too old — do **not** call it directly.
+- **Seed the DB during `track_scripts/setup-server`, before the gateway is ever started**
+  (verified ordering). This makes "the gateway has already seen a week of traffic" true
+  from Lab 01 and avoids a SQLite WAL write-lock from seeding while the container holds
+  the DB open.
+- **`agw-restart()` = `docker restart agentgateway`** (config is bind-mounted; restart
+  re-reads it after edits). Used after every config change in Labs 02–03.
+- **MCP container:** `node:20-alpine` running `npx -y @modelcontextprotocol/server-everything
+  streamableHttp` with `-e PORT=8080` serves at `/mcp` on `:8080`. Cold `npx` download takes
+  ~20–40s — `setup-server` should pre-pull `node:20-alpine` and warm the package.
+- **DB dir must be writable** by the container user; ensure `/root/agentgateway/data` is
+  writable (the generator writes it as the host user, the container reads/appends as
+  `--user`).
+
 ## 10. Out of Scope
 
 Auth/virtual keys, rate limiting/budgets, cost-aware routing, multiple providers,
