@@ -52,7 +52,7 @@ container rather than a stdio process inside the gateway).
 
 Defined in `/root/agw-helpers.sh` (sourced by `~/.bashrc` and by the check/solve scripts):
 
-- `agw-validate` — `--validate-config` against `/root/config.yaml` (passes the OpenAI key in).
+- `agw-validate` — `--validate-only` against `/root/config.yaml` (passes the OpenAI key in).
 - `agw-up` / `agw-restart` — (re)create the gateway container from the config.
 - `agw-reload` — `docker restart agentgateway` to pick up a config edit (config is mounted).
 - `agw-logs` / `agw-down` — tail logs / stop the gateway.

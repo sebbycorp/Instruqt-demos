@@ -102,13 +102,13 @@ export AGW_IMAGE="cr.agentgateway.dev/agentgateway:v1.3.1"
 _agw_key() { echo "${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"; }
 
 # Validate /root/config.yaml. The OpenAI key must be passed in: agentgateway
-# resolves apiKey "$OPENAI_API_KEY" at parse time even with --validate-config.
+# resolves apiKey "$OPENAI_API_KEY" at parse time even with --validate-only.
 agw-validate() {
   docker run --rm \
     -e OPENAI_API_KEY="$(_agw_key)" \
     -v /root/config.yaml:/config.yaml \
     -v /root/costs:/costs \
-    "$AGW_IMAGE" -f /config.yaml --validate-config
+    "$AGW_IMAGE" -f /config.yaml --validate-only
 }
 
 # (Re)create the gateway container from /root/config.yaml.
