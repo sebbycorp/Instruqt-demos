@@ -871,12 +871,14 @@ YAML
 # NOT here. Track-lifecycle scripts have an unreliable $HOME, so `uv run` may not resolve;
 # challenge scripts run with $HOME=/root where uv installs/links cleanly. The gateway
 # creates the request_logs schema itself on first boot.
-chmod -R 777 /root/agentgateway/data
+# Make the whole config dir writable so the gateway (and the UI's "Add model") can
+# write config.yaml back through the bind mount, and so the DB is writable.
+chmod -R 777 /root/agentgateway
 
-# --- Convenience helper: restart the gateway after config edits ---
+# Convenience PATH for the interactive terminal (uv, sqlite3). No command aliases —
+# the assignments use the real docker / agentgateway commands directly.
 cat >> ~/.bashrc <<'RC'
 export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-agw-restart() { docker restart agentgateway >/dev/null 2>&1; sleep 3; }
 RC
 
 echo "=== Track setup complete ==="

@@ -5,7 +5,7 @@ if ! docker ps --filter name=mcp-everything --filter status=running --format '{{
   exit 1
 fi
 if ! grep -q 'mcp-everything:8080/mcp' /root/agentgateway/config.yaml 2>/dev/null; then
-  fail-message "No MCP target in /root/agentgateway/config.yaml. Add the top-level mcp: block (port 3000, host http://mcp-everything:8080/mcp/), then agw-restart."
+  fail-message "No MCP target in /root/agentgateway/config.yaml. Add the top-level mcp: block (port 3000, host http://mcp-everything:8080/mcp/), then: docker restart agentgateway"
   exit 1
 fi
 
@@ -26,7 +26,7 @@ if [ "$code" != "200" ]; then
   docker logs mcp-everything 2>&1 | tail -15
   echo "--- diagnostics: docker logs agentgateway (tail) ---"
   docker logs agentgateway 2>&1 | tail -15
-  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Check the mcp: block (host http://mcp-everything:8080/mcp/) and run agw-restart."
+  fail-message "MCP endpoint on :3000 returned HTTP $code (expected 200). Check the mcp: block (host http://mcp-everything:8080/mcp/), then: docker restart agentgateway"
   exit 1
 fi
 

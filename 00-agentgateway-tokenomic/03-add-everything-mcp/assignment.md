@@ -2,13 +2,13 @@
 slug: add-everything-mcp
 id: zq7kl5qxngxj
 type: challenge
-title: Add an MCP Server
+title: Add the Everything MCP Server
 teaser: Bring agent tool traffic under the same gateway.
 notes:
 - type: text
-  contents: "# \U0001F50C Add an MCP Server\n\nAgents call tools over MCP. Run a separate
-    MCP container and put it behind the\nsame gateway so LLM and tool traffic share
-    one control point.\n"
+  contents: "# \U0001F50C Add the Everything MCP Server\n\nAgents call tools over MCP.
+    Run the reference **everything** MCP server as a\nstreamable-HTTP service and put
+    it behind the same gateway, so LLM and tool\ntraffic share one control point.\n"
 tabs:
 - id: qjndfrkykexn
   title: Terminal
@@ -29,15 +29,16 @@ difficulty: ""
 enhanced_loading: null
 ---
 
-# Add an MCP Server
+# Add the Everything MCP Server
 
 ![Lab 3 — LLM + MCP behind one gateway](../assets/diagram-03-mcp.png)
 
-**What we're building:** a **separate** `mcp-everything` server on the shared
-`agw` network, with the gateway proxying it on `:3000`. The gateway reaches it by
-name over HTTP.
+**What we're doing:** we don't build an MCP server — we run the reference
+[`@modelcontextprotocol/server-everything`](https://github.com/modelcontextprotocol/servers)
+as a **separate streamable-HTTP service** on the shared `agw` network, then point the
+gateway at it so it's proxied on `:3000`. The gateway reaches it by name over HTTP.
 
-## Step 1 — Run the MCP server as its own container
+## Step 1 — Run the everything MCP server (streamable HTTP)
 
 ```bash
 docker run -d --name mcp-everything --network agw \
@@ -70,8 +71,13 @@ mcp:
       host: http://mcp-everything:8080/mcp/
 ```
 
+Validate the config, then restart the gateway so it picks up the MCP target:
+
 ```bash
-agw-restart
+docker run --rm -v /root/agentgateway:/config -e OPENAI_API_KEY \
+  cr.agentgateway.dev/agentgateway:v1.3.1 -f /config/config.yaml --validate-only
+
+docker restart agentgateway
 ```
 
 ## Step 3 — List the tools (and see the token cost)

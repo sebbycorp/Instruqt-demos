@@ -54,10 +54,15 @@ empty `models: []` with:
       apiKey: "$OPENAI_API_KEY"
 ```
 
-Then restart the gateway so it re-reads the file:
+Validate the config, then restart the gateway so it re-reads the file. (The
+`--validate-only` run parses your config and exits; pass the key so the
+`$OPENAI_API_KEY` reference resolves.)
 
 ```bash
-agw-restart
+docker run --rm -v /root/agentgateway:/config -e OPENAI_API_KEY \
+  cr.agentgateway.dev/agentgateway:v1.3.1 -f /config/config.yaml --validate-only
+
+docker restart agentgateway
 ```
 
 `$OPENAI_API_KEY` is read from the container's environment — clients never see the
