@@ -55,38 +55,11 @@ a local `kind` cluster and run a real agent on top of it.
 Many logical **actors** are mapped onto a *small* pool of warm **workers**. An idle
 actor isn't a pod — it's a snapshot sitting in object storage:
 
-```text
-        many actors                   few warm workers
-     (one per session)             (host one actor at a time)
-
-   Actor A  RUNNING   ───────────────▶  ┌──────────┐
-   Actor B  RUNNING   ───────────────▶  │ Worker 1 │
-                                        │ Worker 2 │
-   Actor C  SUSPENDED  ┐                └──────────┘
-   Actor D  SUSPENDED  ├─▶ ┌────────────────────────┐
-   Actor E  SUSPENDED  ┘   │ object storage (rustfs) │
-     ...                   │  one snapshot per actor │
-                           └────────────────────────┘
-
-   On the next request a SUSPENDED actor is restored into a
-   free worker, sub-second, exactly where it left off.
-```
+![Many actors mapped onto a few warm workers; idle actors live as snapshots in object storage](../assets/diagram-substrate-model.png)
 
 ## The actor lifecycle
 
-```text
-   ActorTemplate ──build──▶ golden snapshot (v0)
-                                  │
-                                  │ first request
-                                  ▼
-              resume          ┌─────────┐
-        ┌──────────────────▶  │ RUNNING │  runs the LLM call
-        │                     └────┬────┘
-   ┌─────────┐                     │ idle / done
-   │SUSPENDED│ ◀───────────────────┘
-   └─────────┘   suspend: checkpoint full state (RAM + FS)
-                 to object storage, worker → back to pool
-```
+![Actor lifecycle: an ActorTemplate builds a golden snapshot, then the actor cycles between SUSPENDED and RUNNING via resume and suspend](../assets/diagram-actor-lifecycle.png)
 
 ## Step 1: Confirm your cluster is ready
 

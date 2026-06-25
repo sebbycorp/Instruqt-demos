@@ -34,23 +34,7 @@ enhanced_loading: null
 A single chat turn restores the actor, runs the LLM call, then snapshots it back —
 freeing the worker. Between turns the actor is just bytes in object storage:
 
-```text
-   chat request
-       │
-       ▼
-   kagent ─▶ atenet-router ─▶ ate-api-server:  "where is actor X?"
-                                    │
-                  SUSPENDED ────────┤ resume
-                                    ▼
-                             atelet restores snapshot ─▶ free worker
-                                    │
-                                    ▼
-                             actor RUNNING → runs LLM → replies
-                                    │
-                       after idle / done: checkpoint to rustfs
-                                    ▼
-                             actor SUSPENDED, worker → back to pool
-```
+![On each chat request the actor is resumed from a snapshot into a free worker, runs the LLM call and replies, then is checkpointed back to rustfs and suspended while the worker returns to the pool](../assets/diagram-suspend-resume.png)
 
 You'll trigger this from the UI, then watch the state directly via `grpcurl`.
 

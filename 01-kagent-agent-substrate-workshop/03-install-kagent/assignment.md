@@ -38,24 +38,7 @@ enhanced_loading: null
 kagent is the agent control plane; substrate is the execution layer *underneath* it.
 The `controller.substrate.*` flags below are the wiring between the two:
 
-```text
-   kubectl / kagent UI
-         │  apply SandboxAgent
-         ▼
-  ┌───────────────────────────────┐
-  │ kagent  (namespace: kagent)   │
-  │   controller ─ reconciles ─▶  ActorTemplate + WorkerPool
-  │   ui                          │      (*.ate.dev CRDs)
-  └───────────────┬───────────────┘
-                  │ controller.substrate.*
-                  │   ateApiEndpoint   → api.ate-system
-                  │   atenetRouterURL  → atenet-router
-                  ▼
-  ┌───────────────────────────────┐
-  │ Agent Substrate (ate-system)  │
-  │   ate-api-server · router · atelet · valkey · rustfs
-  └───────────────────────────────┘
-```
+![kagent in the kagent namespace sits on top of Agent Substrate in ate-system; the controller reconciles ActorTemplate and WorkerPool CRDs and connects down to substrate via the controller.substrate.* settings](../assets/diagram-kagent-layering.png)
 
 > This is why order matters: the kagent controller crash-loops if the substrate API
 > isn't reachable at startup, so substrate had to be installed first (challenge 2).
