@@ -1,7 +1,8 @@
 # Agentgateway Tokenomics: See and Govern Your AI Token Spend (Instruqt track)
 
 A 4-lab standalone Agentgateway lab. The learner stands up the gateway as their AI
-control point, turns it into an OpenAI-compatible proxy, attaches a separate
+control point, turns it into an LLM-native proxy (OpenAI as the example; Anthropic,
+Gemini, Bedrock, etc. work the same way), attaches a separate
 everything-MCP server over HTTP, and analyzes a week of pre-seeded token spend.
 (Implementation detail: the gateway and MCP server run as Docker containers — this
 is plumbing, not the lesson.)
