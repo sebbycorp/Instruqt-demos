@@ -26,7 +26,7 @@ tabs:
   hostname: server
   path: /ui
   port: 15000
-- id: llmapi4000tab
+- id: xc2ustoo5mta
   title: LLM API (:4000)
   type: service
   hostname: server
