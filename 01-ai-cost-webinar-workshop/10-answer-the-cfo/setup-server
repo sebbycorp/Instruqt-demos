@@ -1,8 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-# The generator is embedded into /root/gen-mock-logs.py by the track setup script.
-# We do NOT pre-generate here: the learner appends the fleet week into the
-# gateway's live /root/data/data.db in Step 1 so it shows up in the UI.
-export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-command -v uv >/dev/null 2>&1 || { curl -LsSf https://astral.sh/uv/install.sh | sh; ln -sf "$HOME/.local/bin/uv" /usr/local/bin/uv 2>/dev/null || true; }
-echo "challenge 10 setup complete"

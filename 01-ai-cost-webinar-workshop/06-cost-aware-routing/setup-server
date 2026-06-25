@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-mkdir -p /root/data /root/costs
-# Cost catalog (/root/costs/base-costs.json) is provisioned by track_scripts/setup-server.
-echo "challenge 6 setup complete"
