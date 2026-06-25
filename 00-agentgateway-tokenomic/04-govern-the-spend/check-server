@@ -1,0 +1,22 @@
+#!/bin/bash
+set -uo pipefail
+if ! docker ps --filter name=agentgateway --filter status=running --format '{{.Names}}' | grep -q '^agentgateway$'; then
+  fail-message "The agentgateway container isn't running. Start it, then add the budget."
+  exit 1
+fi
+if ! grep -q "localRateLimit" /root/agentgateway/config.yaml 2>/dev/null || ! grep -q "type: tokens" /root/agentgateway/config.yaml 2>/dev/null; then
+  fail-message "No token budget found. Add a localRateLimit with 'type: tokens' under llm.policies, then: docker restart agentgateway"
+  exit 1
+fi
+saw429=0
+for i in $(seq 1 12); do
+  code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Write a detailed paragraph about cloud cost governance and FinOps."}],"max_tokens":120}')
+  [ "$code" = "429" ] && { saw429=1; break; }
+done
+if [ "$saw429" != "1" ]; then
+  fail-message "Sent 12 requests but never hit a 429. Is maxTokens small (~300) with type: tokens, and did you restart the gateway?"
+  exit 1
+fi
+echo "Token budget is enforcing — over-budget requests get 429."

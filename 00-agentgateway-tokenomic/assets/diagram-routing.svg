@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 430" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="rg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+    <marker id="rb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="rp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9333ea"/></marker>
+  </defs>
+  <rect width="920" height="430" fill="#ffffff"/>
+  <text x="30" y="42" font-size="25" font-weight="700" fill="#0f172a">Cost-aware routing</text>
+  <text x="30" y="68" font-size="15" fill="#64748b">The gateway picks the price tier — not the client.</text>
+
+  <!-- request -->
+  <rect x="30" y="180" width="150" height="60" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="105" y="206" text-anchor="middle" font-size="13" fill="#0f172a">request to</text>
+  <text x="105" y="226" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">openai/*</text>
+
+  <!-- gateway decision -->
+  <rect x="250" y="170" width="200" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2.5"/>
+  <text x="350" y="200" text-anchor="middle" font-size="15" font-weight="800" fill="#1e3a8a">Agentgateway</text>
+  <text x="350" y="224" text-anchor="middle" font-size="13" fill="#1d4ed8">header x-priority?</text>
+  <path d="M182,210 L246,210" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#rb)"/>
+
+  <!-- default branch -->
+  <rect x="560" y="100" width="180" height="64" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="650" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#166534">gpt-4.1-nano</text>
+  <text x="650" y="148" text-anchor="middle" font-size="12" fill="#166534">default · ~$3.40 / 1M calls</text>
+  <path d="M450,196 C505,170 520,150 558,140" stroke="#16a34a" stroke-width="2.5" fill="none" marker-end="url(#rg)"/>
+  <text x="505" y="158" font-size="11.5" fill="#16a34a" font-weight="600">no header</text>
+
+  <!-- premium branch -->
+  <rect x="560" y="256" width="180" height="64" rx="10" fill="#f3e8ff" stroke="#9333ea" stroke-width="2"/>
+  <text x="650" y="284" text-anchor="middle" font-size="14" font-weight="700" fill="#6b21a8">gpt-4.1</text>
+  <text x="650" y="304" text-anchor="middle" font-size="12" fill="#6b21a8">premium · ~$68 / 1M calls</text>
+  <path d="M450,224 C505,250 520,270 558,280" stroke="#9333ea" stroke-width="2.5" fill="none" marker-end="url(#rp)"/>
+  <text x="495" y="270" font-size="11.5" fill="#9333ea" font-weight="600">x-priority: high</text>
+
+  <!-- openai -->
+  <rect x="800" y="178" width="90" height="64" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="845" y="214" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">OpenAI</text>
+  <path d="M740,132 C770,150 778,175 798,196" stroke="#6366f1" stroke-width="1.8" fill="none"/>
+  <path d="M740,288 C770,270 778,245 798,224" stroke="#6366f1" stroke-width="1.8" fill="none"/>
+
+  <text x="460" y="392" text-anchor="middle" font-size="14.5" fill="#0f172a" font-weight="700">cheap by default · premium only when a request opts in (~20× pricier)</text>
+</svg>

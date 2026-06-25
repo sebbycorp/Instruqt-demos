@@ -1,0 +1,35 @@
+#!/bin/bash
+set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
+mkdir -p /root/agentgateway/costs /root/agentgateway/data; chmod -R 777 /root/agentgateway/data
+cat > /root/agentgateway/config.yaml <<'YAML'
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:////config/data/data.db"
+  modelCatalog:
+    - file: /config/costs/base-costs.json
+llm:
+  port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
+    apiKey:
+      mode: strict
+      keys:
+      - key: "sk-team-sales-DEMO"
+        metadata: { team: sales, owner: "alice@example.com" }
+      - key: "sk-team-eng-DEMO"
+        metadata: { team: eng, owner: "bob@example.com" }
+  models:
+  - name: "openai/*"
+    provider: openAI
+    params: { model: gpt-4.1-nano, apiKey: "$OPENAI_API_KEY" }
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+YAML
+docker restart agentgateway >/dev/null 2>&1; sleep 4
+echo "solve: virtual-key gate (mode strict) enforced on :4000"

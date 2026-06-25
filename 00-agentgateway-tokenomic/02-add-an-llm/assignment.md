@@ -102,45 +102,36 @@ Click **Settings** (top-right of Logs) to open **Log settings**:
 1. Toggle on **Include prompts and completions in logs** — this adds the
    `gen_ai.prompt` and `gen_ai.completion` attributes to each access log so you can
    inspect the actual request/response text.
-2. **Request log identity** — two **CEL expressions** that decide which **user** and
-   **group** each call is attributed to (that's what powers the Logs **Users**/**Groups**
-   filters and Lab 4's per-user cost breakdown). Paste these exactly:
+2. **Request log identity (optional)** — the same panel exposes two **CEL expressions**
+   that decide which **user** and **group** each call is attributed to (this is what
+   powers the Logs **Users**/**Groups** filters and Lab 4's per-user cost breakdown).
+   There are sensible defaults, so you don't have to touch this — but you *can*. For
+   example, you could attribute from request headers:
 
-   Into the **USER ATTRIBUTE** box:
+   - **USER ATTRIBUTE:** `default(request.headers["x-user-email"], "anonymous")`
+   - **GROUP ATTRIBUTE:** `default(request.headers["x-team"], "default")`
 
-   ```
-   default(request.headers["x-user-email"], "anonymous")
-   ```
+   That would read the user from an `x-user-email` header and the team from an `x-team`
+   header, falling back to `anonymous` / `default`. (Other sources you could draw from:
+   a JWT claim — `default(jwt.email, jwt.sub)`; the virtual API key — `apiKey.name`; or
+   a fixed label.)
 
-   Into the **GROUP ATTRIBUTE** box:
+After saving, send another call. Pass the identifying headers — if you set the example
+expressions above, the call gets attributed to that user/team:
 
-   ```
-   default(request.headers["x-team"], "default")
-   ```
+```bash
+curl -s http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "x-user-email: alice@example.com" \
+  -H "x-team: eng" \
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Summarize MCP in one line."}],"max_tokens":40}' \
+  | jq -r '.choices[0].message.content'
+```
 
-   This reads the user from an `x-user-email` header and the team from an `x-team`
-   header, falling back to `anonymous` / `default` when they're missing. Then click
-   **Save settings**.
-
-   > Other sources you could use instead (FYI — don't paste these): from a JWT,
-   > `default(jwt.email, jwt.sub)` and `default(jwt.groups[0], "default")`; from the
-   > virtual API key, `apiKey.name`; or a fixed label like `"eng-team"`.
-
-3. Send another call — this time identify who's making it:
-
-   ```bash
-   curl -s http://localhost:4000/v1/chat/completions \
-     -H "Content-Type: application/json" \
-     -H "x-user-email: alice@example.com" \
-     -H "x-team: eng" \
-     -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Summarize MCP in one line."}],"max_tokens":40}' \
-     | jq -r '.choices[0].message.content'
-   ```
-
-Back in **Logs**, **Refresh**: the new call is attributed to `alice@example.com` /
-`eng` (try the **Users** and **Groups** filters), and its **Request detail** now shows
-the captured **prompt and completion**. That's the difference between "we spent
-$40k" and "**alice on the eng team** spent it, on *these* prompts."
+Back in **Logs**, **Refresh**: the call's **Request detail** now shows the captured
+**prompt and completion**. And if you set those identity expressions, it's attributed
+to `alice@example.com` / `eng` (try the **Users**/**Groups** filters) — the difference
+between "we spent $40k" and "**alice on the eng team** spent it, on *these* prompts."
 
 > 💡 **A note on the UI's Chat Playground.** You'll see a **Chat Playground** in the
 > nav — it sends a test chat *from your browser*, building the URL as
@@ -151,4 +142,4 @@ $40k" and "**alice on the eng team** spent it, on *these* prompts."
 > for live calls (it runs *on* the gateway VM, so it always works) and the **Logs**
 > view to watch them — which is exactly what you just did.
 
-> Next: bring **tool traffic** under the same gateway with a separate MCP server. ➡️
+> Next: see the **real USD cost** of every call the gateway just logged. ➡️

@@ -92,6 +92,9 @@ data.
 > you'll only see the most recent slice (≈1/7 of the spend). Widen it to 7d (or 30d)
 > and the full picture appears, matching the SQL totals above.
 
-> 🎉 You stood up Agentgateway, proxied LLM + MCP traffic through one control point,
-> and turned a week of token spend into answers. That's the foundation for governance:
-> budgets, rate limits, and cost-aware routing.
+> You stood up Agentgateway, proxied LLM + MCP traffic through one control point, and
+> turned a week of token spend into answers. One thing left to lock down: **who** gets
+> to spend at all.
+
+> Next: issue **per-team virtual keys** so every call is authenticated and attributable
+> — and the real provider key never leaves the gateway. ➡️
