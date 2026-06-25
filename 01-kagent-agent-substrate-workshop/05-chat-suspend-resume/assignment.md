@@ -29,6 +29,31 @@ enhanced_loading: null
 
 # Chat and watch suspend/resume
 
+## What happens on each request
+
+A single chat turn restores the actor, runs the LLM call, then snapshots it back —
+freeing the worker. Between turns the actor is just bytes in object storage:
+
+```text
+   chat request
+       │
+       ▼
+   kagent ─▶ atenet-router ─▶ ate-api-server:  "where is actor X?"
+                                    │
+                  SUSPENDED ────────┤ resume
+                                    ▼
+                             atelet restores snapshot ─▶ free worker
+                                    │
+                                    ▼
+                             actor RUNNING → runs LLM → replies
+                                    │
+                       after idle / done: checkpoint to rustfs
+                                    ▼
+                             actor SUSPENDED, worker → back to pool
+```
+
+You'll trigger this from the UI, then watch the state directly via `grpcurl`.
+
 ## Step 1: Chat with the agent (UI)
 
 Open the **kagent UI** tab. Pick `kagent/hello-substrate` from the Agents list and send:

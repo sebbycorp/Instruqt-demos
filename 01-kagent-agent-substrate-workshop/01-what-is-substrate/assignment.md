@@ -50,6 +50,44 @@ a local `kind` cluster and run a real agent on top of it.
 | **Golden snapshot** | The initial frozen image every new actor is restored from. |
 | **Suspend / Resume** | Checkpoint actor state to object storage / restore it sub-second. |
 
+## The model at a glance
+
+Many logical **actors** are mapped onto a *small* pool of warm **workers**. An idle
+actor isn't a pod — it's a snapshot sitting in object storage:
+
+```text
+        many actors                   few warm workers
+     (one per session)             (host one actor at a time)
+
+   Actor A  RUNNING   ───────────────▶  ┌──────────┐
+   Actor B  RUNNING   ───────────────▶  │ Worker 1 │
+                                        │ Worker 2 │
+   Actor C  SUSPENDED  ┐                └──────────┘
+   Actor D  SUSPENDED  ├─▶ ┌────────────────────────┐
+   Actor E  SUSPENDED  ┘   │ object storage (rustfs) │
+     ...                   │  one snapshot per actor │
+                           └────────────────────────┘
+
+   On the next request a SUSPENDED actor is restored into a
+   free worker, sub-second, exactly where it left off.
+```
+
+## The actor lifecycle
+
+```text
+   ActorTemplate ──build──▶ golden snapshot (v0)
+                                  │
+                                  │ first request
+                                  ▼
+              resume          ┌─────────┐
+        ┌──────────────────▶  │ RUNNING │  runs the LLM call
+        │                     └────┬────┘
+   ┌─────────┐                     │ idle / done
+   │SUSPENDED│ ◀───────────────────┘
+   └─────────┘   suspend: checkpoint full state (RAM + FS)
+                 to object storage, worker → back to pool
+```
+
 ## Step 1: Confirm your cluster is ready
 
 Your environment already created a `kind` cluster named `kagent-substrate`. Verify it:

@@ -37,6 +37,28 @@ enhanced_loading: null
 You'll install Agent Substrate (v0.0.6) from its published Helm charts into the `ate-system`
 namespace.
 
+## How the pieces fit together
+
+Everything below lands in `ate-system`. A request flows through the router to a worker;
+the api-server decides *which* worker and drives suspend/resume:
+
+```text
+                    ate-system namespace
+   request
+      │
+      ▼
+   atenet-router ──────────────▶ Worker pod ── hosts ─▶ actor
+   (L7 routing)                     ▲
+      ▲                             │ restore / checkpoint
+      │ which worker?               │
+      ▼                          atelet (DaemonSet, per node)
+   ate-api-server ──────────────────┘
+   (schedule / suspend / resume)
+      │
+      ├──▶ valkey-cluster   actor + worker records, locks
+      └──▶ rustfs           S3-compatible snapshot storage
+```
+
 ## Step 1: Install the substrate CRDs
 
 ```bash
