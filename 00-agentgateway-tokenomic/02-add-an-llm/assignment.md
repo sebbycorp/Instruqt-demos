@@ -3,12 +3,13 @@ slug: add-an-llm
 id: ss7rwb9xy9yo
 type: challenge
 title: Add an LLM
-teaser: Turn the gateway into an OpenAI-compatible proxy.
+teaser: Turn the gateway into an LLM-native proxy.
 notes:
 - type: text
-  contents: "# \U0001F310 Add an LLM\n\nPoint the gateway at OpenAI and it becomes
-    an OpenAI-compatible proxy your apps\ncall instead of api.openai.com — with cost
-    tracking on by default.\n"
+  contents: "# \U0001F310 Add an LLM\n\nPut a model behind the gateway and it becomes
+    an **LLM-native proxy** — one\nendpoint your apps point at instead of calling
+    providers directly. We use\nOpenAI here, but the same gateway fronts Anthropic,
+    Gemini, Bedrock, and more,\nwith cost tracking on by default.\n"
 tabs:
 - id: 2x4vmpolxfao
   title: Terminal
@@ -31,10 +32,12 @@ enhanced_loading: null
 
 # Add an LLM
 
-![Lab 2 — OpenAI-compatible proxy](../assets/diagram-02-llm.png)
+![Lab 2 — LLM-native proxy](../assets/diagram-02-llm.png)
 
 **What we're building:** an `llm.models` entry so clients call `openai/...` through
-`:4000` and the gateway forwards to OpenAI using a key they never see.
+`:4000` and the gateway forwards to OpenAI using a key they never see. OpenAI is just
+the example here — add `anthropic/*`, `gemini/*`, `bedrock/*`, etc. the same way, and
+every provider rides the same gateway, logs, and cost tracking.
 
 ## Step 1 — Add an OpenAI model
 
