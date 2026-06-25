@@ -6,17 +6,13 @@ title: Stand Up the Gateway
 teaser: Put one control point in front of all your AI traffic.
 notes:
 - type: text
-  contents: |
-    # 🚦 Stand Up the Gateway
-
-    **Agentgateway** is an open-source proxy purpose-built for AI traffic. It sits
-    between your apps/agents and the LLMs and MCP tool servers they call — one place
-    that sees and controls every request: routing, real-time **cost + token usage**,
-    governance (budgets, rate limits, keys), and security.
-
-    In this first step you start Agentgateway from a minimal config and open its
-    built-in web UI. Your control point goes live; the next labs layer models, cost,
-    governance, tools, and keys on top.
+  contents: "# \U0001F6A6 Stand Up the Gateway\n\n**Agentgateway** is an open-source
+    proxy purpose-built for AI traffic. It sits\nbetween your apps/agents and the
+    LLMs and MCP tool servers they call — one place\nthat sees and controls every
+    request: routing, real-time **cost + token usage**,\ngovernance (budgets, rate
+    limits, keys), and security.\n\nIn this first step you start Agentgateway from
+    a minimal config and open its\nbuilt-in web UI. Your control point goes live;
+    the next labs layer models, cost,\ngovernance, tools, and keys on top.\n"
 tabs:
 - id: eemwgichzjbp
   title: Terminal
