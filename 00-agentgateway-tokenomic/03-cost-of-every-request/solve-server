@@ -1,0 +1,42 @@
+#!/bin/bash
+set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
+mkdir -p /root/agentgateway/costs /root/agentgateway/data; chmod -R 777 /root/agentgateway/data
+cat > /root/agentgateway/costs/overrides.json <<'EOF'
+{ "providers": { "openai": { "models": {
+  "gpt-4.1": { "rates": { "input": "1.20", "output": "4.80" } } } } } }
+EOF
+cat > /root/agentgateway/config.yaml <<'YAML'
+config:
+  adminAddr: "0.0.0.0:15000"
+  database:
+    url: "sqlite:////config/data/data.db"
+  modelCatalog:
+    - file: /config/costs/base-costs.json
+    - file: /config/costs/overrides.json
+llm:
+  port: 4000
+  policies:
+    cors:
+      allowOrigins: ["*"]
+      allowHeaders: ["*"]
+      allowMethods: ["GET","POST","OPTIONS"]
+  models:
+  - name: "openai/gpt-4.1"
+    provider: openAI
+    params: { model: gpt-4.1, apiKey: "$OPENAI_API_KEY" }
+  - name: "openai/*"
+    provider: openAI
+    params: { model: gpt-4.1-nano, apiKey: "$OPENAI_API_KEY" }
+frontendPolicies:
+  http:
+    maxBufferSize: 33554432
+YAML
+docker restart agentgateway >/dev/null 2>&1; sleep 4
+# Drive a cheap + premium call so request_logs has priced rows for both tiers.
+curl -s -o /dev/null http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}'
+curl -s -o /dev/null http://localhost:4000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"openai/gpt-4.1","messages":[{"role":"user","content":"Say hi in 3 words."}],"max_tokens":20}'
+sleep 1
+echo "solve: premium + cheap models served, overrides layered, calls priced"
