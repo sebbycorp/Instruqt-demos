@@ -26,6 +26,12 @@ tabs:
   hostname: server
   path: /ui
   port: 15000
+- id: llmapi4000tab
+  title: LLM API (:4000)
+  type: service
+  hostname: server
+  path: /v1/models
+  port: 4000
 difficulty: ""
 enhanced_loading: null
 ---
@@ -134,5 +140,25 @@ Back in **Logs**, **Refresh**: the new call is attributed to `alice@example.com`
 `eng` (try the **Users** and **Groups** filters), and its **Request detail** now shows
 the captured **prompt and completion**. That's the difference between "we spent
 $40k" and "**alice on the eng team** spent it, on *these* prompts."
+
+## Step 5 (optional) — Chat in the browser with the Playground
+
+The UI's **Chat Playground** sends its request *from your browser* to the gateway's
+LLM port (`:4000`). In this hosted lab the browser can only reach published service
+tabs, so by default the Playground can't hit `:4000`. We've published it as the
+**LLM API (:4000)** tab to fix that:
+
+1. Open the **LLM API (:4000)** tab. It loads `/v1/models` (your configured models) —
+   proof the browser can now reach the LLM port over HTTPS. **Copy that tab's URL**
+   from the address bar, **without** the `/v1/models` path (you want the base, e.g.
+   `https://…-4000-…`).
+2. In the UI, go to **Client Setup** (or the Playground's connection settings) and set
+   **Gateway base URL** to that copied HTTPS URL. (CORS is already open, so the
+   cross-origin call is allowed.)
+3. Open **Chat Playground**, pick `openai/gpt-4.1-nano`, and send a message — it now
+   routes through the gateway just like your `curl` did, and shows up in **Logs**.
+
+> Live `curl` from the Terminal always works (it runs *on* the gateway VM); this step
+> just makes the *browser* Playground work too in the hosted lab.
 
 > Next: bring **tool traffic** under the same gateway with a separate MCP server. ➡️
