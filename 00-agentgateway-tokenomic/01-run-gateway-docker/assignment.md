@@ -6,9 +6,17 @@ title: Stand Up the Gateway
 teaser: Put one control point in front of all your AI traffic.
 notes:
 - type: text
-  contents: "# \U0001F6A6 Stand Up the Gateway\n\nStep one to regaining control: route
-    every AI call through one place you operate.\nStart Agentgateway with a minimal
-    config and connect to its built-in web UI.\n"
+  contents: |
+    # 🚦 Stand Up the Gateway
+
+    **Agentgateway** is an open-source proxy purpose-built for AI traffic. It sits
+    between your apps/agents and the LLMs and MCP tool servers they call — one place
+    that sees and controls every request: routing, real-time **cost + token usage**,
+    governance (budgets, rate limits, keys), and security.
+
+    In this first step you start Agentgateway from a minimal config and open its
+    built-in web UI. Your control point goes live; the next labs layer models, cost,
+    governance, tools, and keys on top.
 tabs:
 - id: eemwgichzjbp
   title: Terminal
@@ -31,17 +39,32 @@ enhanced_loading: null
 
 # Stand Up the Gateway
 
-![What you'll build across this lab](../assets/diagram-journey.png)
+## What is Agentgateway?
 
-**What we're building:** one gateway that becomes the single control point for every
-LLM and MCP call your agents make. We start it empty, then add an LLM (Lab 2), an MCP
-server (Lab 3), and finish by analyzing the traffic (Lab 4).
+**Agentgateway** is an open-source, purpose-built proxy (data plane) for **AI traffic**.
+Today your apps, agents, copilots, and scripts call LLM providers and MCP tool servers
+*directly* — so there's no single place to see cost, attribute spend, apply policy, or
+secure access. Agentgateway becomes that single **control point**:
+
+- **LLM-native proxy** — one OpenAI-compatible endpoint that fronts OpenAI, Anthropic, Gemini, Bedrock, and more.
+- **MCP gateway** — proxies MCP tool servers so agent *tool* traffic is governed too.
+- **Cost & observability** — prices and logs every call (real USD + tokens) out of the box.
+- **Governance & security** — token budgets, rate limits, model routing, and per-team API keys.
+
+It's a single binary (you'll run it as a **Docker container** here), and it ships with a
+built-in **web UI** for setup and observability. This whole workshop is about turning it
+into your AI control point, one capability at a time.
+
+![What you'll build across this workshop](../assets/diagram-journey.png)
+
+## What we're doing in this lab
+
+Just get the gateway **running** and connect to it — the foundation for everything else.
+A minimal **`/root/agentgateway/config.yaml`** is already staged (admin UI + a default
+cost catalog + a request database, **no models yet**). Three ports matter: **:4000** (LLM
+API), **:3000** (MCP), and **:15000** (admin + UI).
 
 ![Lab 1 — stand up the gateway and open the UI](../assets/diagram-01-gateway.png)
-
-A minimal **`/root/agentgateway/config.yaml`** is already staged (admin UI + a default
-cost catalog + a request database, no models yet). Three ports matter: **:4000** (LLM
-API), **:3000** (MCP), and **:15000** (admin + UI).
 
 ## Step 1 — Start the gateway
 
