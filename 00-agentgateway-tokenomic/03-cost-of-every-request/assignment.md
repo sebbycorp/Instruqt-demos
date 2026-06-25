@@ -1,29 +1,27 @@
 ---
 slug: cost-of-every-request
-id: 5ejsi8cybh1e
+id: 61ctkrsshamm
 type: challenge
 title: The Cost of Every Request
 teaser: See the real USD cost of every call — and why gpt-4.1 costs ~20× gpt-4.1-nano.
 notes:
 - type: text
-  contents: |
-    # 💵 The Cost of Every Request
-
-    You didn't *configure* this — the moment the gateway came up it started pricing
-    every call in real USD and recording it. In this challenge you'll watch a single
-    request become a dollar figure, and see why choosing gpt-4.1 over gpt-4.1-nano is
-    a budget decision, not a detail.
+  contents: "# \U0001F4B5 The Cost of Every Request\n\nYou didn't *configure* this
+    — the moment the gateway came up it started pricing\nevery call in real USD and
+    recording it. In this challenge you'll watch a single\nrequest become a dollar
+    figure, and see why choosing gpt-4.1 over gpt-4.1-nano is\na budget decision,
+    not a detail.\n"
 tabs:
-- id: term-cost03
+- id: pfdjffahct5v
   title: Terminal
   type: terminal
   hostname: server
-- id: edit-cost03
+- id: iay834bqhgxq
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui-cost03
+- id: ovcfnorshoel
   title: Agentgateway UI
   type: service
   hostname: server

@@ -1,28 +1,26 @@
 ---
 slug: govern-the-spend
-id: qmve54u4qqcg
+id: obyekbrijesh
 type: challenge
 title: Govern the Spend
 teaser: A budget you can't enforce isn't a budget. Cap tokens at the gateway.
 notes:
 - type: text
-  contents: |
-    # 🛡️ Govern the Spend
-
-    Seeing cost is half the job; the other half is stopping runaway spend before it
-    happens. The gateway can enforce a token budget per time window — requests over
-    budget get a clean HTTP 429 instead of a surprise invoice.
+  contents: "# \U0001F6E1️ Govern the Spend\n\nSeeing cost is half the job; the other
+    half is stopping runaway spend before it\nhappens. The gateway can enforce a token
+    budget per time window — requests over\nbudget get a clean HTTP 429 instead of
+    a surprise invoice.\n"
 tabs:
-- id: term-gov04
+- id: fgdad03bytjn
   title: Terminal
   type: terminal
   hostname: server
-- id: edit-gov04
+- id: pejgien7jdex
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui-gov04
+- id: oge0n6qbz9py
   title: Agentgateway UI
   type: service
   hostname: server

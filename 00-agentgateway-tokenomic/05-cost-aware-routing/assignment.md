@@ -1,28 +1,26 @@
 ---
 slug: cost-aware-routing
-id: kouqzmact7bg
+id: 56m9nfd7erhf
 type: challenge
 title: Cost-Aware Routing
 teaser: Cheap model by default; premium only when a request explicitly escalates.
 notes:
 - type: text
-  contents: |
-    # 🔀 Cost-Aware Routing
-
-    The cheapest token is the one you never send to an expensive model. Default
-    everyone to a small model and let the gateway promote to a premium model **only
-    when a request opts in** — no client gets to silently pick gpt-4.1.
+  contents: "# \U0001F500 Cost-Aware Routing\n\nThe cheapest token is the one you
+    never send to an expensive model. Default\neveryone to a small model and let the
+    gateway promote to a premium model **only\nwhen a request opts in** — no client
+    gets to silently pick gpt-4.1.\n"
 tabs:
-- id: term-route05
+- id: fuezxe4ceolm
   title: Terminal
   type: terminal
   hostname: server
-- id: edit-route05
+- id: kdd0dvnowmto
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui-route05
+- id: 2qaps6kex9wz
   title: Agentgateway UI
   type: service
   hostname: server
