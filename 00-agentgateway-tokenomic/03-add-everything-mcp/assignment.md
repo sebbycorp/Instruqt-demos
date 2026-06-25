@@ -81,7 +81,23 @@ docker run --rm -v /root/agentgateway:/config -e OPENAI_API_KEY \
 docker restart agentgateway
 ```
 
-## Step 3 — List the tools (and see the token cost)
+## Step 3 — Confirm MCP is live in the UI
+
+Open the **Agentgateway UI** tab. On **Home** (Gateway Overview), the **MCP** card now
+shows **Enabled** — **1 configured server**, **Port 3000** — right alongside the **LLM**
+card. One gateway, both LLM and tool traffic.
+
+Then go to **MCP → Servers**. You'll see your target:
+
+| Name | Type | Endpoint | State |
+|------|------|----------|-------|
+| `everything` | Streamable HTTP | `http://mcp-everything:8080/mcp/` | **ready** |
+
+`ready` means the gateway connected to the MCP server successfully. A new **MCP →
+Policies** section is now available too — the same governance machinery (auth, rate
+limits, etc.) you'd apply to LLM traffic now applies to tools.
+
+## Step 4 — List the tools (and see the token cost)
 
 ```bash
 SID=$(curl -s -D - -o /dev/null -X POST http://localhost:3000 \
