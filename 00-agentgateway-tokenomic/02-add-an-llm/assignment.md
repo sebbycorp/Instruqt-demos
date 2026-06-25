@@ -6,17 +6,13 @@ title: Add an LLM
 teaser: Turn the gateway into an LLM-native proxy.
 notes:
 - type: text
-  contents: |
-    # 🌐 Add an LLM
-
-    An **LLM-native proxy** means your apps point at **one** endpoint — the gateway —
-    instead of calling each provider directly. The gateway speaks the OpenAI API shape
-    but routes to OpenAI, Anthropic, Gemini, Bedrock, and more, so you swap or add
-    providers without touching app code. The provider key stays *in* the gateway, and
-    every call is logged and priced automatically.
-
-    Here you'll add your first model and send a call through `:4000` — then watch it
-    land in the gateway's **Logs** with tokens and real USD cost.
+  contents: "# \U0001F310 Add an LLM\n\nAn **LLM-native proxy** means your apps point
+    at **one** endpoint — the gateway —\ninstead of calling each provider directly.
+    The gateway speaks the OpenAI API shape\nbut routes to OpenAI, Anthropic, Gemini,
+    Bedrock, and more, so you swap or add\nproviders without touching app code. The
+    provider key stays *in* the gateway, and\nevery call is logged and priced automatically.\n\nHere
+    you'll add your first model and send a call through `:4000` — then watch it\nland
+    in the gateway's **Logs** with tokens and real USD cost.\n"
 tabs:
 - id: 2x4vmpolxfao
   title: Terminal
