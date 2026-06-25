@@ -49,7 +49,7 @@ Start Agentgateway with the staged config. It exposes three ports — **:4000** 
 **:3000** (MCP), and **:15000** (admin + UI) — and reads your config from `/config`.
 
 ```bash
-docker run -d --name agentgateway --network agw \
+docker run -d --name agentgateway --network agw --user 0:0 \
   -v /root/agentgateway:/config \
   -p 4000:4000 -p 3000:3000 -p 15000:15000 \
   -e ADMIN_ADDR=0.0.0.0:15000 \

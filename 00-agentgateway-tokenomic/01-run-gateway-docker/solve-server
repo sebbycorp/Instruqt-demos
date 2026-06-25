@@ -2,7 +2,7 @@
 set -uo pipefail
 export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
 docker rm -f agentgateway >/dev/null 2>&1 || true
-docker run -d --name agentgateway --network agw \
+docker run -d --name agentgateway --network agw --user 0:0 \
   -v /root/agentgateway:/config \
   -p 4000:4000 -p 3000:3000 -p 15000:15000 \
   -e ADMIN_ADDR=0.0.0.0:15000 \

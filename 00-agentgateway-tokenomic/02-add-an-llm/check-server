@@ -5,7 +5,7 @@ if ! docker ps --filter name=agentgateway --filter status=running --format '{{.N
   exit 1
 fi
 if ! grep -q 'openai/\*' /root/agentgateway/config.yaml 2>/dev/null && ! grep -q 'provider: openAI' /root/agentgateway/config.yaml 2>/dev/null; then
-  fail-message "No OpenAI model found in /root/agentgateway/config.yaml. Add the llm.models entry (or use the UI) and run agw-restart."
+  fail-message "No OpenAI model found in /root/agentgateway/config.yaml. Add the llm.models entry (or use the UI), then: docker restart agentgateway"
   exit 1
 fi
 
@@ -21,7 +21,7 @@ done
 if [ "$code" != "200" ]; then
   echo "--- diagnostics: docker logs agentgateway (tail) ---"
   docker logs agentgateway 2>&1 | tail -20
-  fail-message "A test call to :4000 returned HTTP $code. Ensure the model has params.apiKey set to \$OPENAI_API_KEY, the container was started with -e OPENAI_API_KEY, and run agw-restart."
+  fail-message "A test call to :4000 returned HTTP $code. Ensure the model has params.apiKey set to \$OPENAI_API_KEY, the container was started with -e OPENAI_API_KEY, then: docker restart agentgateway"
   exit 1
 fi
 echo "Gateway is proxying OpenAI on :4000 (test call returned 200)."
