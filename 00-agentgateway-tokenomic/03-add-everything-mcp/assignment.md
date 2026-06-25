@@ -6,9 +6,10 @@ title: Add the Everything MCP Server
 teaser: Bring agent tool traffic under the same gateway.
 notes:
 - type: text
-  contents: "# \U0001F50C Add the Everything MCP Server\n\nAgents call tools over MCP.
-    Run the reference **everything** MCP server as a\nstreamable-HTTP service and put
-    it behind the same gateway, so LLM and tool\ntraffic share one control point.\n"
+  contents: "# \U0001F50C Add the Everything MCP Server\n\nAgents call tools over
+    MCP. Run the reference **everything** MCP server as a\nstreamable-HTTP service
+    and put it behind the same gateway, so LLM and tool\ntraffic share one control
+    point.\n"
 tabs:
 - id: qjndfrkykexn
   title: Terminal
