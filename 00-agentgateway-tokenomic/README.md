@@ -17,6 +17,7 @@ is plumbing, not the lesson.)
 6. **add-everything-mcp** — separate MCP container on the `agw` network; tools on `:3000`.
 7. **analyze-the-traffic** — query `request_logs` for cost + usage (week of seeded traffic).
 8. **virtual-keys** — per-team `apiKey` gate (`mode: strict`); no key → 401, team key → 200.
+9. **thank-you** — closing screen: links (agentgateway.dev, Discord, GitHub) + QR (no execution).
 
 ## How it runs
 - Gateway: `cr.agentgateway.dev/agentgateway:v1.3.1`, config bind-mounted at `/config`, ports 4000/3000/15000.

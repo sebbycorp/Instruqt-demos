@@ -97,8 +97,7 @@ the keys, and **Logs** now attributes calls to the team/owner from the key's met
 Delete a team's key from the `keys:` list and `docker restart agentgateway` — that team
 is cut off instantly, with zero impact on anyone else and no provider-key rotation.
 
-> 🎉 **That's tokenomics under control.** You stood up Agentgateway, made it an
-> LLM-native proxy, **priced** every call, **governed** spend with a token budget,
-> **routed** cost-aware by header, brought **MCP** tools under the same control point,
-> **analyzed** a week of spend, and locked the door with **per-team virtual keys** —
-> the real provider key never leaving the gateway.
+**That's tokenomics under control** — priced, governed, routed, MCP-fronted, analyzed,
+and locked down with per-team keys, the real provider key never leaving the gateway.
+
+> One last screen. ➡️
