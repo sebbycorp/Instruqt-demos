@@ -83,8 +83,14 @@ setup can't give you.
 
 ## See it in the UI
 
-Open the **Agentgateway UI** tab and browse the request/usage pages for the same data
-visually — the gateway turns invisible AI spend into queryable, attributable data.
+Open the **Agentgateway UI** tab and browse **Costs** / **Analytics** / **Logs** for the
+same data visually — the gateway turns invisible AI spend into queryable, attributable
+data.
+
+> ⏱️ **Set the time range to the last 7 days.** These views default to the **last 24
+> hours**, but this lab seeded a **full week** of traffic — so on the default window
+> you'll only see the most recent slice (≈1/7 of the spend). Widen it to 7d (or 30d)
+> and the full picture appears, matching the SQL totals above.
 
 > 🎉 You stood up Agentgateway, proxied LLM + MCP traffic through one control point,
 > and turned a week of token spend into answers. That's the foundation for governance:
