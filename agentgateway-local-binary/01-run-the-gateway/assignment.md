@@ -1,27 +1,25 @@
 ---
 slug: run-the-gateway
-id: zw1e4k67rgdj
+id: ln8s1lz2ixsf
 type: challenge
 title: Run the Gateway (Binary + External SQLite)
 teaser: Start Agentgateway from the command line, backed by an on-disk SQLite database.
 notes:
 - type: text
-  contents: |
-    # 🚀 Run the Gateway
-
-    No Docker here — Agentgateway is a single binary. You'll run it from the terminal,
-    pointed at an external SQLite database on disk, and connect to its built-in UI.
+  contents: "# \U0001F680 Run the Gateway\n\nNo Docker here — Agentgateway is a single
+    binary. You'll run it from the terminal,\npointed at an external SQLite database
+    on disk, and connect to its built-in UI.\n"
 tabs:
-- id: term-runbin01
+- id: pbmilzgfgbfy
   title: Terminal
   type: terminal
   hostname: server
-- id: edit-runbin01
+- id: ezhmrwbowxco
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui-runbin01
+- id: awqpzomfcdrm
   title: Agentgateway UI
   type: service
   hostname: server

@@ -1,28 +1,24 @@
 slug: agentgateway-local-binary
+id: ttrozjeslnad
 title: 'Agentgateway Local: Run the Binary with an External SQLite DB'
 teaser: Run Agentgateway as a local binary (no Docker), backed by an on-disk SQLite
   database, then route an LLM through it.
-description: |-
-  Run **Agentgateway** the simplest way there is: a single binary on the box, no
-  Docker, pointed at an **external SQLite database** on disk. You'll install it,
-  start it against a config you control, route an LLM through it, and then open the
-  SQLite file directly to see the request logs the gateway writes.
-
-  In this short, hands-on lab you'll:
-
-  - ⬇️ Install the Agentgateway binary and run it from the command line
-  - 🗄️ Back it with an on-disk SQLite database (`sqlite:///data/data.db`)
-  - 🌐 Add an LLM and send a call through the gateway
-  - 🔎 Query the SQLite database directly to inspect logged requests
-
-  No Kubernetes, no containers — just a terminal.
+description: "Run **Agentgateway** the simplest way there is: a single binary on the
+  box, no\nDocker, pointed at an **external SQLite database** on disk. You'll install
+  it,\nstart it against a config you control, route an LLM through it, and then open
+  the\nSQLite file directly to see the request logs the gateway writes.\n\nIn this
+  short, hands-on lab you'll:\n\n- ⬇️ Install the Agentgateway binary and run it from
+  the command line\n- \U0001F5C4️ Back it with an on-disk SQLite database (`sqlite:///data/data.db`)\n-
+  \U0001F310 Add an LLM and send a call through the gateway\n- \U0001F50E Query the
+  SQLite database directly to inspect logged requests\n\nNo Kubernetes, no containers
+  — just a terminal."
 icon: ""
 tags:
 - ai
 - llm
+- sqlite
 - agentgateway
 - solo-io
-- sqlite
 owner: soloio
 developers:
 - sebastian.maniak@solo.io
@@ -34,4 +30,5 @@ lab_config:
   feedback_tab_enabled: false
   loadingMessages: true
   hideStopButton: false
+checksum: "4971475626572757215"
 enhanced_loading: false

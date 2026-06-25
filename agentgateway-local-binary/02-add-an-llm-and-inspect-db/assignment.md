@@ -1,27 +1,25 @@
 ---
 slug: add-an-llm-and-inspect-db
-id: 0ijxtb9p8jy5
+id: paf2dyon4vhx
 type: challenge
 title: Add an LLM & Inspect the SQLite DB
 teaser: Route a model through the gateway, then read the request back out of SQLite.
 notes:
 - type: text
-  contents: |
-    # 🌐 Add an LLM & Inspect the Database
-
-    Point the gateway at OpenAI, send a call, then open the external SQLite file
-    directly to see the request the gateway logged.
+  contents: "# \U0001F310 Add an LLM & Inspect the Database\n\nPoint the gateway at
+    OpenAI, send a call, then open the external SQLite file\ndirectly to see the request
+    the gateway logged.\n"
 tabs:
-- id: term-llm02
+- id: uu15gncaiyol
   title: Terminal
   type: terminal
   hostname: server
-- id: edit-llm02
+- id: t1swzfhaqes1
   title: Editor
   type: code
   hostname: server
   path: /root/agentgateway
-- id: ui-llm02
+- id: cm5jh5ncsa9w
   title: Agentgateway UI
   type: service
   hostname: server
