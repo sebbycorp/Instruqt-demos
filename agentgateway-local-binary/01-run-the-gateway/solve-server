@@ -1,0 +1,8 @@
+#!/bin/bash
+set -uo pipefail
+mkdir -p /data; chmod -R 777 /data
+pkill -f "agentgateway -f /root/agentgateway/config.yaml" 2>/dev/null || true
+sleep 1
+nohup agentgateway -f /root/agentgateway/config.yaml > /root/agentgateway/agw.log 2>&1 &
+sleep 4
+echo "solve: gateway started (external DB at /data/data.db)"

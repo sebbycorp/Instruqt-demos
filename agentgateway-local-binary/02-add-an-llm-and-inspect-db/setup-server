@@ -1,0 +1,10 @@
+#!/bin/bash
+set -uo pipefail
+export OPENAI_API_KEY="${OPENAI_API_KEY:-$(cat /root/.openai-api-key 2>/dev/null)}"
+mkdir -p /data; chmod -R 777 /data
+# Ensure the gateway is running (it was started in Lab 1; start it if not).
+if ! pgrep -f "agentgateway -f /root/agentgateway/config.yaml" >/dev/null; then
+  nohup agentgateway -f /root/agentgateway/config.yaml > /root/agentgateway/agw.log 2>&1 &
+  sleep 4
+fi
+echo "challenge 2 setup complete"
