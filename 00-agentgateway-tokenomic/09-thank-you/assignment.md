@@ -1,23 +1,21 @@
 ---
 slug: thank-you
-id: purboqmjpczy
+id: gk5wtverzpdn
 type: challenge
 title: Thank You!
 teaser: You did it — here's where to go next.
 notes:
 - type: text
-  contents: |
-    # 🙌 Thank you for joining!
-
-    You turned Agentgateway into a real AI control point — proxying LLM + MCP traffic,
-    pricing every call, governing spend, routing cost-aware, and locking it down with
-    per-team keys. Come build with us.
+  contents: "# \U0001F64C Thank you for joining!\n\nYou turned Agentgateway into a
+    real AI control point — proxying LLM + MCP traffic,\npricing every call, governing
+    spend, routing cost-aware, and locking it down with\nper-team keys. Come build
+    with us.\n"
 tabs:
-- id: term-thanks09
+- id: osov4xjmglk4
   title: Terminal
   type: terminal
   hostname: server
-- id: ui-thanks09
+- id: eahiugs79ozu
   title: Agentgateway UI
   type: service
   hostname: server
