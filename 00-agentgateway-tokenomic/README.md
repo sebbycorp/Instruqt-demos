@@ -8,6 +8,7 @@ everything-MCP server over HTTP, and analyzes a week of pre-seeded token spend.
 is plumbing, not the lesson.)
 
 ## Labs
+0. **the-blind-spot** — intro: the shadow-AI problem, the fix, and the 8-step plan (diagrams, no execution).
 1. **run-gateway-docker** — `docker run` the gateway with a minimal config; connect to the UI.
 2. **add-an-llm** — add an OpenAI model (LLM-native proxy); first call through `:4000`; UI Logs + optional user/group identity.
 3. **cost-of-every-request** — per-call USD cost, premium-vs-cheap model, catalog overrides, UI Costs.
