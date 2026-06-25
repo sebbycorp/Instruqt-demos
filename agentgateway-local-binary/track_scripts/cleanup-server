@@ -1,0 +1,4 @@
+#!/bin/bash
+set -uo pipefail
+pkill -f "agentgateway -f" 2>/dev/null || true
+echo "cleanup complete"
