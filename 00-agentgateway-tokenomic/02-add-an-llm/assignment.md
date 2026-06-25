@@ -102,22 +102,29 @@ Click **Settings** (top-right of Logs) to open **Log settings**:
 1. Toggle on **Include prompts and completions in logs** — this adds the
    `gen_ai.prompt` and `gen_ai.completion` attributes to each access log so you can
    inspect the actual request/response text.
-2. **Request log identity** — these are optional **CEL expressions** that decide which
-   **user** and **group** each call is attributed to in the logs (that's how the Logs
-   view's **Users**/**Groups** filters and Lab 4's per-user cost breakdown get
-   populated). Set, for example:
+2. **Request log identity** — two **CEL expressions** that decide which **user** and
+   **group** each call is attributed to (that's what powers the Logs **Users**/**Groups**
+   filters and Lab 4's per-user cost breakdown). Paste these exactly:
 
-   | Field | CEL expression | Attributes from |
-   |-------|----------------|-----------------|
-   | **User attribute** | `default(request.headers["x-user-email"], "anonymous")` | an `x-user-email` request header |
-   | **Group attribute** | `default(request.headers["x-team"], "default")` | an `x-team` request header |
+   Into the **USER ATTRIBUTE** box:
 
-   Other options, depending on how clients authenticate:
-   - From a JWT (when JWT auth is on): user `default(jwt.email, jwt.sub)`, group `default(jwt.groups[0], "default")`
-   - From the virtual API key used: user `apiKey.name` (each key can map to a user/team)
-   - A static label for this gateway: user `"eng-team"`
+   ```
+   default(request.headers["x-user-email"], "anonymous")
+   ```
 
-   Click **Save settings**.
+   Into the **GROUP ATTRIBUTE** box:
+
+   ```
+   default(request.headers["x-team"], "default")
+   ```
+
+   This reads the user from an `x-user-email` header and the team from an `x-team`
+   header, falling back to `anonymous` / `default` when they're missing. Then click
+   **Save settings**.
+
+   > Other sources you could use instead (FYI — don't paste these): from a JWT,
+   > `default(jwt.email, jwt.sub)` and `default(jwt.groups[0], "default")`; from the
+   > virtual API key, `apiKey.name`; or a fixed label like `"eng-team"`.
 
 3. Send another call — this time identify who's making it:
 
