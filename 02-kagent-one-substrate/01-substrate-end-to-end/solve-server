@@ -1,0 +1,66 @@
+#!/bin/bash
+set -euxo pipefail
+
+# --- Part 2: Agent Substrate -------------------------------------------------
+helm upgrade --install substrate-crds \
+  oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
+  --version 0.0.6 \
+  --namespace ate-system --create-namespace --wait
+
+helm upgrade --install substrate \
+  oci://ghcr.io/kagent-dev/substrate/helm/substrate \
+  --version 0.0.6 \
+  --namespace ate-system --wait --timeout 10m
+
+kubectl wait --for=condition=Available deployment --all -n ate-system --timeout=300s
+
+# --- Part 3: kagent wired to substrate ---------------------------------------
+helm upgrade --install kagent-crds \
+  oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+  --version 0.9.7 \
+  --namespace kagent --create-namespace --wait
+
+# Disable xtrace for the kagent install so the OpenAI key isn't echoed into logs.
+set +x
+helm upgrade --install kagent \
+  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+  --version 0.9.7 --namespace kagent --timeout 10m --wait \
+  --set providers.default=openAI \
+  --set providers.openAI.apiKey="${OPENAI_API_KEY}" \
+  --set controller.substrate.enabled=true \
+  --set controller.substrate.ateApiEndpoint="dns:///api.ate-system.svc:443" \
+  --set controller.substrate.ateApiInsecure=true \
+  --set controller.substrate.atenetRouterURL="http://atenet-router.ate-system.svc:80" \
+  --set controller.substrate.ateApiTokenFile="/var/run/secrets/tokens/ate-api/token" \
+  --set controller.substrate.defaultWorkerPool.namespace=kagent \
+  --set controller.substrate.defaultWorkerPool.name=kagent-default \
+  --set substrateWorkerPool.create=true \
+  --set substrateWorkerPool.name=kagent-default \
+  --set substrateWorkerPool.replicas=1 \
+  --set substrateWorkerPool.ateomImage=ghcr.io/kagent-dev/substrate/ateom-gvisor:v0.0.6 \
+  || true
+set -x
+
+kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=600s
+
+# --- Part 4: SandboxAgent ----------------------------------------------------
+kubectl apply -f /root/hello-substrate.yaml
+kubectl wait sandboxagent/hello-substrate -n kagent --for=condition=Ready --timeout=300s
+
+# --- Part 5: actor lifecycle + marker ----------------------------------------
+kubectl port-forward -n ate-system svc/api 18443:443 >/tmp/pf-api.log 2>&1 &
+PF_PID=$!
+sleep 3
+
+# Disable xtrace so the bearer token isn't echoed into logs.
+set +x
+TOKEN=$(kubectl create token kagent-controller -n kagent --audience=api.ate-system.svc --duration=15m)
+grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors || true
+set -x
+
+kill "$PF_PID" 2>/dev/null || true
+
+echo "export SUBSTRATE_LAB_DONE=true" >> ~/.bashrc
+
+echo "Single-lab challenge solved"

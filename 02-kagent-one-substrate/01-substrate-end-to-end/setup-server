@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euxo pipefail
+
+# The track setup-server already created the kind cluster, installed tooling,
+# validated the OpenAI key, and defined the kagent-ui port-forward service.
+# Here we just confirm the cluster is reachable and pre-write the agent manifest.
+kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+# Pre-write the SandboxAgent manifest so it shows in the Code Editor tab.
+cat > /root/hello-substrate.yaml <<'YAML'
+apiVersion: kagent.dev/v1alpha2
+kind: SandboxAgent
+metadata:
+  name: hello-substrate
+  namespace: kagent
+spec:
+  type: Declarative
+  description: Tiny declarative agent running inside a substrate actor
+  declarative:
+    runtime: go
+    modelConfig: default-model-config
+    systemMessage: |
+      You are a friendly assistant living inside an Agent Substrate sandbox.
+      When asked who you are, say "I am hello-substrate, a Go ADK declarative
+      agent running inside a gVisor actor."
+  platform: substrate
+  substrate:
+    workerPoolRef:
+      name: kagent-default
+YAML
+
+# Ensure the kagent UI port-forward service is running (it harmlessly retries
+# until kagent-ui is deployed during the lab).
+systemctl restart kagent-ui 2>/dev/null || true
+
+echo "Single-lab setup complete"

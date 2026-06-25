@@ -1,0 +1,39 @@
+slug: agent-substrate-kagent-one-lab
+id: q7m2zk9xv4rt
+title: Agent Substrate with kagent (Single Lab)
+teaser: In one hands-on lab, deploy Agent Substrate + kagent on kind and run a
+  SandboxAgent whose state is checkpointed by gVisor.
+description: "Agent Substrate is a Kubernetes-native runtime that runs huge numbers
+  of stateful\nagent \"actors\" on a small pool of pre-warmed worker pods. Idle actors
+  are suspended\nby checkpointing their full state (RAM + filesystem, via gVisor)
+  to object storage,\nthen resumed sub-second on demand — serverless scale-to-zero,
+  but for *stateful*\nagent sessions.\n\nThis is the **single-lab** edition of the
+  Agent Substrate workshop: everything from\nthe 6-challenge track condensed into one
+  end-to-end challenge. You'll:\n\n- \U0001F9E0 Learn the substrate model — actors,
+  workers, golden snapshots, suspend/resume\n- \U0001F3D7️ Deploy Agent Substrate (v0.0.6)
+  on a kind cluster\n- \U0001F916 Install OSS kagent (v0.9.7) wired to the substrate\n-
+  \U0001F680 Deploy a SandboxAgent that runs inside a gVisor actor\n- \U0001F50D Watch
+  an actor go Suspended → Running across a single request\n\n**Prerequisites:** Kubernetes
+  basics (kubectl, Helm, pods, services). No prior\nkagent or substrate experience
+  required.\n"
+icon: ""
+tags:
+- gvisor
+- ai
+- agents
+- kubernetes
+- substrate
+- solo-io
+- kagent
+owner: soloio
+developers:
+- sebastian.maniak@solo.io
+idle_timeout: 1800
+timelimit: 5400
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  hideStopButton: false
+enhanced_loading: false
