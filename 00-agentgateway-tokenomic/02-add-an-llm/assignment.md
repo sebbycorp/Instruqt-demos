@@ -84,4 +84,55 @@ curl -s http://localhost:4000/v1/chat/completions \
 The bundled cost catalog already priced this call and logged it to the request
 database (you'll mine that in Lab 4).
 
+## Step 3 — See the call in the UI
+
+Open the **Agentgateway UI** tab → left nav **Logs**. Your call shows up under
+**Recent calls** (model, HTTP status, latency, tokens, and **realized cost**). Click
+the row to expand **Request detail** — the model flow (what the client asked for vs
+what the gateway sent vs what the provider returned), timing, and per-direction token
+cost. That dollar figure came from the gateway, not a provider dashboard.
+
+You'll also see a banner: **"Prompt logging is off."** By default the gateway records
+metadata and cost, but **not** the prompt/response text. Let's turn that on.
+
+## Step 4 — Capture payloads and attribute calls to a user/team
+
+Click **Settings** (top-right of Logs) to open **Log settings**:
+
+1. Toggle on **Include prompts and completions in logs** — this adds the
+   `gen_ai.prompt` and `gen_ai.completion` attributes to each access log so you can
+   inspect the actual request/response text.
+2. **Request log identity** — these are optional **CEL expressions** that decide which
+   **user** and **group** each call is attributed to in the logs (that's how the Logs
+   view's **Users**/**Groups** filters and Lab 4's per-user cost breakdown get
+   populated). Set, for example:
+
+   | Field | CEL expression | Attributes from |
+   |-------|----------------|-----------------|
+   | **User attribute** | `default(request.headers["x-user-email"], "anonymous")` | an `x-user-email` request header |
+   | **Group attribute** | `default(request.headers["x-team"], "default")` | an `x-team` request header |
+
+   Other options, depending on how clients authenticate:
+   - From a JWT (when JWT auth is on): user `default(jwt.email, jwt.sub)`, group `default(jwt.groups[0], "default")`
+   - From the virtual API key used: user `apiKey.name` (each key can map to a user/team)
+   - A static label for this gateway: user `"eng-team"`
+
+   Click **Save settings**.
+
+3. Send another call — this time identify who's making it:
+
+   ```bash
+   curl -s http://localhost:4000/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -H "x-user-email: alice@example.com" \
+     -H "x-team: eng" \
+     -d '{"model":"openai/gpt-4.1-nano","messages":[{"role":"user","content":"Summarize MCP in one line."}],"max_tokens":40}' \
+     | jq -r '.choices[0].message.content'
+   ```
+
+Back in **Logs**, **Refresh**: the new call is attributed to `alice@example.com` /
+`eng` (try the **Users** and **Groups** filters), and its **Request detail** now shows
+the captured **prompt and completion**. That's the difference between "we spent
+$40k" and "**alice on the eng team** spent it, on *these* prompts."
+
 > Next: bring **tool traffic** under the same gateway with a separate MCP server. ➡️
