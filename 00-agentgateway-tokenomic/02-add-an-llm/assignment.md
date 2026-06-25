@@ -6,10 +6,17 @@ title: Add an LLM
 teaser: Turn the gateway into an LLM-native proxy.
 notes:
 - type: text
-  contents: "# \U0001F310 Add an LLM\n\nPut a model behind the gateway and it becomes
-    an **LLM-native proxy** — one\nendpoint your apps point at instead of calling
-    providers directly. We use\nOpenAI here, but the same gateway fronts Anthropic,
-    Gemini, Bedrock, and more,\nwith cost tracking on by default.\n"
+  contents: |
+    # 🌐 Add an LLM
+
+    An **LLM-native proxy** means your apps point at **one** endpoint — the gateway —
+    instead of calling each provider directly. The gateway speaks the OpenAI API shape
+    but routes to OpenAI, Anthropic, Gemini, Bedrock, and more, so you swap or add
+    providers without touching app code. The provider key stays *in* the gateway, and
+    every call is logged and priced automatically.
+
+    Here you'll add your first model and send a call through `:4000` — then watch it
+    land in the gateway's **Logs** with tokens and real USD cost.
 tabs:
 - id: 2x4vmpolxfao
   title: Terminal
@@ -32,12 +39,25 @@ enhanced_loading: null
 
 # Add an LLM
 
+## Why route LLM calls through the gateway?
+
+When apps call `api.openai.com` (and `api.anthropic.com`, and Bedrock, …) **directly**,
+each one carries its own key, picks its own model, and reports nothing back. You can't
+see cost, attribute spend, or change providers without redeploying code.
+
+Point them at the gateway instead and it becomes an **LLM-native proxy**:
+
+- **One endpoint, many providers** — clients use one OpenAI-compatible URL; the gateway routes to OpenAI, Anthropic, Gemini, Bedrock, etc.
+- **Keys stay in the gateway** — apps send *nothing* secret; the real provider key never leaves the control point.
+- **Cost & logs for free** — every call is priced (real USD) and logged the moment it passes through.
+- **Swap models centrally** — change the model or provider in one config, no app changes.
+
 ![Lab 2 — LLM-native proxy](../assets/diagram-02-llm.png)
 
 **What we're building:** an `llm.models` entry so clients call `openai/...` through
 `:4000` and the gateway forwards to OpenAI using a key they never see. OpenAI is just
-the example here — add `anthropic/*`, `gemini/*`, `bedrock/*`, etc. the same way, and
-every provider rides the same gateway, logs, and cost tracking.
+the example — add `anthropic/*`, `gemini/*`, `bedrock/*`, etc. the same way, and every
+provider rides the same gateway, logs, and cost tracking.
 
 ## Step 1 — Add an OpenAI model
 
