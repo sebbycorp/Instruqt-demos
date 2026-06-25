@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="880" height="320" fill="#ffffff"/>
+  <defs>
+    <marker id="li" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#4f46e5"/></marker>
+    <marker id="lg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#10b981"/></marker>
+    <marker id="ls" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="440" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a">The actor lifecycle</text>
+
+  <g text-anchor="middle">
+    <!-- ActorTemplate -->
+    <rect x="40" y="70" width="170" height="50" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="125" y="100" font-size="13" font-weight="bold" fill="#0f172a">ActorTemplate</text>
+    <!-- golden snapshot -->
+    <rect x="280" y="70" width="190" height="50" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+    <text x="375" y="93" font-size="13" font-weight="bold" fill="#b45309">golden snapshot</text>
+    <text x="375" y="110" font-size="11" fill="#92400e">version 0 — frozen image</text>
+
+    <!-- SUSPENDED -->
+    <rect x="200" y="200" width="180" height="60" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="290" y="235" font-size="15" font-weight="bold" fill="#475569">SUSPENDED</text>
+    <!-- RUNNING -->
+    <rect x="560" y="200" width="200" height="60" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="660" y="226" font-size="15" font-weight="bold" fill="#047857">RUNNING</text>
+    <text x="660" y="246" font-size="11" fill="#059669">runs the LLM call</text>
+  </g>
+
+  <!-- ActorTemplate -> golden -->
+  <path d="M210 95 H280" stroke="#4f46e5" stroke-width="2" marker-end="url(#li)"/>
+  <text x="245" y="86" text-anchor="middle" font-size="11" fill="#3730a3">build</text>
+  <!-- golden -> SUSPENDED -->
+  <path d="M360 120 C345 150, 320 165, 295 200" fill="none" stroke="#4f46e5" stroke-width="2" marker-end="url(#li)"/>
+  <text x="300" y="160" text-anchor="end" font-size="11" fill="#3730a3">first request</text>
+
+  <!-- SUSPENDED -> RUNNING (resume) -->
+  <path d="M380 218 H560" stroke="#10b981" stroke-width="2" marker-end="url(#lg)"/>
+  <text x="470" y="210" text-anchor="middle" font-size="12" fill="#047857">resume (sub-second)</text>
+  <!-- RUNNING -> SUSPENDED (suspend) -->
+  <path d="M560 244 H380" stroke="#64748b" stroke-width="2" marker-end="url(#ls)"/>
+  <text x="470" y="288" text-anchor="middle" font-size="12" fill="#475569">suspend: checkpoint full state (RAM + FS) to storage, free the worker</text>
+</svg>

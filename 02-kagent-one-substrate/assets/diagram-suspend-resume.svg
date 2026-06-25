@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="880" height="440" fill="#ffffff"/>
+  <defs>
+    <marker id="si" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#4f46e5"/></marker>
+    <marker id="sg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#10b981"/></marker>
+    <marker id="sgr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="440" y="34" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a">What happens on each chat request</text>
+
+  <g text-anchor="middle">
+    <!-- step 1 -->
+    <circle cx="60" cy="92" r="14" fill="#4f46e5"/><text x="60" y="97" font-size="13" font-weight="bold" fill="#ffffff">1</text>
+    <rect x="95" y="70" width="170" height="44" rx="9" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="180" y="97" font-size="13" font-weight="bold" fill="#0f172a">chat request → kagent</text>
+    <rect x="320" y="70" width="170" height="44" rx="9" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+    <text x="405" y="97" font-size="13" font-weight="bold" fill="#3730a3">atenet-router</text>
+    <rect x="545" y="70" width="250" height="44" rx="9" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+    <text x="670" y="91" font-size="12" font-weight="bold" fill="#3730a3">ate-api-server</text>
+    <text x="670" y="107" font-size="11" fill="#475569">"where is actor X?"</text>
+
+    <!-- step 2 -->
+    <circle cx="60" cy="192" r="14" fill="#10b981"/><text x="60" y="197" font-size="13" font-weight="bold" fill="#ffffff">2</text>
+    <rect x="95" y="170" width="170" height="44" rx="9" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <text x="180" y="197" font-size="13" font-weight="bold" fill="#475569">actor is SUSPENDED</text>
+    <rect x="320" y="170" width="200" height="44" rx="9" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="420" y="197" font-size="12" font-weight="bold" fill="#0f172a">atelet restores snapshot</text>
+    <rect x="575" y="170" width="170" height="44" rx="9" fill="#ffffff" stroke="#4f46e5"/>
+    <text x="660" y="197" font-size="12" font-weight="bold" fill="#3730a3">into a free worker</text>
+
+    <!-- step 3 -->
+    <circle cx="60" cy="292" r="14" fill="#10b981"/><text x="60" y="297" font-size="13" font-weight="bold" fill="#ffffff">3</text>
+    <rect x="95" y="270" width="320" height="44" rx="9" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="255" y="297" font-size="13" font-weight="bold" fill="#047857">actor RUNNING → runs LLM → replies</text>
+
+    <!-- step 4 -->
+    <circle cx="60" cy="380" r="14" fill="#64748b"/><text x="60" y="385" font-size="13" font-weight="bold" fill="#ffffff">4</text>
+    <rect x="95" y="358" width="340" height="44" rx="9" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+    <text x="265" y="380" font-size="12" font-weight="bold" fill="#b45309">after idle: checkpoint to rustfs</text>
+    <text x="265" y="396" font-size="11" fill="#92400e">actor → SUSPENDED, worker → back to pool</text>
+  </g>
+
+  <!-- horizontal arrows step1 -->
+  <path d="M265 92 H320" stroke="#4f46e5" stroke-width="2" marker-end="url(#si)"/>
+  <path d="M490 92 H545" stroke="#4f46e5" stroke-width="2" marker-end="url(#si)"/>
+  <!-- step2 -->
+  <path d="M265 192 H320" stroke="#10b981" stroke-width="2" marker-end="url(#sg)"/>
+  <path d="M520 192 H575" stroke="#10b981" stroke-width="2" marker-end="url(#sg)"/>
+  <!-- vertical 1->2 -->
+  <path d="M180 114 V170" stroke="#64748b" stroke-width="2" marker-end="url(#sgr)"/>
+  <text x="192" y="146" text-anchor="start" font-size="11" fill="#64748b">resume</text>
+  <!-- 2->3 -->
+  <path d="M180 214 V270" stroke="#10b981" stroke-width="2" marker-end="url(#sg)"/>
+  <!-- 3->4 -->
+  <path d="M180 314 V358" stroke="#64748b" stroke-width="2" marker-end="url(#sgr)"/>
+  <text x="192" y="340" text-anchor="start" font-size="11" fill="#64748b">suspend</text>
+</svg>

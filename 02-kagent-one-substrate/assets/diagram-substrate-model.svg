@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="900" height="400" fill="#ffffff"/>
+  <defs>
+    <marker id="ag" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#10b981"/></marker>
+    <marker id="as" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#64748b"/></marker>
+  </defs>
+  <text x="450" y="34" text-anchor="middle" font-size="18" font-weight="bold" fill="#0f172a">Many actors mapped onto a few warm workers</text>
+
+  <!-- column headers -->
+  <text x="135" y="66" text-anchor="middle" font-size="13" font-weight="bold" fill="#475569">many actors (one per session)</text>
+  <text x="540" y="66" text-anchor="middle" font-size="13" font-weight="bold" fill="#475569">few warm workers</text>
+
+  <!-- actors -->
+  <g text-anchor="middle">
+    <rect x="40" y="80" width="190" height="42" rx="9" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="135" y="100" font-size="13" font-weight="bold" fill="#047857">Actor A</text>
+    <text x="135" y="116" font-size="11" fill="#059669">RUNNING</text>
+    <rect x="40" y="128" width="190" height="42" rx="9" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="135" y="148" font-size="13" font-weight="bold" fill="#047857">Actor B</text>
+    <text x="135" y="164" font-size="11" fill="#059669">RUNNING</text>
+
+    <rect x="40" y="190" width="190" height="36" rx="9" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="135" y="213" font-size="12" fill="#475569">Actor C · SUSPENDED</text>
+    <rect x="40" y="232" width="190" height="36" rx="9" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="135" y="255" font-size="12" fill="#475569">Actor D · SUSPENDED</text>
+    <rect x="40" y="274" width="190" height="36" rx="9" fill="#f1f5f9" stroke="#64748b"/>
+    <text x="135" y="297" font-size="12" fill="#475569">Actor E · SUSPENDED</text>
+  </g>
+
+  <!-- workers -->
+  <g text-anchor="middle">
+    <rect x="440" y="80" width="200" height="130" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+    <text x="540" y="104" font-size="13" font-weight="bold" fill="#3730a3">worker pool</text>
+    <rect x="460" y="118" width="160" height="34" rx="7" fill="#ffffff" stroke="#4f46e5"/>
+    <text x="540" y="140" font-size="12" font-weight="bold" fill="#3730a3">Worker 1</text>
+    <rect x="460" y="160" width="160" height="34" rx="7" fill="#ffffff" stroke="#4f46e5"/>
+    <text x="540" y="182" font-size="12" font-weight="bold" fill="#3730a3">Worker 2</text>
+  </g>
+
+  <!-- storage -->
+  <g text-anchor="middle">
+    <rect x="440" y="250" width="240" height="70" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+    <text x="560" y="280" font-size="13" font-weight="bold" fill="#b45309">object storage (rustfs)</text>
+    <text x="560" y="300" font-size="12" fill="#92400e">one snapshot per idle actor</text>
+  </g>
+
+  <!-- arrows: running -> workers -->
+  <path d="M230 101 H440" stroke="#10b981" stroke-width="2" marker-end="url(#ag)"/>
+  <path d="M230 149 H440" stroke="#10b981" stroke-width="2" marker-end="url(#ag)"/>
+  <!-- arrows: suspended -> storage -->
+  <path d="M230 208 C320 215, 360 280, 440 282" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#as)"/>
+  <path d="M230 250 C330 255, 360 285, 440 287" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#as)"/>
+  <path d="M230 292 H440" stroke="#64748b" stroke-width="2" marker-end="url(#as)"/>
+
+  <text x="450" y="372" text-anchor="middle" font-size="13" fill="#475569">On the next request a SUSPENDED actor is restored into a free worker — sub-second, where it left off.</text>
+</svg>
