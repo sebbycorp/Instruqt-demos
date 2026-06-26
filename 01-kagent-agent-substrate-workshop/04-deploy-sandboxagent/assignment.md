@@ -8,15 +8,16 @@ teaser: Deploy a declarative SandboxAgent that runs inside a gVisor actor on the
 notes:
 - type: text
   contents: "# \U0001F680 SandboxAgent\n\nkagent's `SandboxAgent` (`platform: substrate`)
-    is a per-session declarative agent\nthat runs as a substrate **actor**.\n\nThis one
-    is a real **Kubernetes agent**: it calls the `k8s_*` tools on kagent's\nbuilt-in
-    `kagent-tool-server` (a `RemoteMCPServer`) over MCP — so a single agent\nrunning inside
-    a gVisor actor can actually inspect your cluster.\n\nWhen you create one, kagent generates
-    an `ActorTemplate`, which triggers the\n**golden snapshot** — the version-0 frozen
-    image every session is restored from.\nThe first snapshot takes ~60–90s.\n\n> The runtime
-    must be **Go** — Python ADK isn't compatible with gVisor checkpointing.\n> The MCP
-    tool wiring is identical for Go and Python agents.\n\nThe manifest is pre-written to
-    `/root/hello-substrate.yaml` (open it in the Code\nEditor tab).\n"
+    is a per-session declarative agent\nthat runs as a substrate **actor**.\n\nThis
+    one is a real **Kubernetes agent**: it calls the `k8s_*` tools on kagent's\nbuilt-in
+    `kagent-tool-server` (a `RemoteMCPServer`) over MCP — so a single agent\nrunning
+    inside a gVisor actor can actually inspect your cluster.\n\nWhen you create one,
+    kagent generates an `ActorTemplate`, which triggers the\n**golden snapshot** —
+    the version-0 frozen image every session is restored from.\nThe first snapshot
+    takes ~60–90s.\n\n> The runtime must be **Go** — Python ADK isn't compatible with
+    gVisor checkpointing.\n> The MCP tool wiring is identical for Go and Python agents.\n\nThe
+    manifest is pre-written to `/root/hello-substrate.yaml` (open it in the Code\nEditor
+    tab).\n"
 tabs:
 - id: pmy2ofmq4zy9
   title: Terminal
