@@ -33,7 +33,7 @@ One worker serves many declarative sessions sequentially because each session re
 slot the moment it snapshots back. To run overlapping sessions or long-lived agents, scale
 the pool:
 
-```bash
+```bash,run
 kubectl scale workerpool kagent-default -n kagent --replicas=3
 ```
 
@@ -50,12 +50,6 @@ kubectl scale workerpool kagent-default -n kagent --replicas=3
 Agent Substrate is **very early / pre-1.0** — APIs will change and it's not production-ready.
 Substrate's in-cluster TLS certs also expire after ~24h on idle clusters, so this lab is best
 run in a single sitting.
-
-## Cleanup (if running outside Instruqt)
-
-```bash
-kind delete cluster --name kagent-substrate
-```
 
 ## ✅ You've learned
 

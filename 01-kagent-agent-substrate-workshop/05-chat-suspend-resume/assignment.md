@@ -42,11 +42,18 @@ You'll trigger this from the UI, then watch the state directly via `grpcurl`.
 
 Open the **kagent UI** tab. Pick `kagent/hello-substrate` from the Agents list and send:
 
-> *What are you, and where are you running? Answer in one sentence.*
+> *Who are you, and where are you running?*
 
 You should get back something like:
 
-> *I am hello-substrate, a Go ADK declarative agent running inside a gVisor actor.*
+> *I am a Kubernetes agent running inside a gVisor actor on Agent Substrate.*
+
+Now ask it to actually use its MCP tools against the cluster:
+
+> *List the pods in the kagent namespace.*
+
+It calls the `k8s_get_resources` tool on `kagent-tool-server` over MCP — from inside the actor —
+and returns the live pod list.
 
 Then open the **Substrate** page (`/substrate`) in the UI to see the worker pool and actors.
 
@@ -54,40 +61,51 @@ Then open the **Substrate** page (`/substrate`) in the UI to see the worker pool
 
 In the **Terminal** tab, port-forward the substrate API in the background:
 
-```bash
+```bash,run
 kubectl port-forward -n ate-system svc/api 18443:443 >/tmp/pf-api.log 2>&1 &
 sleep 3
 ```
 
+The `>/tmp/pf-api.log 2>&1` part redirects the background port-forward's own output to a log file
+so it doesn't interleave with your commands. If a later step can't reach `localhost:18443`, check
+that the forward is healthy with `cat /tmp/pf-api.log`.
+
 Mint a short-lived token the kagent controller's identity can use:
 
-```bash
+```bash,run
 TOKEN=$(kubectl create token kagent-controller -n kagent --audience=api.ate-system.svc --duration=15m)
 ```
 
-List the actors. Note your actor's id and its status (it will be `SUSPENDED` between requests):
+List the actors. Each one shows a status (it will be `STATUS_SUSPENDED` between requests):
 
-```bash
+```bash,run
 grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
   localhost:18443 ateapi.Control/ListActors
 ```
 
 ## Step 3: Resume the actor explicitly
 
-Copy the actor id from the list above and resume it — watch it flip to `RUNNING`:
+Grab your actor's id straight from `ListActors` into a variable (no copy/paste needed):
 
-```bash
+```bash,run
+ACTOR_ID=$(grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors | jq -r '.actors[0].actorId')
+echo "Actor: $ACTOR_ID"
+```
+
+Resume it — watch it flip to `STATUS_RUNNING`:
+
+```bash,run
 grpcurl -insecure -H "authorization: Bearer $TOKEN" \
-  -d '{"actor_id":"<ACTOR_ID>"}' \
+  -d "{\"actor_id\":\"$ACTOR_ID\"}" \
   localhost:18443 ateapi.Control/ResumeActor
 ```
 
-Re-run `ListActors` to confirm the state change.
+Re-run `ListActors` to confirm the state change:
 
-## Step 4: Save a marker
-
-```bash
-echo "export SUBSTRATE_LAB_DONE=true" >> ~/.bashrc
+```bash,run
+grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors
 ```
 
 ## ✅ What you've learned

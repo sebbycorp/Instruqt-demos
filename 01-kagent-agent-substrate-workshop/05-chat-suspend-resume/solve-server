@@ -11,10 +11,15 @@ set +x
 TOKEN=$(kubectl create token kagent-controller -n kagent --audience=api.ate-system.svc --duration=15m)
 grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
   localhost:18443 ateapi.Control/ListActors || true
+ACTOR_ID=$(grpcurl -insecure -H "authorization: Bearer $TOKEN" -d '{}' \
+  localhost:18443 ateapi.Control/ListActors | jq -r '.actors[0].actorId')
+if [ -n "${ACTOR_ID:-}" ] && [ "${ACTOR_ID}" != "null" ]; then
+  grpcurl -insecure -H "authorization: Bearer $TOKEN" \
+    -d "{\"actor_id\":\"$ACTOR_ID\"}" \
+    localhost:18443 ateapi.Control/ResumeActor || true
+fi
 set -x
 
 kill "$PF_PID" 2>/dev/null || true
-
-echo "export SUBSTRATE_LAB_DONE=true" >> ~/.bashrc
 
 echo "Challenge 5 solved"

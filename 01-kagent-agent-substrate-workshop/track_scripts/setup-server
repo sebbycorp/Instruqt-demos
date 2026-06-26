@@ -54,6 +54,13 @@ if ! command -v grpcurl >/dev/null 2>&1; then
   chmod +x /usr/local/bin/grpcurl
 fi
 
+# jq is used in challenge 5 to extract the actor_id from grpcurl JSON output.
+if ! command -v jq >/dev/null 2>&1; then
+  curl -fsSLo /usr/local/bin/jq \
+    "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64"
+  chmod +x /usr/local/bin/jq
+fi
+
 # --- Ensure Docker is running (kind requires it) ----------------------------
 systemctl start docker 2>/dev/null || true
 timeout 60 bash -c 'until docker info >/dev/null 2>&1; do sleep 2; done'

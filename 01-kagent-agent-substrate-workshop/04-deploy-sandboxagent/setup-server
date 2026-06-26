@@ -13,14 +13,26 @@ metadata:
   namespace: kagent
 spec:
   type: Declarative
-  description: Tiny declarative agent running inside a substrate actor
+  description: A Kubernetes assistant running inside a substrate gVisor actor
   declarative:
     runtime: go
     modelConfig: default-model-config
     systemMessage: |
-      You are a friendly assistant living inside an Agent Substrate sandbox.
-      When asked who you are, say "I am hello-substrate, a Go ADK declarative
-      agent running inside a gVisor actor."
+      You are a helpful Kubernetes assistant running inside an Agent Substrate
+      gVisor actor. Use the Kubernetes tools to answer questions about the
+      cluster. When asked who you are, say "I am a Kubernetes agent running
+      inside a gVisor actor on Agent Substrate." Keep answers concise.
+    tools:
+    - type: McpServer
+      mcpServer:
+        name: kagent-tool-server
+        kind: RemoteMCPServer
+        apiGroup: kagent.dev
+        toolNames:
+        - k8s_get_resources
+        - k8s_describe_resource
+        - k8s_get_pod_logs
+        - k8s_get_events
   platform: substrate
   substrate:
     workerPoolRef:
