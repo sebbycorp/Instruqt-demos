@@ -45,7 +45,7 @@ The `controller.substrate.*` flags below are the wiring between the two:
 
 ## Step 1: Confirm your OpenAI key is set
 
-```bash
+```bash,run
 [[ -n "${OPENAI_API_KEY:-}" ]] && echo "key set (len=${#OPENAI_API_KEY})" || echo "OPENAI_API_KEY is empty!"
 ```
 
@@ -55,7 +55,7 @@ The `controller.substrate.*` flags below are the wiring between the two:
 
 ## Step 2: Install the kagent CRDs
 
-```bash
+```bash,run
 helm upgrade --install kagent-crds \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
   --version 0.9.7 \
@@ -64,7 +64,7 @@ helm upgrade --install kagent-crds \
 
 ## Step 3: Install kagent with substrate enabled
 
-```bash
+```bash,run
 helm upgrade --install kagent \
   oci://ghcr.io/kagent-dev/kagent/helm/kagent \
   --version 0.9.7 --namespace kagent --timeout 10m --wait \
@@ -86,25 +86,30 @@ helm upgrade --install kagent \
 > If helm times out while the controller waits on its database (it restarts a couple of
 > times during cold start), wait for it manually and continue:
 >
-> ```bash
+> ```bash,run
 > kubectl wait deploy/kagent-controller -n kagent --for=condition=Available --timeout=10m
 > ```
 
 ## Step 4: Verify the WorkerPool and the integration
 
-```bash
+```bash,run
 kubectl get workerpools.ate.dev -A
 ```
 
 You should see `kagent/kagent-default`.
 
-```bash
-kubectl run substrate-status-check -n kagent --rm -i --restart=Never \
-  --image=curlimages/curl:8.10.1 -- \
-  http://kagent-controller:8083/api/substrate/status
+```bash,run
+kubectl -n kagent port-forward deploy/kagent-controller 8083:8083 >/tmp/pf-ctrl.log 2>&1 &
+sleep 3
+curl -s http://localhost:8083/api/substrate/status; echo
+kill %1 2>/dev/null
 ```
 
 The response should include `"enabled": true`.
+
+> We port-forward the controller and `curl` it from the host instead of running a throwaway
+> `curl` pod — a quick pod exits before `kubectl` can attach to it, so you'd see no output.
+> The port-forward's own logs go to `/tmp/pf-ctrl.log` (`cat` it if the connection fails).
 
 ## ✅ What you've learned
 

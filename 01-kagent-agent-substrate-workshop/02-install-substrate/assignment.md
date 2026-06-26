@@ -46,7 +46,7 @@ the api-server decides *which* worker and drives suspend/resume:
 
 ## Step 1: Install the substrate CRDs
 
-```bash
+```bash,run
 helm upgrade --install substrate-crds \
   oci://ghcr.io/kagent-dev/substrate/helm/substrate-crds \
   --version 0.0.6 \
@@ -55,7 +55,7 @@ helm upgrade --install substrate-crds \
 
 ## Step 2: Install the substrate control plane
 
-```bash
+```bash,run
 helm upgrade --install substrate \
   oci://ghcr.io/kagent-dev/substrate/helm/substrate \
   --version 0.0.6 \
@@ -66,7 +66,7 @@ This pulls several images and starts the valkey cluster, so it can take a few mi
 
 ## Step 3: Watch it come up
 
-```bash
+```bash,run
 kubectl get pods -n ate-system
 ```
 
@@ -76,7 +76,7 @@ Wait until you see `ate-api-server`, `ate-controller`, `atelet-*`, `atenet-route
 
 ## Step 4: Inspect the CRDs you just installed
 
-```bash
+```bash,run
 kubectl get crd | grep ate.dev
 kubectl get workerpools.ate.dev -A
 ```

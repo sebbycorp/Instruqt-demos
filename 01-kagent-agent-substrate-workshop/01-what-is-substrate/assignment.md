@@ -65,19 +65,19 @@ actor isn't a pod — it's a snapshot sitting in object storage:
 
 Your environment already created a `kind` cluster named `kagent-substrate`. Verify it:
 
-```bash
+```bash,run
 kubectl get nodes
 ```
 
 You should see one node in `Ready` state.
 
-```bash
+```bash,run
 kubectl cluster-info
 ```
 
 ## Step 2: Confirm your tools
 
-```bash
+```bash,run
 kind version
 helm version --short
 grpcurl --version
