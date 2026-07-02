@@ -37,7 +37,7 @@ Budgets denominated in USD need a price list. Let's give the gateway one.
 
 > **What's happening:** The catalog is a plain ConfigMap with per-1M-token USD rates. These match OpenAI's public pricing: gpt-4o at $2.50 in / $10.00 out, gpt-4o-mini at $0.15 in / $0.60 out. The data plane multiplies each response's token usage by these rates to compute the *realized* dollar cost of every request.
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: v1
 kind: ConfigMap
@@ -69,7 +69,7 @@ EOF
 
 Create the parameters:
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayParameters
@@ -87,7 +87,7 @@ EOF
 
 Attach it to the Gateway:
 
-```bash
+```bash,run
 kubectl patch gateway agentgateway -n agentgateway-system --type=merge -p '
 spec:
   infrastructure:
@@ -100,7 +100,7 @@ spec:
 
 Wait for the proxy to roll out with the new config:
 
-```bash
+```bash,run
 kubectl -n agentgateway-system rollout status deployment -l app.kubernetes.io/name=agentgateway --timeout=120s
 ```
 
@@ -108,7 +108,7 @@ kubectl -n agentgateway-system rollout status deployment -l app.kubernetes.io/na
 
 > **What's happening:** This route proxies to the **same** OpenAI backend as `/openai`, but on its own path. Budgets are enforced per-route — so when you trip a Block budget on `/budget-demo` in challenge 4, `/openai` traffic is completely unaffected. That's your blast-radius control.
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -137,7 +137,7 @@ EOF
 
 > **What's happening:** Send a completion through the new route, then compute what it cost using the catalog rates. This is exactly the math the gateway now does internally on every request — and what USD budgets meter against.
 
-```bash
+```bash,run
 curl -s "$GATEWAY_IP:8080/budget-demo" \
   -H "content-type: application/json" \
   -d '{

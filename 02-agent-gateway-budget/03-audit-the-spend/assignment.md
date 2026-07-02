@@ -37,7 +37,7 @@ Create a **$5/day Audit budget** on the `/budget-demo` route. It watches the mon
 
 > **What's happening:** This budget has a single entry, `demo-usd-audit`. The gateway meters the *realized USD cost* of every request on enforced routes — computed from token usage and your model cost catalog — against the $5 daily limit. `Audit` mode means exceeding the limit is logged, never blocked.
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayBudget
@@ -60,7 +60,7 @@ EOF
 
 > **What's happening:** The `entBudgetEnforcement` policy activates budget metering on its target — here, only the `budget-demo` HTTPRoute. `discovery.namespaces.from: Same` means only Budget resources in this namespace apply. Note what's *not* targeted: the `/openai` route has no budget policy at all.
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayPolicy
@@ -84,7 +84,7 @@ EOF
 
 > **What's happening:** Every one of these requests is now priced against the catalog and counted toward `demo-usd-audit`. Because the mode is `Audit`, requests flow normally — you're building a real picture of spend with zero risk to callers.
 
-```bash
+```bash,run
 for i in {1..3}; do
   curl -s "$GATEWAY_IP:8080/budget-demo" \
     -H "content-type: application/json" \
@@ -101,7 +101,7 @@ All three succeed — an Audit budget never says no.
 
 > **What's happening:** The budget is a live Kubernetes resource. Its spec is the contract; the gateway's counters (in ext-cache) track consumption against it per window.
 
-```bash
+```bash,run
 kubectl get enterpriseagentgatewaybudget budget-demo -n agentgateway-system -o yaml | grep -A12 'spec:'
 ```
 

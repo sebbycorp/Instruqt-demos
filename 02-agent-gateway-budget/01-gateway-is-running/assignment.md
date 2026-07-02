@@ -38,7 +38,7 @@ The track setup installed Enterprise AgentGateway **v2026.6.3** with an OpenAI b
 
 > **What's happening:** The *control plane* (`enterprise-agentgateway`) watches Kubernetes for configuration changes and programs the *data plane* (`agentgateway`) — the proxy that actually handles LLM traffic. Shared extensions like `ext-cache` (Redis) hold the counters that budgets and rate limits rely on.
 
-```bash
+```bash,run
 kubectl get pods -n agentgateway-system
 ```
 
@@ -48,13 +48,13 @@ You should see `enterprise-agentgateway` (control plane), `agentgateway` (data p
 
 > **What's happening:** v2026.6.3 ships a new Custom Resource Definition: `EnterpriseAgentgatewayBudget`. It's a first-class Kubernetes resource — your AI spend policy lives in version-controlled YAML, just like the rest of your gateway config.
 
-```bash
+```bash,run
 kubectl api-resources | awk 'NR==1 || /enterpriseagentgateway\.solo\.io|agentgateway\.dev/'
 ```
 
 Spot the star of this lab:
 
-```bash
+```bash,run
 kubectl explain enterpriseagentgatewaybudget.spec.budgets --recursive | head -20
 ```
 
@@ -64,7 +64,7 @@ Note the fields: `limit` (unit: `USD` or `Tokens`), `window`, and `onBudgetExcee
 
 > **What's happening:** The `Gateway` resource is a standard Gateway API object — the single entry point for all LLM traffic. A systemd port-forward exposes it on `localhost:8080`.
 
-```bash
+```bash,run
 kubectl get gateway -n agentgateway-system
 kubectl get httproute -n agentgateway-system
 ```
@@ -75,7 +75,7 @@ The `agentgateway` Gateway should be `PROGRAMMED: True` with an `/openai` HTTPRo
 
 > **What's happening:** The gateway proxies this to OpenAI, injecting the API key server-side from a Kubernetes Secret — clients never hold provider credentials. Note the `usage` block in the response: input and output token counts. That's the raw material budgets are built on.
 
-```bash
+```bash,run
 curl -s "$GATEWAY_IP:8080/openai" \
   -H "content-type: application/json" \
   -d '{

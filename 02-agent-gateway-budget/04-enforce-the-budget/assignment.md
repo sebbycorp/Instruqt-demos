@@ -36,7 +36,7 @@ Add a **Block** entry to the budget and trip it — live.
 
 > **What's happening:** You're updating the existing budget to hold two entries. `demo-usd-audit` keeps watching dollars. The new `demo-token-block` caps the route at 2000 tokens per day — and this one says no. In real life this would be sized generously; here it's small enough to trip in a couple of requests.
 
-```bash
+```bash,run
 kubectl apply -f - <<EOF
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayBudget
@@ -68,7 +68,7 @@ The enforcement policy from challenge 3 already covers this route — new budget
 
 > **What's happening:** Each request asks for a long answer (~600+ tokens), and each response's total tokens count against the 2000/day limit. Watch the HTTP status codes: 200s while there's budget left, then a 429 the moment it's exhausted — the gateway refuses *before* calling OpenAI, so a blocked request costs exactly $0.
 
-```bash
+```bash,run
 for i in {1..6}; do
   CODE=$(curl -s -o /tmp/resp.json -w "%{http_code}" "$GATEWAY_IP:8080/budget-demo" \
     -H "content-type: application/json" \
@@ -84,7 +84,7 @@ done
 
 You should see a few `HTTP 200`s and then:
 
-```
+```nocopy
 request N → HTTP 429 (tokens: -)
 ```
 
@@ -94,7 +94,7 @@ That's the budget doing its job — a clean, machine-readable rejection instead 
 
 > **What's happening:** The Block budget is enforced only where the policy targets it: the `budget-demo` route. The `/openai` route has no budget policy — its traffic flows untouched. This is how you protect experimental or untrusted workloads without risking the ones that pay the bills.
 
-```bash
+```bash,run
 curl -s -o /dev/null -w "/budget-demo → HTTP %{http_code}\n" "$GATEWAY_IP:8080/budget-demo" \
   -H "content-type: application/json" \
   -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}'
@@ -104,7 +104,7 @@ curl -s -o /dev/null -w "/openai      → HTTP %{http_code}\n" "$GATEWAY_IP:8080
   -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}'
 ```
 
-```
+```nocopy
 /budget-demo → HTTP 429
 /openai      → HTTP 200
 ```
