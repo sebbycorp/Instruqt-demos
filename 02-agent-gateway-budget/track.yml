@@ -1,0 +1,38 @@
+slug: agentgateway-enterprise-budget
+id: 7v3ljqu2l9dx
+title: 'Enterprise AgentGateway Budgets: Govern Your AI Spend'
+teaser: Set hard AI spend limits at the gateway with the new EnterpriseAgentgatewayBudget
+  CRD — audit dollars, block tokens, get a clean 429 instead of a surprise invoice.
+description: "Rate limits were never built for AI spend. Requests aren't the unit
+  that costs money — tokens and dollars are. Enterprise AgentGateway v2026.6.3 introduces
+  **Budgets & Dimensions**: native budget enforcement at the gateway, denominated
+  in USD or tokens.\n\nIn this hands-on lab you'll:\n\n- \U0001F680 Verify Enterprise
+  AgentGateway v2026.6.3 and send your first LLM request through it\n- \U0001F4B5
+  Load a model cost catalog so the gateway prices every OpenAI request in real USD\n-
+  \U0001F440 Create an **Audit** budget that tracks dollar spend without blocking
+  anyone\n- \U0001F6D1 Create a **Block** budget, trip it live, and watch the gateway
+  return HTTP 429 — while unbudgeted routes keep working\n\n**Prerequisites:** Basic
+  kubectl and Helm familiarity. No prior AgentGateway experience required."
+icon: ""
+tags:
+- ai
+- enterprise
+- llm
+- kubernetes
+- budgets
+- agentgateway
+- solo-io
+- cost
+owner: soloio
+developers:
+- sebastian.maniak@solo.io
+idle_timeout: 1800
+timelimit: 3600
+lab_config:
+  sidebar_enabled: true
+  feedback_recap_enabled: true
+  feedback_tab_enabled: false
+  loadingMessages: true
+  hideStopButton: false
+checksum: "2726620502107338588"
+enhanced_loading: false

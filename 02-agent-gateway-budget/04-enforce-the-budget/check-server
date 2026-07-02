@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euxo pipefail
+
+if ! kubectl get enterpriseagentgatewaybudget budget-demo -n agentgateway-system -o jsonpath='{.spec.budgets[*].name}' | grep -q demo-token-block; then
+  fail-message "The budget 'budget-demo' has no 'demo-token-block' entry. Add the Block entry as shown in Step 1."
+  exit 1
+fi
+
+MODE=$(kubectl get enterpriseagentgatewaybudget budget-demo -n agentgateway-system -o jsonpath='{.spec.budgets[?(@.name=="demo-token-block")].onBudgetExceeded}')
+if [ "$MODE" != "Block" ]; then
+  fail-message "The 'demo-token-block' entry is not in Block mode (found: '$MODE'). Set onBudgetExceeded: Block."
+  exit 1
+fi
+
+# The budget must actually be tripped: /budget-demo returns 429, /openai still 200
+DEMO_CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/budget-demo" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' || echo "000")
+
+if [ "$DEMO_CODE" != "429" ]; then
+  fail-message "/budget-demo returned HTTP $DEMO_CODE — the token budget is not tripped yet. Run the traffic loop in Step 2 until you see a 429."
+  exit 1
+fi
+
+OPENAI_CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/openai" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' || echo "000")
+
+if [ "$OPENAI_CODE" != "200" ]; then
+  fail-message "/openai returned HTTP $OPENAI_CODE — the unbudgeted route should still work. Check the gateway and the OpenAI backend."
+  exit 1
+fi
+
+echo "Challenge 4 complete!"

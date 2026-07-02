@@ -1,0 +1,4 @@
+#!/bin/bash
+set -euxo pipefail
+
+echo "Challenge 3 setup complete"

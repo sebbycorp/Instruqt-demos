@@ -1,0 +1,202 @@
+#!/bin/bash
+
+# Wait for instruqt bootstrap
+until [ -f /opt/instruqt/bootstrap/host-bootstrap-completed ]; do
+  sleep 1
+done
+
+set -euxo pipefail
+
+set-workdir /root
+
+# Shell conveniences
+cat >> ~/.bashrc << 'EOF'
+alias k=kubectl
+complete -F __start_kubectl k
+source /etc/bash_completion
+export ENTERPRISE_AGW_VERSION=v2026.6.3
+export GATEWAY_IP=localhost
+EOF
+
+export ENTERPRISE_AGW_VERSION=v2026.6.3
+export GATEWAY_IP=localhost
+
+# Start k3d cluster (pre-installed in image)
+if command -v k3d >/dev/null 2>&1; then
+  k3d cluster start my-k8s-cluster 2>/dev/null || \
+  k3d cluster create my-k8s-cluster --wait
+fi
+
+kubectl wait --for=condition=Ready nodes --all --timeout=120s
+
+echo "=== Installing Gateway API CRDs (v1.4.0 experimental) ==="
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/experimental-install.yaml
+
+echo "=== Installing Enterprise AgentGateway CRDs ==="
+kubectl create namespace agentgateway-system || true
+helm upgrade -i --create-namespace \
+  --namespace agentgateway-system \
+  --version $ENTERPRISE_AGW_VERSION \
+  enterprise-agentgateway-crds \
+  oci://us-docker.pkg.dev/solo-public/enterprise-agentgateway/charts/enterprise-agentgateway-crds
+
+echo "=== Installing Enterprise AgentGateway Controller ==="
+helm upgrade -i -n agentgateway-system \
+  enterprise-agentgateway \
+  oci://us-docker.pkg.dev/solo-public/enterprise-agentgateway/charts/enterprise-agentgateway \
+  --create-namespace \
+  --version $ENTERPRISE_AGW_VERSION \
+  --set-string licensing.licenseKey=${AGENTGATEWAY_LICENSE_KEY} \
+  --wait --timeout 180s \
+  -f -<<HELMEOF
+gatewayClassParametersRefs:
+  enterprise-agentgateway:
+    group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayParameters
+    name: agentgateway-params
+    namespace: agentgateway-system
+HELMEOF
+
+kubectl -n agentgateway-system rollout status deployment/enterprise-agentgateway --timeout=120s
+
+echo "=== Configuring class-level EnterpriseAgentgatewayParameters ==="
+# Shared extensions (ext-cache backs budget/rate-limit counters) + JSON access
+# logs that include token usage so learners can see what each request consumed.
+kubectl apply -f- <<'EOF'
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayParameters
+metadata:
+  name: agentgateway-params
+  namespace: agentgateway-system
+spec:
+  sharedExtensions:
+    extauth:
+      enabled: true
+      deployment:
+        spec:
+          replicas: 1
+    ratelimiter:
+      enabled: true
+      deployment:
+        spec:
+          replicas: 1
+    extCache:
+      enabled: true
+      deployment:
+        spec:
+          replicas: 1
+  logging:
+    level: info
+  rawConfig:
+    config:
+      logging:
+        format: json
+        fields:
+          add:
+            gen_ai.request.model: "llm.requestModel"
+            gen_ai.usage.prompt_tokens: "llm.inputTokens"
+            gen_ai.usage.completion_tokens: "llm.outputTokens"
+  deployment:
+    spec:
+      replicas: 1
+      template:
+        spec:
+          containers:
+          - name: agentgateway
+            resources:
+              requests:
+                cpu: 300m
+                memory: 128Mi
+EOF
+
+echo "=== Creating Gateway Resource ==="
+# NOTE: no infrastructure.parametersRef here — challenge 02 attaches the
+# budget-params (model cost catalog) to this Gateway.
+kubectl apply -f- <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: agentgateway
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: enterprise-agentgateway
+  listeners:
+    - name: http
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+EOF
+
+# Wait for proxy
+sleep 10
+kubectl -n agentgateway-system wait --for=condition=Available deployment -l app.kubernetes.io/name=agentgateway --timeout=180s || true
+
+echo "=== Storing OpenAI API key ==="
+if [ -n "${OPENAI_API_KEY:-}" ]; then
+  echo "export OPENAI_API_KEY=${OPENAI_API_KEY}" >> ~/.bashrc
+  kubectl create secret generic openai-secret -n agentgateway-system \
+    --from-literal="Authorization=Bearer $OPENAI_API_KEY" \
+    --dry-run=client -oyaml | kubectl apply -f -
+else
+  echo "=== WARNING: OPENAI_API_KEY not set ==="
+fi
+
+echo "=== Creating OpenAI backend and /openai route ==="
+kubectl apply -f- <<EOF
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: openai
+  namespace: agentgateway-system
+spec:
+  ai:
+    provider:
+      openai: {}
+  policies:
+    auth:
+      secretRef:
+        name: openai-secret
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: openai
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - name: agentgateway
+      namespace: agentgateway-system
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /openai
+      backendRefs:
+        - name: openai
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+      timeouts:
+        request: "120s"
+EOF
+
+echo "=== Setting up port-forward service ==="
+cat <<SVCEOF > /etc/systemd/system/agentgateway-proxy.service
+[Unit]
+Description=AgentGateway Proxy Port Forward
+After=cloud-final.service multi-user.target
+[Service]
+Restart=always
+RestartSec=5s
+Environment="KUBECONFIG=/root/.kube/config"
+ExecStart=/usr/local/bin/kubectl -n agentgateway-system port-forward svc/agentgateway 8080:8080 --address 0.0.0.0
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+systemctl daemon-reload
+systemctl enable agentgateway-proxy
+systemctl start agentgateway-proxy
+
+echo "=== Track setup complete ==="

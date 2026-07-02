@@ -1,0 +1,34 @@
+#!/bin/bash
+set -euxo pipefail
+
+if ! kubectl get configmap model-cost-catalog -n agentgateway-system &>/dev/null; then
+  fail-message "ConfigMap 'model-cost-catalog' not found. Create the cost catalog as shown in Step 1."
+  exit 1
+fi
+
+if ! kubectl get enterpriseagentgatewayparameters budget-params -n agentgateway-system &>/dev/null; then
+  fail-message "EnterpriseAgentgatewayParameters 'budget-params' not found. Create it as shown in Step 2."
+  exit 1
+fi
+
+PARAMS_REF=$(kubectl get gateway agentgateway -n agentgateway-system -o jsonpath='{.spec.infrastructure.parametersRef.name}' 2>/dev/null || echo "")
+if [ "$PARAMS_REF" != "budget-params" ]; then
+  fail-message "The Gateway is not referencing 'budget-params' via spec.infrastructure.parametersRef. Run the kubectl patch in Step 2."
+  exit 1
+fi
+
+if ! kubectl get httproute budget-demo -n agentgateway-system &>/dev/null; then
+  fail-message "HTTPRoute 'budget-demo' not found. Create the isolated route as shown in Step 3."
+  exit 1
+fi
+
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/budget-demo" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' || echo "000")
+
+if [ "$HTTP_CODE" != "200" ]; then
+  fail-message "The /budget-demo route returned HTTP $HTTP_CODE instead of 200. Check the route and wait for the proxy rollout to finish."
+  exit 1
+fi
+
+echo "Challenge 2 complete!"

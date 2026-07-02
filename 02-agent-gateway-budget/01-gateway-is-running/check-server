@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euxo pipefail
+
+if ! kubectl get crd enterpriseagentgatewaybudgets.enterpriseagentgateway.solo.io &>/dev/null; then
+  fail-message "The EnterpriseAgentgatewayBudget CRD is missing — the v2026.6.3 install did not complete. Check 'kubectl get pods -n agentgateway-system'."
+  exit 1
+fi
+
+if ! kubectl get gateway agentgateway -n agentgateway-system -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' | grep -q True; then
+  fail-message "Gateway 'agentgateway' is not Programmed yet. Check 'kubectl get gateway -n agentgateway-system'."
+  exit 1
+fi
+
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/openai" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' || echo "000")
+
+if [ "$HTTP_CODE" != "200" ]; then
+  fail-message "A chat completion through the gateway returned HTTP $HTTP_CODE instead of 200. Try the curl from Step 4 and check the gateway logs."
+  exit 1
+fi
+
+echo "Challenge 1 complete!"

@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euxo pipefail
+
+kubectl apply -f - <<EOF
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBudget
+metadata:
+  name: budget-demo
+  namespace: agentgateway-system
+spec:
+  budgets:
+    - name: demo-usd-audit
+      limit:
+        unit: USD
+        amount: 5
+      window:
+        unit: Day
+      onBudgetExceeded: Audit
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: budget-demo-enforcement
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: budget-demo
+  traffic:
+    entBudgetEnforcement:
+      discovery:
+        namespaces:
+          from: Same
+EOF
+
+sleep 5
+
+# Send metered traffic
+curl -s "localhost:8080/budget-demo" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' | jq .usage || true
+
+echo "Challenge 3 solved!"

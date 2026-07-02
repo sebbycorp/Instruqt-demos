@@ -1,0 +1,73 @@
+#!/bin/bash
+set -euxo pipefail
+
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-cost-catalog
+  namespace: agentgateway-system
+data:
+  catalog.json: |
+    {
+      "providers": {
+        "openai": {
+          "models": {
+            "gpt-4o": {
+              "rates": { "input": "2.50", "output": "10.00" }
+            },
+            "gpt-4o-mini": {
+              "rates": { "input": "0.15", "output": "0.60" }
+            }
+          }
+        }
+      }
+    }
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayParameters
+metadata:
+  name: budget-params
+  namespace: agentgateway-system
+spec:
+  modelCatalog:
+    sources:
+      - configMap:
+          name: model-cost-catalog
+          key: catalog.json
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: budget-demo
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - name: agentgateway
+      namespace: agentgateway-system
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /budget-demo
+      backendRefs:
+        - name: openai
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+      timeouts:
+        request: "120s"
+EOF
+
+kubectl patch gateway agentgateway -n agentgateway-system --type=merge -p '
+spec:
+  infrastructure:
+    parametersRef:
+      group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayParameters
+      name: budget-params
+'
+
+kubectl -n agentgateway-system rollout status deployment -l app.kubernetes.io/name=agentgateway --timeout=120s || true
+sleep 5
+
+echo "Challenge 2 solved!"

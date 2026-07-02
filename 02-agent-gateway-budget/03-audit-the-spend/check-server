@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euxo pipefail
+
+if ! kubectl get enterpriseagentgatewaybudget budget-demo -n agentgateway-system &>/dev/null; then
+  fail-message "EnterpriseAgentgatewayBudget 'budget-demo' not found. Create it as shown in Step 1."
+  exit 1
+fi
+
+if ! kubectl get enterpriseagentgatewaybudget budget-demo -n agentgateway-system -o jsonpath='{.spec.budgets[*].name}' | grep -q demo-usd-audit; then
+  fail-message "The budget 'budget-demo' has no entry named 'demo-usd-audit'. Check the spec from Step 1."
+  exit 1
+fi
+
+if ! kubectl get enterpriseagentgatewaypolicy budget-demo-enforcement -n agentgateway-system &>/dev/null; then
+  fail-message "EnterpriseAgentgatewayPolicy 'budget-demo-enforcement' not found. Create the enforcement policy as shown in Step 2."
+  exit 1
+fi
+
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/budget-demo" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' || echo "000")
+
+if [ "$HTTP_CODE" != "200" ]; then
+  fail-message "The /budget-demo route returned HTTP $HTTP_CODE — an Audit budget should never block. Check the budget mode is 'Audit' and the proxy is healthy."
+  exit 1
+fi
+
+echo "Challenge 3 complete!"

@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euxo pipefail
+
+# Verification-only challenge — send one completion so traffic has flowed.
+curl -s "localhost:8080/openai" \
+  -H "content-type: application/json" \
+  -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}' | jq .usage || true
+
+echo "Challenge 1 solved!"

@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euxo pipefail
+
+kubectl apply -f - <<EOF
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBudget
+metadata:
+  name: budget-demo
+  namespace: agentgateway-system
+spec:
+  budgets:
+    - name: demo-usd-audit
+      limit:
+        unit: USD
+        amount: 5
+      window:
+        unit: Day
+      onBudgetExceeded: Audit
+    - name: demo-token-block
+      limit:
+        unit: Tokens
+        amount: 2000
+      window:
+        unit: Day
+      onBudgetExceeded: Block
+EOF
+
+sleep 5
+
+# Burn through the 2000-token budget until the gateway blocks
+for i in {1..10}; do
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" "localhost:8080/budget-demo" \
+    -H "content-type: application/json" \
+    -d '{"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "Explain Kubernetes in detail, about 400 words."}]}' || echo "000")
+  echo "request $i → HTTP $CODE"
+  [ "$CODE" = "429" ] && break
+  sleep 1
+done
+
+echo "Challenge 4 solved!"
